@@ -6,6 +6,11 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		991607082F0BF1790056EC8D /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 991607072F0BF1790056EC8D /* SnapKit */; };
+		9916070B2F0BF1840056EC8D /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 9916070A2F0BF1840056EC8D /* Then */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		999F3E362F04E5D4002119DE /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -65,6 +70,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				991607082F0BF1790056EC8D /* SnapKit in Frameworks */,
+				9916070B2F0BF1840056EC8D /* Then in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,6 +132,8 @@
 			);
 			name = "WithUs-iOS";
 			packageProductDependencies = (
+				991607072F0BF1790056EC8D /* SnapKit */,
+				9916070A2F0BF1840056EC8D /* Then */,
 			);
 			productName = "WithUs-iOS";
 			productReference = 999F3E1F2F04E5D1002119DE /* WithUs-iOS.app */;
@@ -208,6 +217,10 @@
 			);
 			mainGroup = 999F3E162F04E5D1002119DE;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				991607062F0BF1790056EC8D /* XCRemoteSwiftPackageReference "SnapKit" */,
+				991607092F0BF1840056EC8D /* XCRemoteSwiftPackageReference "Then" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 999F3E202F04E5D1002119DE /* Products */;
 			projectDirPath = "";
@@ -291,7 +304,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6UDF9VNHC6;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "WithUs-iOS/Info.plist";
+				INFOPLIST_FILE = "WithUs-iOS/Resources/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -318,7 +331,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 6UDF9VNHC6;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "WithUs-iOS/Info.plist";
+				INFOPLIST_FILE = "WithUs-iOS/Resources/Info.plist";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -569,6 +582,38 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		991607062F0BF1790056EC8D /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.1;
+			};
+		};
+		991607092F0BF1840056EC8D /* XCRemoteSwiftPackageReference "Then" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/devxoul/Then";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		991607072F0BF1790056EC8D /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 991607062F0BF1790056EC8D /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
+		9916070A2F0BF1840056EC8D /* Then */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 991607092F0BF1840056EC8D /* XCRemoteSwiftPackageReference "Then" */;
+			productName = Then;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 999F3E172F04E5D1002119DE /* Project object */;
 }
