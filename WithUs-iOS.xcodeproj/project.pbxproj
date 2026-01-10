@@ -119,6 +119,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 999F3E482F04E5D4002119DE /* Build configuration list for PBXNativeTarget "WithUs-iOS" */;
 			buildPhases = (
+				93E183DC2F1222D6002A3F54 /* ShellScript */,
 				999F3E1B2F04E5D1002119DE /* Sources */,
 				999F3E1C2F04E5D1002119DE /* Frameworks */,
 				999F3E1D2F04E5D1002119DE /* Resources */,
@@ -256,6 +257,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		93E183DC2F1222D6002A3F54 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		999F3E1B2F04E5D1002119DE /* Sources */ = {

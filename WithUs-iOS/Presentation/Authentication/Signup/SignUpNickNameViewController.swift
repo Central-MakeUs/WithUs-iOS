@@ -18,27 +18,33 @@ final class SignUpNickNameViewController: BaseViewController {
     }
     
     private let titleLabel = UILabel().then {
-        $0.font = .systemFont(ofSize: 28, weight: .bold)
+        $0.font = UIFont.pretendard24Bold
         $0.textAlignment = .center
-        $0.numberOfLines = 0
         $0.text = "위더스에서 활동할 닉네임은?"
+        $0.textColor = UIColor.gray900
     }
     
     private let subTitleLabel = UILabel().then {
-        $0.font = .systemFont(ofSize: 16, weight: .regular)
+        $0.font = UIFont.pretendard16Regular
         $0.textAlignment = .center
-        $0.numberOfLines = 0
-        $0.textColor = .systemGray
+        $0.textColor = UIColor.gray500
         $0.text = "상대방에게 주로 불리는 애칭을 입력해도 좋아요"
+    }
+    
+    private let warningLabel = UILabel().then {
+        $0.font = UIFont.pretendard14Regular
+        $0.text = "2~8자로 입력해주세요."
+        $0.textColor = UIColor.redWarning
+        $0.isHidden = true
     }
     
     private let nicknameTextField = UITextField().then {
         $0.placeholder = "닉네임을 입력해주세요."
-        $0.font = .systemFont(ofSize: 16, weight: .regular)
+        $0.font = UIFont.pretendard18Regular
         $0.textAlignment = .center
         $0.borderStyle = .none
-        $0.layer.cornerRadius = 12
-        $0.backgroundColor = UIColor.systemGray6
+        $0.layer.cornerRadius = 8
+        $0.backgroundColor = UIColor.gray100
         $0.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
         $0.leftViewMode = .always
         $0.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
@@ -49,14 +55,18 @@ final class SignUpNickNameViewController: BaseViewController {
     
     private let nextButton = UIButton().then {
         $0.setTitle("다음", for: .normal)
-        $0.backgroundColor = .systemBlue
-        $0.layer.cornerRadius = 12
+        $0.backgroundColor = UIColor.disabled
+        $0.layer.cornerRadius = 8
         $0.isEnabled = false
-        $0.alpha = 0.5
     }
     
     deinit {
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupKeyboardObservers()
     }
     
     override func setupUI() {
@@ -64,8 +74,11 @@ final class SignUpNickNameViewController: BaseViewController {
         titleStackView.addArrangedSubview(titleLabel)
         titleStackView.addArrangedSubview(subTitleLabel)
         view.addSubview(nicknameTextField)
+        view.addSubview(warningLabel)
         view.addSubview(nextButton)
-        
+    }
+    
+    override func setupConstraints() {
         titleStackView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide).offset(108)
             $0.left.right.equalToSuperview()
@@ -75,6 +88,11 @@ final class SignUpNickNameViewController: BaseViewController {
             $0.top.equalTo(titleStackView.snp.bottom).offset(40)
             $0.left.right.equalToSuperview().inset(16)
             $0.height.equalTo(56)
+        }
+        
+        warningLabel.snp.makeConstraints {
+            $0.top.equalTo(nicknameTextField.snp.bottom).offset(16)
+            $0.centerX.equalToSuperview()
         }
         
         nextButton.snp.makeConstraints {
@@ -145,16 +163,16 @@ final class SignUpNickNameViewController: BaseViewController {
     
     @objc private func textFieldDidChange() {
         let text = nicknameTextField.text ?? ""
-        let isValid = !text.isEmpty && text.count >= 2
-        
+        let isValid = !text.isEmpty && text.count >= 2 && text.count <= 8
         nextButton.isEnabled = isValid
-        nextButton.alpha = isValid ? 1.0 : 0.5
+        warningLabel.isHidden = isValid
+        nextButton.backgroundColor = isValid ? UIColor.abled : UIColor.disabled
     }
     
     @objc private func nextButtonTapped() {
         guard let nickname = nicknameTextField.text, !nickname.isEmpty else { return }
-        // 다음 화면으로 이동하는 로직
         print("닉네임: \(nickname)")
+        
     }
     
     @objc private func dismissKeyboard() {
@@ -172,19 +190,17 @@ extension SignUpNickNameViewController: UITextFieldDelegate {
         let currentText = textField.text ?? ""
         guard let stringRange = Range(range, in: currentText) else { return false }
         let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
-        
-        // 닉네임 최대 길이 제한 (예: 10자)
         return updatedText.count <= 10
     }
 }
-
-import SwiftUI
-
-#if DEBUG
-struct SignUpNickNameViewController_Previews: PreviewProvider {
-    static var previews: some View {
-        SignUpNickNameViewController()
-            .toPreview()
-    }
-}
-#endif
+//
+//import SwiftUI
+//
+//#if DEBUG
+//struct SignUpNickNameViewController_Previews: PreviewProvider {
+//    static var previews: some View {
+//        SignUpNickNameViewController()
+//            .toPreview()
+//    }
+//}
+//#endif

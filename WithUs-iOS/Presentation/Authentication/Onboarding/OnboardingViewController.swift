@@ -12,6 +12,24 @@ import SwiftUI
 
 final class OnboardingViewController: BaseViewController {
     
+    private let onboardingPages: [OnboardingPage] = [
+        OnboardingPage(
+            image: "heart.fill",
+            title: "매일 발송되는 랜덤 질문",
+            description: "주어진 질문에 사진 한 장으로\n서로의 마음을 확인해요"
+        ),
+        OnboardingPage(
+            image: "photo.fill",
+            title: "사진으로 일상을 함께",
+            description: "쌓여가는 둘만의 사진 기록을\n한눈에 확인해요"
+        ),
+        OnboardingPage(
+            image: "hand.wave.fill",
+            title: "우리 취향대로 커플네컷",
+            description: "원하는 사진으로\n둘만의 인생 네컷을 만들어봐요"
+        )
+    ]
+     
     private lazy var layout = UICollectionViewFlowLayout().then {
         $0.scrollDirection = .horizontal
         $0.minimumLineSpacing = 0
@@ -20,31 +38,34 @@ final class OnboardingViewController: BaseViewController {
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout).then {
         $0.isPagingEnabled = true
         $0.showsHorizontalScrollIndicator = false
-        $0.backgroundColor = .systemBackground
+        $0.backgroundColor = .white
         $0.delegate = self
         $0.dataSource = self
-//        $0.register(OnboardingPageCell.self, forCellWithReuseIdentifier: OnboardingPageCell.identifier)
     }
     
     private let pageControl = UIPageControl().then {
-        $0.currentPageIndicatorTintColor = .label
-        $0.pageIndicatorTintColor = .systemGray4
+        $0.currentPageIndicatorTintColor = UIColor.gray900
+        $0.pageIndicatorTintColor = UIColor.gray300
+        $0.numberOfPages = 3
+        $0.preferredIndicatorImage = UIImage(named: "page_control_inactive")
+        $0.setIndicatorImage(UIImage(named: "page_control_active"), forPage: 0)
     }
     
     private let nextButton = UIButton().then {
         $0.setTitle("시작하기", for: .normal)
-        $0.backgroundColor = .systemBlue
-        $0.layer.cornerRadius = 12
+        $0.backgroundColor = UIColor.gray900
+        $0.layer.cornerRadius = 8
+        $0.isHidden = true
     }
     
-    private let cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, Int> {
-           cell, indexPath, item in
-           cell.contentConfiguration = UIHostingConfiguration {
-               OnboardingPageView()
-           }
-           .margins(.all, 0)
-           .background(Color(.systemBackground))
-       }
+    private let cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, OnboardingPage> {
+        cell, indexPath, page in
+        cell.contentConfiguration = UIHostingConfiguration {
+            OnboardingPageView(page: page)
+        }
+        .margins(.all, 0)
+        .background(Color(.white))
+    }
     
     override func setupUI() {
         view.addSubview(collectionView)
@@ -72,49 +93,31 @@ final class OnboardingViewController: BaseViewController {
 
 extension OnboardingViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let count = 3
-        pageControl.numberOfPages = count
-        return count
+        pageControl.numberOfPages = onboardingPages.count
+        return onboardingPages.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-//        guard let cell = collectionView.dequeueReusableCell(
-//            withReuseIdentifier: OnboardingPageCell.identifier,
-//            for: indexPath
-//        ) as? OnboardingPageCell else {
-//            return UICollectionViewCell()
-//        }
-        
-//        let page = viewModel.pages[indexPath.item]
-//        cell.configure(with: page)
-        return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: indexPath.item)
+        let page = onboardingPages[indexPath.item]
+        return collectionView.dequeueConfiguredReusableCell(using: cellRegistration, for: indexPath, item: page)
     }
 }
 
 extension OnboardingViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout,
-                        
-                        
-                        indexPath: IndexPath) -> CGSize {
-//        let width = collectionView.bounds.width
-//        let cell = OnboardingPageCell()
-//        let targetSize = CGSize(
-//            width: width,
-//            height: UIView.layoutFittingCompressedSize.height
-//        )
-//        let size = cell.systemLayoutSizeFitting(
-//            targetSize,
-//            withHorizontalFittingPriority: .required,
-//            verticalFittingPriority: .fittingSizeLevel
-//        )
-        return collectionView.bounds.size
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: collectionView.bounds.width, height: collectionView.bounds.height)
     }
 }
 
 extension OnboardingViewController: UIScrollViewDelegate {
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         let page = Int(scrollView.contentOffset.x / scrollView.frame.width)
-//        viewModel.didSwipeToPage(index: page)
+        pageControl.currentPage = page
+        for i in 0..<onboardingPages.count {
+            pageControl.setIndicatorImage(UIImage(named: "page_control_inactive"), forPage: i)
+        }
+        pageControl.setIndicatorImage(UIImage(named: "page_control_active"), forPage: page)
+        nextButton.isHidden = (page != onboardingPages.count - 1)
     }
 }
 
