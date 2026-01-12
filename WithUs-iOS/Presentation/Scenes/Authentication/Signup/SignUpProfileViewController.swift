@@ -10,6 +10,8 @@ import SnapKit
 
 final class SignUpProfileViewController: BaseViewController {
     
+    weak var coordinator: SignUpCoordinator?
+    
     private let titleStackView = UIStackView().then {
         $0.axis = .vertical
         $0.spacing = 8
@@ -36,7 +38,7 @@ final class SignUpProfileViewController: BaseViewController {
         $0.setTitle("프로필 완성하기", for: .normal)
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
-        $0.isEnabled = false
+        $0.isEnabled = true
     }
     
     override func setupUI() {
@@ -65,17 +67,13 @@ final class SignUpProfileViewController: BaseViewController {
             $0.bottom.equalTo(view.safeAreaLayoutGuide)
         }
     }
+    
+    override func setupActions() {
+        //TODO: ProfileView action 받아서 처리
+        nextButton.addTarget(self, action: #selector(nextBtnTapped), for: .touchUpInside)
+    }
+    
+    @objc private func nextBtnTapped() {
+        coordinator?.showInvite()
+    }
 }
-
-
-//import SwiftUI
-//
-//#if DEBUG
-//struct SignUpProfileViewController_Previews: PreviewProvider {
-//    static var previews: some View {
-//        SignUpProfileViewController()
-//            .toPreview()
-//    }
-//}
-//#endif
-//

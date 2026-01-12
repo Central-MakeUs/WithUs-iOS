@@ -10,6 +10,9 @@ import SnapKit
 import Then
 
 final class InviteViewController: BaseViewController {
+    
+    weak var coordinator: InviteCoordinator?
+    
     private let titleStackView = UIStackView().then {
         $0.axis = .vertical
         $0.spacing = 16
@@ -108,15 +111,18 @@ final class InviteViewController: BaseViewController {
             $0.horizontalEdges.equalToSuperview()
         }
     }
+    
+    override func setupActions() {
+        inputCodeBtn.addTarget(self, action: #selector(inputCodeBtnTapped), for: .touchUpInside)
+        inviteBtn.addTarget(self, action: #selector(inviteBtnTapped), for: .touchUpInside)
+    }
+    
+    @objc private func inputCodeBtnTapped() {
+        coordinator?.showInviteInputCode()
+    }
+    
+    @objc private func inviteBtnTapped() {
+        coordinator?.showInviteCode()
+    }
 }
 
-//import SwiftUI
-//
-//#if DEBUG
-//struct InviteViewController_Previews: PreviewProvider {
-//    static var previews: some View {
-//        InviteViewController()
-//            .toPreview()
-//    }
-//}
-//#endif

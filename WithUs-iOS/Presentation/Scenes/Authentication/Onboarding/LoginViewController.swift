@@ -11,6 +11,8 @@ import Then
 
 final class LoginViewController: BaseViewController {
     
+    weak var coordinator: AuthCoordinator?
+    
     private let logoImageView = UIImageView().then {
         $0.image = UIImage(named: "withup_logo")
         $0.contentMode = .scaleAspectFit
@@ -28,14 +30,14 @@ final class LoginViewController: BaseViewController {
         $0.setTitle("카카오로 시작하기", for: .normal)
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
-        $0.isEnabled = false
+        $0.isEnabled = true
     }
     
     private let appleButton = UIButton().then {
         $0.setTitle("Apple로 시작하기", for: .normal)
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
-        $0.isEnabled = false
+        $0.isEnabled = true
     }
     
     private let buttonStackView = UIStackView().then {
@@ -80,15 +82,24 @@ final class LoginViewController: BaseViewController {
             $0.horizontalEdges.equalToSuperview()
         }
     }
+    
+    //MARK: TODO(viewmodel 작업, network - async await 작업필수)
+    
+    override func setupActions() {
+        kakaoButton.addTarget(self, action: #selector(kakaoButtonTapped), for: .touchUpInside)
+        appleButton.addTarget(self, action: #selector(appleButtonTapped), for: .touchUpInside)
+    }
+    
+    @objc private func kakaoButtonTapped() {
+        performLogin()
+    }
+    
+    @objc private func appleButtonTapped() {
+        performLogin()
+    }
+    
+    private func performLogin() {
+        self.coordinator?.showSignup()
+    }
+    
 }
-//
-//import SwiftUI
-//
-//#if DEBUG
-//struct LoginViewController_Previews: PreviewProvider {
-//    static var previews: some View {
-//        LoginViewController()
-//            .toPreview()
-//    }
-//}
-//#endif

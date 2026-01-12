@@ -12,6 +12,8 @@ import SwiftUI
 
 final class OnboardingViewController: BaseViewController {
     
+    weak var coordinator: AuthCoordinator?
+    
     private let onboardingPages: [OnboardingPage] = [
         OnboardingPage(
             image: "heart.fill",
@@ -89,6 +91,14 @@ final class OnboardingViewController: BaseViewController {
             $0.height.equalTo(56)
         }
     }
+    
+    override func setupActions() {
+        nextButton.addTarget(self, action: #selector(nextBtnTapped), for: .touchUpInside)
+    }
+    
+    @objc private func nextBtnTapped() {
+        coordinator?.showLogin()
+    }
 }
 
 extension OnboardingViewController: UICollectionViewDataSource {
@@ -120,14 +130,3 @@ extension OnboardingViewController: UIScrollViewDelegate {
         nextButton.isHidden = (page != onboardingPages.count - 1)
     }
 }
-
-//import SwiftUI
-//
-//#if DEBUG
-//struct OnboardingViewController_Previews: PreviewProvider {
-//    static var previews: some View {
-//        OnboardingViewController()
-//            .toPreview()
-//    }
-//}
-//#endif

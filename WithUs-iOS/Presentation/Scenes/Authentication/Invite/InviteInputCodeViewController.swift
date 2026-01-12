@@ -65,8 +65,8 @@ class InviteInputCodeViewController: BaseViewController {
     private var pinDigitViews: [PinDigitView] = []
     
     deinit {
-         NotificationCenter.default.removeObserver(self)
-     }
+        NotificationCenter.default.removeObserver(self)
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -162,33 +162,33 @@ class InviteInputCodeViewController: BaseViewController {
     }
     
     @objc private func keyboardWillShow(_ notification: Notification) {
-          guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
-                let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
-              return
-          }
-          
-          let keyboardHeight = keyboardFrame.height
-          
-          UIView.animate(withDuration: duration) {
-              self.nextButton.snp.updateConstraints {
-                  $0.bottom.equalTo(self.view.safeAreaLayoutGuide).offset(-keyboardHeight + self.view.safeAreaInsets.bottom - 20)
-              }
-              self.view.layoutIfNeeded()
-          }
-      }
-      
-      @objc private func keyboardWillHide(_ notification: Notification) {
-          guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
-              return
-          }
-          
-          UIView.animate(withDuration: duration) {
-              self.nextButton.snp.updateConstraints {
-                  $0.bottom.equalTo(self.view.safeAreaLayoutGuide).offset(-20)
-              }
-              self.view.layoutIfNeeded()
-          }
-      }
+        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
+            return
+        }
+        
+        let keyboardHeight = keyboardFrame.height
+        
+        UIView.animate(withDuration: duration) {
+            self.nextButton.snp.updateConstraints {
+                $0.bottom.equalTo(self.view.safeAreaLayoutGuide).offset(-keyboardHeight + self.view.safeAreaInsets.bottom - 20)
+            }
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        guard let duration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else {
+            return
+        }
+        
+        UIView.animate(withDuration: duration) {
+            self.nextButton.snp.updateConstraints {
+                $0.bottom.equalTo(self.view.safeAreaLayoutGuide).offset(-20)
+            }
+            self.view.layoutIfNeeded()
+        }
+    }
     
     @objc private func backButtonTapped() {
         navigationController?.popViewController(animated: true)
@@ -245,15 +245,3 @@ extension InviteInputCodeViewController: UITextFieldDelegate {
         return allowedCharacters.isSuperset(of: characterSet)
     }
 }
-
-//import SwiftUI
-//
-//#if DEBUG
-//struct PinInputViewController_Previews: PreviewProvider {
-//    static var previews: some View {
-//        PinInputViewController()
-//            .toPreview()
-//    }
-//}
-//#endif
-

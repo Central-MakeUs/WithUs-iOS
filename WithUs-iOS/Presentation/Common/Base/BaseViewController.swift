@@ -12,6 +12,7 @@ class BaseViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
+        setupActions()
     }
     
     func setupUI() {
@@ -20,5 +21,7 @@ class BaseViewController: UIViewController {
     
     func setupConstraints() {
     }
+    
+    func setupActions() {}
 }
 

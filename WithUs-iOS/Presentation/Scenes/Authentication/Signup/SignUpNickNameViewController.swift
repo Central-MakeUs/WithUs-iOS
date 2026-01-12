@@ -11,6 +11,8 @@ import SnapKit
 
 final class SignUpNickNameViewController: BaseViewController {
     
+    weak var coordinator: SignUpCoordinator?
+    
     private let titleStackView = UIStackView().then {
         $0.axis = .vertical
         $0.spacing = 8
@@ -57,7 +59,7 @@ final class SignUpNickNameViewController: BaseViewController {
         $0.setTitle("다음", for: .normal)
         $0.backgroundColor = UIColor.disabled
         $0.layer.cornerRadius = 8
-        $0.isEnabled = false
+        $0.isEnabled = true
     }
     
     deinit {
@@ -102,6 +104,10 @@ final class SignUpNickNameViewController: BaseViewController {
         }
     }
     
+    override func setupActions() {
+        nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
+    }
+    
     private func setupKeyboardObservers() {
         NotificationCenter.default.addObserver(
             self,
@@ -121,10 +127,6 @@ final class SignUpNickNameViewController: BaseViewController {
     private func setupTextFieldDelegate() {
         nicknameTextField.delegate = self
         nicknameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-    }
-    
-    private func setupActions() {
-        nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
     private func setupGestureRecognizer() {
@@ -171,8 +173,7 @@ final class SignUpNickNameViewController: BaseViewController {
     
     @objc private func nextButtonTapped() {
         guard let nickname = nicknameTextField.text, !nickname.isEmpty else { return }
-        print("닉네임: \(nickname)")
-        
+        coordinator?.showSignUpProfile()
     }
     
     @objc private func dismissKeyboard() {
@@ -193,14 +194,3 @@ extension SignUpNickNameViewController: UITextFieldDelegate {
         return updatedText.count <= 10
     }
 }
-//
-//import SwiftUI
-//
-//#if DEBUG
-//struct SignUpNickNameViewController_Previews: PreviewProvider {
-//    static var previews: some View {
-//        SignUpNickNameViewController()
-//            .toPreview()
-//    }
-//}
-//#endif

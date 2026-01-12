@@ -11,6 +11,8 @@ import SnapKit
 
 class InviteCodeViewController: BaseViewController {
     
+    weak var coordinator: InviteCoordinator?
+    
     private let pinLength = 8
     var pinCode: String = "" {
         didSet {
@@ -45,7 +47,6 @@ class InviteCodeViewController: BaseViewController {
         config.background.cornerRadius = 8
         
         $0.configuration = config
-        $0.addTarget(self, action: #selector(duplicateBtnTapped), for: .touchUpInside)
     }
     
     private let linkBtn = UIButton().then {
@@ -59,7 +60,6 @@ class InviteCodeViewController: BaseViewController {
         config.background.cornerRadius = 8
         
         $0.configuration = config
-        $0.addTarget(self, action: #selector(linkBtnTapped), for: .touchUpInside)
     }
     
     private let buttonStackView = UIStackView().then {
@@ -113,6 +113,11 @@ class InviteCodeViewController: BaseViewController {
         }
     }
     
+    override func setupActions() {
+        duplicateBtn.addTarget(self, action: #selector(duplicateBtnTapped), for: .touchUpInside)
+        linkBtn.addTarget(self, action: #selector(linkBtnTapped), for: .touchUpInside)
+    }
+    
     private func setupNavigationBar() {
         let backButton = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
@@ -138,6 +143,7 @@ class InviteCodeViewController: BaseViewController {
         UIPasteboard.general.string = pinCode
         ToastView.show(message: "코드가 성공적으로 복사 되었어요")
     }
+    
     @objc private func linkBtnTapped() {
         let imageToShare: UIImage = UIImage(named: "ic_duplicate")!
         let urlToShare: String = "https://velog.io/@go90js"
