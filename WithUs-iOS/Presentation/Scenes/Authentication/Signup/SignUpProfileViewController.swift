@@ -7,6 +7,8 @@
 
 import UIKit
 import SnapKit
+import Photos
+import AVFoundation
 
 final class SignUpProfileViewController: BaseViewController {
     
@@ -69,11 +71,114 @@ final class SignUpProfileViewController: BaseViewController {
     }
     
     override func setupActions() {
-        //TODO: ProfileView action 받아서 처리
         nextButton.addTarget(self, action: #selector(nextBtnTapped), for: .touchUpInside)
+        profileView.delegate = self
     }
     
     @objc private func nextBtnTapped() {
         coordinator?.showInvite()
+    }
+}
+
+extension SignUpProfileViewController: ProfileViewDelegate {
+    func setProfileTapped() {
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        
+        let modifyAction = UIAlertAction(title: "수정", style: .default, handler: nil)
+        let deleteAction = UIAlertAction(title: "삭제", style: .destructive, handler: nil)
+        let cancelAction = UIAlertAction(title: "취소", style: .cancel, handler: nil)
+        
+        alert.addAction(modifyAction)
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+
+        self.present(alert, animated: true, completion: nil)
+    }
+}
+
+extension SignUpProfileViewController {
+    private func openCamera() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        
+        switch status {
+        case .authorized:
+            presentPicker(sourceType: .camera)
+            
+        case .notDetermined:
+            AVCaptureDevice.requestAccess(for: .video) { granted in
+                DispatchQueue.main.async {
+                    if granted {
+                        self.presentPicker(sourceType: .camera)
+                    }
+                }
+            }
+            
+        default:
+            showPermissionAlert("카메라")
+        }
+    }
+    
+    private func openPhotoLibrary() {
+        let status = PHPhotoLibrary.authorizationStatus()
+        
+        switch status {
+        case .authorized, .limited:
+            presentPicker(sourceType: .photoLibrary)
+            
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization { newStatus in
+                DispatchQueue.main.async {
+                    if newStatus == .authorized || newStatus == .limited {
+                        self.presentPicker(sourceType: .photoLibrary)
+                    }
+                }
+            }
+            
+        default:
+            showPermissionAlert("사진")
+        }
+    }
+    
+    private func presentPicker(sourceType: UIImagePickerController.SourceType) {
+        guard UIImagePickerController.isSourceTypeAvailable(sourceType) else { return }
+        
+        let picker = UIImagePickerController()
+        picker.sourceType = sourceType
+        picker.allowsEditing = true
+        picker.delegate = self
+        present(picker, animated: true)
+    }
+    
+    private func showPermissionAlert(_ type: String) {
+        let alert = UIAlertController(
+            title: "\(type) 접근 권한 필요",
+            message: "설정에서 권한을 허용해주세요.",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
+            if let url = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(url)
+            }
+        })
+        
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        present(alert, animated: true)
+    }
+}
+
+extension SignUpProfileViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
+    
+    func imagePickerController(
+        _ picker: UIImagePickerController,
+        didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
+    ) {
+        let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
+        profileView.profileImageView.image = image
+        picker.dismiss(animated: true)
+    }
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true)
     }
 }

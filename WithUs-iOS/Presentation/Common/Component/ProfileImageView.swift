@@ -8,7 +8,13 @@
 import UIKit
 import SnapKit
 
+protocol ProfileViewDelegate: AnyObject {
+    func setProfileTapped()
+}
+
 class ProfileImageView: UIView {
+    
+    weak var delegate: ProfileViewDelegate?
 
     private let backgroundCircleView = UIView().then {
         $0.backgroundColor = UIColor.gray50
@@ -74,7 +80,7 @@ class ProfileImageView: UIView {
     }
     
     @objc private func cameraButtonTapped() {
-        print("카메라 버튼 탭!")
+        delegate?.setProfileTapped()
     }
     
     func setProfileImage(_ image: UIImage?) {
