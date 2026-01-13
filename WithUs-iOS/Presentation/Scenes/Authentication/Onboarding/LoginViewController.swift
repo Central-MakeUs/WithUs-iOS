@@ -8,8 +8,13 @@
 import UIKit
 import SnapKit
 import Then
+import ReactorKit
+import RxSwift
+import RxCocoa
 
-final class LoginViewController: BaseViewController {
+final class LoginViewController: BaseViewController, View {
+    
+    var disposeBag = DisposeBag()
     
     weak var coordinator: AuthCoordinator?
     
@@ -44,6 +49,15 @@ final class LoginViewController: BaseViewController {
         $0.axis = .vertical
         $0.spacing = 12
         $0.alignment = .center
+    }
+    
+    init(reactor: LoginReactor) {
+        super.init(nibName: nil, bundle: nil)
+        self.reactor = reactor
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func setupUI() {
@@ -90,8 +104,32 @@ final class LoginViewController: BaseViewController {
         appleButton.addTarget(self, action: #selector(appleButtonTapped), for: .touchUpInside)
     }
     
+    func bind(reactor: LoginReactor) {
+        reactor.state.compactMap { $0.loginResult }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] result in
+                switch result {
+                case .needsSignup:
+                    self?.coordinator?.showSignup()
+                    
+                case .goToMain:
+                    print("✅ 기존 회원 → 메인 화면으로")
+                    //                    self?.coordinator?.showMainTab()
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state.compactMap { $0.errorMessage }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] message in
+                self?.showErrorAlert(message: message)
+            })
+            .disposed(by: disposeBag)
+    }
+    
     @objc private func kakaoButtonTapped() {
-        performLogin()
+        reactor?.action.onNext(.kakaoLogin)
     }
     
     @objc private func appleButtonTapped() {
@@ -102,4 +140,13 @@ final class LoginViewController: BaseViewController {
         self.coordinator?.showSignup()
     }
     
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(
+            title: "알림",
+            message: message,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
+    }
 }

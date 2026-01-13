@@ -31,7 +31,11 @@ class AuthCoordinator: Coordinator {
     }
     
     func showLogin() {
-        let loginVC = LoginViewController()
+        let networdService = NetworkService.shared
+        let repository = LoginRepository(networkService: networdService)
+        let useCase = KakaoLoginUseCase(repository: repository)
+        let reactor = LoginReactor(kakaoLoginUseCase: useCase)
+        let loginVC = LoginViewController(reactor: reactor)
         loginVC.coordinator = self
         navigationController.pushViewController(loginVC, animated: true)
     }

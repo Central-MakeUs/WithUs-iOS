@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9913AC7F2F166F3800B74E63 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 9913AC7E2F166F3800B74E63 /* Alamofire */; };
+		9913AC822F166F4F00B74E63 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9913AC812F166F4F00B74E63 /* ReactorKit */; };
+		9913AC952F1677E600B74E63 /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 9913AC942F1677E600B74E63 /* KakaoSDKAuth */; };
+		9913AC972F1677E600B74E63 /* KakaoSDKCommon in Frameworks */ = {isa = PBXBuildFile; productRef = 9913AC962F1677E600B74E63 /* KakaoSDKCommon */; };
+		9913AC992F1677E600B74E63 /* KakaoSDKUser in Frameworks */ = {isa = PBXBuildFile; productRef = 9913AC982F1677E600B74E63 /* KakaoSDKUser */; };
+		9913ACAF2F168BCF00B74E63 /* RxCocoa in Frameworks */ = {isa = PBXBuildFile; productRef = 9913ACAE2F168BCF00B74E63 /* RxCocoa */; };
+		9913ACB12F168BCF00B74E63 /* RxRelay in Frameworks */ = {isa = PBXBuildFile; productRef = 9913ACB02F168BCF00B74E63 /* RxRelay */; };
+		9913ACB32F168BCF00B74E63 /* RxSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 9913ACB22F168BCF00B74E63 /* RxSwift */; };
 		991607082F0BF1790056EC8D /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 991607072F0BF1790056EC8D /* SnapKit */; };
 		9916070B2F0BF1840056EC8D /* Then in Frameworks */ = {isa = PBXBuildFile; productRef = 9916070A2F0BF1840056EC8D /* Then */; };
 /* End PBXBuildFile section */
@@ -70,8 +78,16 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9913ACB12F168BCF00B74E63 /* RxRelay in Frameworks */,
+				9913AC7F2F166F3800B74E63 /* Alamofire in Frameworks */,
+				9913ACB32F168BCF00B74E63 /* RxSwift in Frameworks */,
 				991607082F0BF1790056EC8D /* SnapKit in Frameworks */,
+				9913AC822F166F4F00B74E63 /* ReactorKit in Frameworks */,
+				9913AC992F1677E600B74E63 /* KakaoSDKUser in Frameworks */,
 				9916070B2F0BF1840056EC8D /* Then in Frameworks */,
+				9913AC972F1677E600B74E63 /* KakaoSDKCommon in Frameworks */,
+				9913ACAF2F168BCF00B74E63 /* RxCocoa in Frameworks */,
+				9913AC952F1677E600B74E63 /* KakaoSDKAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,6 +151,14 @@
 			packageProductDependencies = (
 				991607072F0BF1790056EC8D /* SnapKit */,
 				9916070A2F0BF1840056EC8D /* Then */,
+				9913AC7E2F166F3800B74E63 /* Alamofire */,
+				9913AC812F166F4F00B74E63 /* ReactorKit */,
+				9913AC942F1677E600B74E63 /* KakaoSDKAuth */,
+				9913AC962F1677E600B74E63 /* KakaoSDKCommon */,
+				9913AC982F1677E600B74E63 /* KakaoSDKUser */,
+				9913ACAE2F168BCF00B74E63 /* RxCocoa */,
+				9913ACB02F168BCF00B74E63 /* RxRelay */,
+				9913ACB22F168BCF00B74E63 /* RxSwift */,
 			);
 			productName = "WithUs-iOS";
 			productReference = 999F3E1F2F04E5D1002119DE /* WithUs-iOS.app */;
@@ -221,6 +245,10 @@
 			packageReferences = (
 				991607062F0BF1790056EC8D /* XCRemoteSwiftPackageReference "SnapKit" */,
 				991607092F0BF1840056EC8D /* XCRemoteSwiftPackageReference "Then" */,
+				9913AC7D2F166F3800B74E63 /* XCRemoteSwiftPackageReference "Alamofire" */,
+				9913AC802F166F4F00B74E63 /* XCRemoteSwiftPackageReference "ReactorKit" */,
+				9913AC932F1677E600B74E63 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
+				9913ACAD2F168BCF00B74E63 /* XCRemoteSwiftPackageReference "RxSwift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 999F3E202F04E5D1002119DE /* Products */;
@@ -328,6 +356,9 @@
 				DEVELOPMENT_TEAM = 6UDF9VNHC6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "WithUs-iOS/Resources/Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "프로필 사진을 촬영하기 위해 카메라 접근이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "프로필 사진을 저장하기 위해 사진 라이브러리 접근이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "프로필 사진을 등록하기 위해 사진 라이브러리 접근이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -356,6 +387,9 @@
 				DEVELOPMENT_TEAM = 6UDF9VNHC6;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "WithUs-iOS/Resources/Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "프로필 사진을 촬영하기 위해 카메라 접근이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "프로필 사진을 저장하기 위해 사진 라이브러리 접근이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "프로필 사진을 등록하기 위해 사진 라이브러리 접근이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -608,6 +642,38 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		9913AC7D2F166F3800B74E63 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.11.0;
+			};
+		};
+		9913AC802F166F4F00B74E63 /* XCRemoteSwiftPackageReference "ReactorKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactorKit/ReactorKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.2.0;
+			};
+		};
+		9913AC932F1677E600B74E63 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kakao/kakao-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.27.1;
+			};
+		};
+		9913ACAD2F168BCF00B74E63 /* XCRemoteSwiftPackageReference "RxSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ReactiveX/RxSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.9.1;
+			};
+		};
 		991607062F0BF1790056EC8D /* XCRemoteSwiftPackageReference "SnapKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
@@ -627,6 +693,46 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		9913AC7E2F166F3800B74E63 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9913AC7D2F166F3800B74E63 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+		9913AC812F166F4F00B74E63 /* ReactorKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9913AC802F166F4F00B74E63 /* XCRemoteSwiftPackageReference "ReactorKit" */;
+			productName = ReactorKit;
+		};
+		9913AC942F1677E600B74E63 /* KakaoSDKAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9913AC932F1677E600B74E63 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKAuth;
+		};
+		9913AC962F1677E600B74E63 /* KakaoSDKCommon */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9913AC932F1677E600B74E63 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKCommon;
+		};
+		9913AC982F1677E600B74E63 /* KakaoSDKUser */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9913AC932F1677E600B74E63 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */;
+			productName = KakaoSDKUser;
+		};
+		9913ACAE2F168BCF00B74E63 /* RxCocoa */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9913ACAD2F168BCF00B74E63 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxCocoa;
+		};
+		9913ACB02F168BCF00B74E63 /* RxRelay */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9913ACAD2F168BCF00B74E63 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxRelay;
+		};
+		9913ACB22F168BCF00B74E63 /* RxSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9913ACAD2F168BCF00B74E63 /* XCRemoteSwiftPackageReference "RxSwift" */;
+			productName = RxSwift;
+		};
 		991607072F0BF1790056EC8D /* SnapKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 991607062F0BF1790056EC8D /* XCRemoteSwiftPackageReference "SnapKit" */;
