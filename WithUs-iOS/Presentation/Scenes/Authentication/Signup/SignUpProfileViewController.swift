@@ -84,12 +84,18 @@ extension SignUpProfileViewController: ProfileViewDelegate {
     func setProfileTapped() {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
         
-        let modifyAction = UIAlertAction(title: "수정", style: .default, handler: nil)
-        let deleteAction = UIAlertAction(title: "삭제", style: .destructive, handler: nil)
+        let cameraAction = UIAlertAction(title: "카메라", style: .default) { [weak self] _ in
+            self?.openCamera()
+        }
+        
+        let albumAction = UIAlertAction(title: "앨범", style: .default) { [weak self] _ in
+            self?.openPhotoLibrary()
+        }
+        
         let cancelAction = UIAlertAction(title: "취소", style: .cancel, handler: nil)
         
-        alert.addAction(modifyAction)
-        alert.addAction(deleteAction)
+        alert.addAction(cameraAction)
+        alert.addAction(albumAction)
         alert.addAction(cancelAction)
 
         self.present(alert, animated: true, completion: nil)
@@ -119,14 +125,14 @@ extension SignUpProfileViewController {
     }
     
     private func openPhotoLibrary() {
-        let status = PHPhotoLibrary.authorizationStatus()
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         
         switch status {
         case .authorized, .limited:
             presentPicker(sourceType: .photoLibrary)
             
         case .notDetermined:
-            PHPhotoLibrary.requestAuthorization { newStatus in
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { newStatus in
                 DispatchQueue.main.async {
                     if newStatus == .authorized || newStatus == .limited {
                         self.presentPicker(sourceType: .photoLibrary)
