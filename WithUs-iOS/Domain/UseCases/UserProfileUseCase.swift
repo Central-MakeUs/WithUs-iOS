@@ -11,7 +11,7 @@ protocol UpdateProfileUseCaseProtocol {
     func execute(
         nickname: String,
         imageObjectKey: String?
-    ) async throws -> UpdateProfileResult
+    ) async throws -> User
 }
 
 final class UpdateProfileUseCase: UpdateProfileUseCaseProtocol {
@@ -24,7 +24,7 @@ final class UpdateProfileUseCase: UpdateProfileUseCaseProtocol {
     func execute(
         nickname: String,
         imageObjectKey: String?
-    ) async throws -> UpdateProfileResult {
+    ) async throws -> User {
         guard !nickname.isEmpty else {
             throw ValidationError.emptyNickname
         }
@@ -34,7 +34,7 @@ final class UpdateProfileUseCase: UpdateProfileUseCaseProtocol {
             imageObjectKey: imageObjectKey
         )
         
-        return UpdateProfileResult(from: response)
+        return User(from: response)
     }
 }
 

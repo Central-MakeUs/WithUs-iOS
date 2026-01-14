@@ -9,8 +9,13 @@ import UIKit
 import SnapKit
 import Photos
 import AVFoundation
+import RxSwift
+import RxCocoa
+import ReactorKit
 
-final class SignUpProfileViewController: BaseViewController {
+final class SignUpProfileViewController: BaseViewController, View {
+    
+    var disposeBag: DisposeBag = DisposeBag()
     
     weak var coordinator: SignUpCoordinator?
     
@@ -41,6 +46,15 @@ final class SignUpProfileViewController: BaseViewController {
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
         $0.isEnabled = true
+    }
+    
+    init(reactor: SignUpReactor) {
+        super.init(nibName: nil, bundle: nil)
+        self.reactor = reactor
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func setupUI() {
@@ -75,8 +89,18 @@ final class SignUpProfileViewController: BaseViewController {
         profileView.delegate = self
     }
     
+    func bind(reactor: SignUpReactor) {
+        reactor.state.map { $0.isCompleted }
+            .distinctUntilChanged()
+            .filter { $0 }
+            .subscribe(onNext: { [weak self] _ in
+                self?.coordinator?.didCompleteSignUp()
+            })
+            .disposed(by: disposeBag)
+    }
+    
     @objc private func nextBtnTapped() {
-        coordinator?.showInvite()
+        reactor?.action.onNext(.completeProfile)
     }
 }
 
@@ -179,9 +203,14 @@ extension SignUpProfileViewController: UIImagePickerControllerDelegate, UINaviga
         _ picker: UIImagePickerController,
         didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]
     ) {
-        let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage
-        profileView.profileImageView.image = image
         picker.dismiss(animated: true)
+        guard let image = (info[.editedImage] ?? info[.originalImage]) as? UIImage,
+              let imageData = image.jpegData(compressionQuality: 0.8) else {
+            return
+        }
+        
+        reactor?.action.onNext(.selectImage(imageData))
+        profileView.profileImageView.image = image
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {

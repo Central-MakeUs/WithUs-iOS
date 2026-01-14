@@ -15,42 +15,46 @@ class SignUpCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     weak var delegate: SignUpCoordinatorDelegate?
+    var reactor: SignUpReactor?
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
     
     func start() {
+        let networkService = NetworkService.shared
+        let imageRepository = ImageRepository(networkService: networkService)
+        let userRepository = UserRepository(networkService: networkService)
+        let uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
+        let completeProfileUseCase = CompleteProfileUseCase(
+            uploadImageUseCase: uploadImageUseCase,
+            userRepository: userRepository
+        )
+        let reactor = SignUpReactor(completeProfileUseCase: completeProfileUseCase)
+        self.reactor = reactor
         showSignUpNickName()
     }
     
     private func showSignUpNickName() {
-        let signUpNickNameVC = SignUpNickNameViewController()
+        guard let reactor else { return }
+        let signUpNickNameVC = SignUpNickNameViewController(reactor: reactor)
         signUpNickNameVC.coordinator = self
         navigationController.pushViewController(signUpNickNameVC, animated: true)
     }
     
     func showSignUpProfile() {
-        let signUpProfileVC = SignUpProfileViewController()
+        guard let reactor else { return }
+        let signUpProfileVC = SignUpProfileViewController(reactor: reactor)
         signUpProfileVC.coordinator = self
         navigationController.pushViewController(signUpProfileVC, animated: true)
     }
     
-    func showInvite() {
-        let inviteCoordinator = InviteCoordinator(navigationController: navigationController)
-        inviteCoordinator.delegate = self
-        childCoordinators.append(inviteCoordinator)
-        inviteCoordinator.start()
+    // 회원가입 완료
+    func didCompleteSignUp() {
+        delegate?.signUpCoordinatorDidFinish(self)
     }
     
     func finish() {
         childCoordinators.removeAll()
-    }
-}
-
-extension SignUpCoordinator: InviteCoordinatorDelegate {
-    func inviteCoordinatorDidFinish(_ coordinator: InviteCoordinator) {
-        coordinator.finish()
-        delegate?.signUpCoordinatorDidFinish(self)
     }
 }

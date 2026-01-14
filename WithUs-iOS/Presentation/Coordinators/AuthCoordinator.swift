@@ -48,6 +48,7 @@ class AuthCoordinator: Coordinator {
     }
     
     func didLogin() {
+        //기존 회원
         delegate?.authCoordinatorDidFinish(self)
     }
     
@@ -58,6 +59,9 @@ class AuthCoordinator: Coordinator {
 
 extension AuthCoordinator: SignUpCoordinatorDelegate {
     func signUpCoordinatorDidFinish(_ coordinator: SignUpCoordinator) {
+        childCoordinators.removeAll { $0 === coordinator }
+        coordinator.finish()
         
+        delegate?.authCoordinatorDidFinish(self)
     }
 }

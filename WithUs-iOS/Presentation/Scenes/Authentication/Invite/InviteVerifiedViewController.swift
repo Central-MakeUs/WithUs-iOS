@@ -1,17 +1,22 @@
 //
-//  InviteViewController.swift
+//  InviteVerifiedViewController.swift
 //  WithUs-iOS
 //
-//  Created by Hubriz iOS on 1/10/26.
+//  Created by Hubriz iOS on 1/14/26.
 //
 
 import UIKit
 import SnapKit
 import Then
+import ReactorKit
+import RxSwift
+import RxCocoa
 
-final class InviteViewController: BaseViewController {
+final class InviteVerifiedViewController: BaseViewController, View {
     
-    weak var coordinator: MainCoordinator?
+    var disposeBag: DisposeBag = DisposeBag()
+    
+    weak var coordinator: InviteCoordinator?
     
     private let titleStackView = UIStackView().then {
         $0.axis = .vertical
@@ -24,14 +29,14 @@ final class InviteViewController: BaseViewController {
         $0.textColor = UIColor.gray900
         $0.textAlignment = .center
         $0.numberOfLines = 2
-        $0.text = "상대방을 연결하고\n둘만의 추억을 쌓아가요."
+        $0.text = "??? 님이\n??? 님을 초대했어요!"
     }
     
     private let subTitleLabel = UILabel().then {
         $0.font = UIFont.pretendard16Regular
         $0.textColor = UIColor.gray500
         $0.textAlignment = .center
-        $0.text = "???님, 가입을 축하드려요!"
+        $0.text = "초대를 수락하면, 두 사람의 기록이 이어져요"
     }
     
     private let imageView = UIImageView().then {
@@ -40,19 +45,19 @@ final class InviteViewController: BaseViewController {
         $0.layer.cornerRadius = 20
     }
     
-    private let inputCodeBtn = UIButton().then {
-        $0.setTitle("상대방 코드 입력하기", for: .normal)
+    private let acceptButton = UIButton().then {
+        $0.setTitle("초대 수락하기", for: .normal)
+        $0.setTitleColor(.white, for: .normal)
+        $0.backgroundColor = UIColor.gray900
+        $0.layer.cornerRadius = 8
+    }
+    
+    private let laterButton = UIButton().then {
+        $0.setTitle("다음에 할래요", for: .normal)
         $0.setTitleColor(UIColor.gray900, for: .normal)
         $0.backgroundColor = UIColor.gray50
         $0.layer.borderColor = UIColor.gray700.cgColor
         $0.layer.borderWidth = 1
-        $0.layer.cornerRadius = 8
-    }
-    
-    private let inviteBtn = UIButton().then {
-        $0.setTitle("내 코드로 초대하기", for: .normal)
-        $0.setTitleColor(.white, for: .normal)
-        $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
     }
     
@@ -62,29 +67,28 @@ final class InviteViewController: BaseViewController {
         $0.alignment = .center
     }
     
-    private let closeBtn = UIButton().then {
-        $0.setImage(UIImage(named: "ic_close"), for: .normal)
+    init(reactor: InviteInputCodeReactor) {
+        super.init(nibName: nil, bundle: nil)
+        self.reactor = reactor
+    }
+    
+    @MainActor required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func setupUI() {
-        view.addSubview(closeBtn)
         view.addSubview(titleStackView)
         view.addSubview(imageView)
         view.addSubview(buttonStackView)
         
-        titleStackView.addArrangedSubview(subTitleLabel)
         titleStackView.addArrangedSubview(titleLabel)
+        titleStackView.addArrangedSubview(subTitleLabel)
         
-        buttonStackView.addArrangedSubview(inputCodeBtn)
-        buttonStackView.addArrangedSubview(inviteBtn)
+        buttonStackView.addArrangedSubview(acceptButton)
+        buttonStackView.addArrangedSubview(laterButton)
     }
     
     override func setupConstraints() {
-        closeBtn.snp.makeConstraints {
-            $0.top.right.equalTo(view.safeAreaLayoutGuide).inset(16)
-            $0.size.equalTo(CGSize(width: 24, height: 24))
-        }
-        
         titleStackView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(108)
             $0.centerX.equalToSuperview()
@@ -101,39 +105,44 @@ final class InviteViewController: BaseViewController {
             $0.horizontalEdges.equalToSuperview().inset(16)
         }
         
-        inputCodeBtn.snp.makeConstraints {
+        acceptButton.snp.makeConstraints {
             $0.height.equalTo(56)
             $0.horizontalEdges.equalToSuperview()
         }
         
-        inviteBtn.snp.makeConstraints {
+        laterButton.snp.makeConstraints {
             $0.height.equalTo(56)
             $0.horizontalEdges.equalToSuperview()
         }
     }
     
     override func setupActions() {
-        inputCodeBtn.addTarget(self, action: #selector(inputCodeBtnTapped), for: .touchUpInside)
-        inviteBtn.addTarget(self, action: #selector(inviteBtnTapped), for: .touchUpInside)
-        closeBtn.addTarget(self, action: #selector(closeBtnTapped), for: .touchUpInside)
+        acceptButton.addTarget(self, action: #selector(acceptBtnTapped), for: .touchUpInside)
+        laterButton.addTarget(self, action: #selector(laterBtnTapped), for: .touchUpInside)
     }
     
-    @objc private func closeBtnTapped() {
-        self.dismiss(animated: true, completion: nil)
+    func bind(reactor: InviteInputCodeReactor) {
+        reactor.state.map { $0.coupleId }
+            .compactMap { $0 }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, id in
+                if !id.isEmpty {
+                    owner.coordinator?.showConnected()
+                }
+            }
+            .disposed(by: disposeBag)
     }
     
-    @objc private func inputCodeBtnTapped() {
-        self.dismiss(animated: true) { [weak self] in
-            guard let self else { return }
-            self.coordinator?.startInviteFlow(.input)
-        }
+    @objc private func acceptBtnTapped() {
+        guard let reactor, let data = reactor.currentState.previewData else { return }
+        
+        let code = data.inviteCode
+        reactor.action.onNext(.acceptInvite(code))
     }
     
-    @objc private func inviteBtnTapped() {
-        self.dismiss(animated: true) { [weak self] in
-            guard let self else { return }
-            self.coordinator?.startInviteFlow(.invite)
-        }
+    @objc private func laterBtnTapped() {
+        coordinator?.didComplete()
     }
 }
+
 

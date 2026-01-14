@@ -112,10 +112,8 @@ final class LoginViewController: BaseViewController, View {
                 switch result {
                 case .needsSignup:
                     self?.coordinator?.showSignup()
-                    
                 case .goToMain:
-                    print("✅ 기존 회원 → 메인 화면으로")
-                    //                    self?.coordinator?.showMainTab()
+                    self?.coordinator?.didLogin()
                 }
             })
             .disposed(by: disposeBag)

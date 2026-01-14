@@ -8,8 +8,14 @@
 import UIKit
 import Then
 import SnapKit
+import ReactorKit
+import RxSwift
+import RxCocoa
 
-class InviteInputCodeViewController: BaseViewController {
+class InviteInputCodeViewController: BaseViewController, View {
+    
+    weak var coordinator: InviteCoordinator?
+    var disposeBag: DisposeBag = DisposeBag()
     
     private let pinLength = 8
     private var pinCode: String = "" {
@@ -60,9 +66,19 @@ class InviteInputCodeViewController: BaseViewController {
         $0.axis = .horizontal
         $0.spacing = 4
         $0.alignment = .center
+        $0.distribution = .fill
     }
     
     private var pinDigitViews: [PinDigitView] = []
+    
+    init(reactor: InviteInputCodeReactor) {
+        super.init(nibName: nil, bundle: nil)
+        self.reactor = reactor
+    }
+
+    @MainActor required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -124,6 +140,20 @@ class InviteInputCodeViewController: BaseViewController {
         }
     }
     
+    override func setupActions() {
+        nextButton.addTarget(self, action: #selector(nextBtnTapped), for: .touchUpInside)
+    }
+    
+    func bind(reactor: InviteInputCodeReactor) {
+        reactor.state.map { $0.previewData }
+            .compactMap { $0 }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, data in
+                owner.coordinator?.showInviteVerified()
+            }
+            .disposed(by: disposeBag)
+    }
+    
     private func setupNavigationBar() {
         let backButton = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
@@ -159,6 +189,12 @@ class InviteInputCodeViewController: BaseViewController {
             name: UIResponder.keyboardWillHideNotification,
             object: nil
         )
+    }
+    
+    @objc private func nextBtnTapped() {
+        if self.nextButton.isEnabled {
+            reactor?.action.onNext(.verifyCode(pinCode))
+        }
     }
     
     @objc private func keyboardWillShow(_ notification: Notification) {

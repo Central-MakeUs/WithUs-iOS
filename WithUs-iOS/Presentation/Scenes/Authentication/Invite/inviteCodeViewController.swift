@@ -8,8 +8,13 @@
 import UIKit
 import Then
 import SnapKit
+import ReactorKit
+import RxSwift
+import RxCocoa
 
-class InviteCodeViewController: BaseViewController {
+class InviteCodeViewController: BaseViewController, View {
+    
+    var disposeBag: DisposeBag = DisposeBag()
     
     weak var coordinator: InviteCoordinator?
     
@@ -70,6 +75,20 @@ class InviteCodeViewController: BaseViewController {
     
     private var pinDigitViews: [PinDigitView] = []
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        reactor?.action.onNext(.getInvitationCode)
+    }
+    
+    init(reactor: InviteCodeReactor) {
+        super.init(nibName: nil, bundle: nil)
+        self.reactor = reactor
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func setupUI() {
         setupNavigationBar()
         view.addSubview(titleLabel)
@@ -118,6 +137,18 @@ class InviteCodeViewController: BaseViewController {
         linkBtn.addTarget(self, action: #selector(linkBtnTapped), for: .touchUpInside)
     }
     
+    func bind(reactor: InviteCodeReactor) {
+        reactor.state
+            .map { $0.invitationCode }
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, code in
+                owner.pinCode = code
+            }
+            .disposed(by: disposeBag)
+    }
+    
     private func setupNavigationBar() {
         let backButton = UIBarButtonItem(
             image: UIImage(systemName: "chevron.left"),
@@ -148,7 +179,7 @@ class InviteCodeViewController: BaseViewController {
         let imageToShare: UIImage = UIImage(named: "ic_duplicate")!
         let urlToShare: String = "https://velog.io/@go90js"
         let textToShare: String = "고라니"
-
+        
         let activityViewController = UIActivityViewController(activityItems: [imageToShare, urlToShare, textToShare], applicationActivities: nil)
         present(activityViewController, animated: true)
     }

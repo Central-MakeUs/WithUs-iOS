@@ -8,8 +8,13 @@
 import UIKit
 import Then
 import SnapKit
+import ReactorKit
+import RxSwift
+import RxCocoa
 
-final class SignUpNickNameViewController: BaseViewController {
+final class SignUpNickNameViewController: BaseViewController, View {
+    
+    var disposeBag = DisposeBag()
     
     weak var coordinator: SignUpCoordinator?
     
@@ -62,6 +67,15 @@ final class SignUpNickNameViewController: BaseViewController {
         $0.isEnabled = true
     }
     
+    init(reactor: SignUpReactor) {
+        super.init(nibName: nil, bundle: nil)
+        self.reactor = reactor
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -106,6 +120,10 @@ final class SignUpNickNameViewController: BaseViewController {
     
     override func setupActions() {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
+    }
+    
+    func bind(reactor: SignUpReactor) {
+        
     }
     
     private func setupKeyboardObservers() {
@@ -173,6 +191,7 @@ final class SignUpNickNameViewController: BaseViewController {
     
     @objc private func nextButtonTapped() {
         guard let nickname = nicknameTextField.text, !nickname.isEmpty else { return }
+        reactor?.action.onNext(.updateNickname(nickname))
         coordinator?.showSignUpProfile()
     }
     

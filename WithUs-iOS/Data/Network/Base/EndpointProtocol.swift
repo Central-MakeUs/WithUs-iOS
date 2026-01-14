@@ -26,11 +26,12 @@ extension EndpointProtocol {
         var headers: HTTPHeaders = [
             "Content-Type": "application/json"
         ]
+//        
+//        if let token = TokenManager.shared.accessToken {
+//            headers.add(.authorization(bearerToken: token))
+//        }
         
-        // JWT 토큰이 있으면 추가
-        if let token = TokenManager.shared.accessToken {
-            headers.add(.authorization(bearerToken: token))
-        }
+        headers.add(.authorization(bearerToken: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwibmlja25hbWUiOiJHVUVTVF80Njk1NDEyNjI5IiwiaWF0IjoxNzY4MzU2NzgzLCJleHAiOjE3NjgzOTk5ODN9.bceQZGkexsqtC09kkGc1Eiv4PLVVrSsM4RdMb9Pl1EA"))
         
         return headers
     }
@@ -42,9 +43,9 @@ extension EndpointProtocol {
     public var encoding: ParameterEncoding {
         switch method {
         case .get:
-            return URLEncoding.default
+            return URLEncoding.default //parameter(url뒤에 붙임)
         default:
-            return JSONEncoding.default
+            return JSONEncoding.default //request body(parameter)
         }
     }
     

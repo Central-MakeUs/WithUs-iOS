@@ -8,7 +8,7 @@
 import Foundation
 
 struct UpdateProfileResponse: Decodable {
-    let userId: String
+    let userId: Int64
     let nickname: String
     let profileImageUrl: String?
 }

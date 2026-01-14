@@ -26,22 +26,31 @@ class AppCoordinator: Coordinator {
     }
     
     private func checkAutoLogin() {
-        // TODO: 실제 자동 로그인 로직 구현
-        // 예: UserDefaults에서 토큰 확인, Keychain에서 인증 정보 확인 등 -> apple login
-        let isLoggedIn = false
-        
-        if isLoggedIn {
-            
+        if let token = TokenManager.shared.accessToken, !token.isEmpty {
+            print("✅ 자동 로그인: 토큰 있음")
+            //            showMainFlow()
         } else {
+            print("❌ 자동 로그인: 토큰 없음")
             showAuthFlow()
         }
     }
     
     private func showAuthFlow() {
+        childCoordinators.removeAll()
+        
         let authCoordinator = AuthCoordinator(navigationController: navigationController)
         authCoordinator.delegate = self
         childCoordinators.append(authCoordinator)
         authCoordinator.start()
+    }
+    
+    private func showMainFlow() {
+        childCoordinators.removeAll()
+        
+        let mainCoordinator = MainCoordinator(navigationController: navigationController)
+        mainCoordinator.delegate = self
+        childCoordinators.append(mainCoordinator)
+        mainCoordinator.start()
     }
     
     func finish() {
@@ -49,9 +58,19 @@ class AppCoordinator: Coordinator {
     }
 }
 
+//MARK: 부모배열에서 나를 제거하고 내 자식들도 다 제거한다
 extension AppCoordinator: AuthCoordinatorDelegate {
     func authCoordinatorDidFinish(_ coordinator: AuthCoordinator) {
+        
         childCoordinators.removeAll { $0 === coordinator }
-        //로그인 성공시, 홈화면으로
+        coordinator.finish()
+        
+        showMainFlow()
+    }
+}
+
+extension AppCoordinator: MainCoordinatorDelegate {
+    func mainCoordinatorDidFinish(_ coordinator: MainCoordinator) {
+        
     }
 }

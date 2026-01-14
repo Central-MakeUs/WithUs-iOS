@@ -1,19 +1,19 @@
 //
-//  UpdateProfileResult.swift
+//  User.swift
 //  WithUs-iOS
 //
-//  Created by 지상률 on 1/14/26.
+//  Created by Hubriz iOS on 1/14/26.
 //
 
 import Foundation
 
-struct UpdateProfileResult {
+struct User {
     let userId: String
     let nickname: String
     let profileImageUrl: String?
     
     init(from response: UpdateProfileResponse) {
-        self.userId = response.userId
+        self.userId = String(response.userId)
         self.nickname = response.nickname
         self.profileImageUrl = response.profileImageUrl
     }

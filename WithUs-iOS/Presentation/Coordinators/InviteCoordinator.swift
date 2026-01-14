@@ -14,30 +14,64 @@ protocol InviteCoordinatorDelegate: AnyObject {
 class InviteCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
+    var type: CodeType
+    var inputReactor: InviteInputCodeReactor?
+    
     weak var delegate: InviteCoordinatorDelegate?
     
-    init(navigationController: UINavigationController) {
+    init(navigationController: UINavigationController, type: CodeType) {
         self.navigationController = navigationController
+        self.type = type
     }
     
     func start() {
-        showInvite()
+        let networdService = NetworkService.shared
+        
+        // 코드초대
+        let repository = InvitationCodeRepository(networkService: networdService)
+        let useCase = GetInvitationUseCase(repository: repository)
+        let reactor = InviteCodeReactor(getInvitationUseCase: useCase)
+        
+        // 코드입력
+        let inputRepository = InviteVerificationAndAcceptRepository(networkService: networdService)
+        let inputUseCase = VerifyCodePreviewUseCase(repository: inputRepository)
+        inputReactor = InviteInputCodeReactor(usecase: inputUseCase)
+        
+        switch type {
+        case .input:
+            showInviteInputCode(inputReactor!)
+        default:
+            showInviteCode(reactor)
+        }
     }
     
-    private func showInvite() {
-        let inviteCodeVC = InviteViewController()
-        inviteCodeVC.coordinator = self
-        navigationController.pushViewController(inviteCodeVC, animated: true)
-    }
-    
-    func showInviteInputCode() {
-        let inviteInputVC = InviteInputCodeViewController()
+    func showInviteInputCode(_ reactor: InviteInputCodeReactor) {
+        let inviteInputVC = InviteInputCodeViewController(reactor: reactor)
+        inviteInputVC.coordinator = self
         navigationController.pushViewController(inviteInputVC, animated: true)
     }
     
-    func showInviteCode() {
-        let inviteCodeVC = InviteCodeViewController()
+    func showInviteCode(_ reactor: InviteCodeReactor) {
+        let inviteCodeVC = InviteCodeViewController(reactor: reactor)
         navigationController.pushViewController(inviteCodeVC, animated: true)
+    }
+    
+    func showInviteVerified() {
+        guard let inputReactor else { return }
+        let vc = InviteVerifiedViewController(reactor: inputReactor)
+        vc.coordinator = self
+        navigationController.pushViewController(vc, animated: true)
+    }
+    
+    func showConnected() {
+        guard let inputReactor else { return }
+        let vc = InviteConnectedViewController(reactor: inputReactor)
+        vc.coordinator = self
+        navigationController.pushViewController(vc, animated: true)
+    }
+    
+    func didComplete() {
+        delegate?.inviteCoordinatorDidFinish(self)
     }
     
     func finish() {

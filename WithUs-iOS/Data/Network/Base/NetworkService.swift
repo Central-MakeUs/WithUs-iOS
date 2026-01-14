@@ -17,10 +17,18 @@ public final class NetworkService {
         endpoint: EndpointProtocol,
         responseType: T.Type
     ) async throws -> T {
-        // 네트워크 연결 확인
         guard NetworkMonitor.shared.isConnected else {
             throw NetworkError.disconnected
         }
+        
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("🌐 API 요청")
+        print("URL: \(endpoint.url)")
+        print("Method: \(endpoint.method)")
+        print("Headers: \(endpoint.headers)")
+        print("Parameters: \(endpoint.parameters ?? [:])")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        
         
         do {
             let response: BaseResponse<T> = try await AF.request(
@@ -33,7 +41,8 @@ public final class NetworkService {
             .validate()
             .serializingDecodable(BaseResponse<T>.self)
             .value
-            
+            print("✅ 응답 성공: \(response.success)")
+
             guard response.success else {
                 if let error = response.error {
                     throw NetworkError.serverError(message: error.message, code: error.code)
@@ -53,6 +62,38 @@ public final class NetworkService {
         } catch let decodingError as DecodingError {
             print("Decoding Error: \(decodingError)")
             throw NetworkError.decodingError
+        } catch let afError as AFError {
+            // ✅ Alamofire 에러 (여기가 핵심!)
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            print("❌ Alamofire Error")
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            
+            if let statusCode = afError.responseCode {
+                print("Status Code: \(statusCode)")
+                
+                switch statusCode {
+                case 401:
+                    print("→ 인증 실패 (토큰 문제)")
+                case 404:
+                    print("→ API 경로를 찾을 수 없음")
+                case 500:
+                    print("→ 서버 내부 에러")
+                default:
+                    print("→ HTTP 에러")
+                }
+            }
+            
+            if let url = afError.url {
+                print("URL: \(url)")
+            }
+            
+            if let underlyingError = afError.underlyingError {
+                print("Underlying Error: \(underlyingError)")
+            }
+            
+            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            
+            throw NetworkError.unknown(afError)
         } catch {
             print("Network Error: \(error)")
             throw NetworkError.unknown(error)
@@ -135,6 +176,28 @@ public final class NetworkService {
         }
     }
     
+    public func uploadToS3(url: String, imageData: Data) async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            let headers: HTTPHeaders = [
+                "Content-Type": "image/jpeg"
+            ]
+            
+            AF.upload(imageData, to: url, method: .put, headers: headers)
+                .validate()
+                .response { response in
+                    switch response.result {
+                    case .success:
+                        print("✅ S3 업로드 성공 (JPG)")
+                        continuation.resume()
+                        
+                    case .failure(let error):
+                        print("❌ S3 업로드 실패: \(error)")
+                        continuation.resume(throwing: NetworkError.unknown(error))
+                    }
+                }
+        }
+    }
+    
     public func upload<T: Decodable>(
         endpoint: EndpointProtocol,
         responseType: T.Type,
@@ -174,8 +237,6 @@ public final class NetworkService {
             }
         }
     }
-    
-    // MARK: - Upload without Response Data
     
     public func uploadWithoutData(
         endpoint: EndpointProtocol,
