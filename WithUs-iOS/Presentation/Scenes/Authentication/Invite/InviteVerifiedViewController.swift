@@ -131,6 +131,16 @@ final class InviteVerifiedViewController: BaseViewController, View {
                 }
             }
             .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.previewData }
+            .compactMap { $0 }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, data in
+                let myName = data.myName
+                let senderName = data.senderName
+                owner.titleLabel.text = "\(senderName) 님이\n\(myName) 님을 초대했어요!"
+            }
+            .disposed(by: disposeBag)
     }
     
     @objc private func acceptBtnTapped() {

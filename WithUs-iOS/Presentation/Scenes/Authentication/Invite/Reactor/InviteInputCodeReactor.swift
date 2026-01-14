@@ -81,7 +81,6 @@ final class InviteInputCodeReactor: Reactor {
                 
                 Task { @MainActor in
                     do {
-                        
                         let result = try await self.usecase.executeAccept(inviteCode: code)
                         print("✅ couple id 받아오기 완료")
                         observer.onNext(.setSuccess)

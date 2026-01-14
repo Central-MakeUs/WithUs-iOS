@@ -193,7 +193,8 @@ class InviteInputCodeViewController: BaseViewController, View {
     
     @objc private func nextBtnTapped() {
         if self.nextButton.isEnabled {
-            reactor?.action.onNext(.verifyCode(pinCode))
+//            reactor?.action.onNext(.verifyCode(pinCode))
+            reactor?.action.onNext(.verifyCode("95659783"))
         }
     }
     
