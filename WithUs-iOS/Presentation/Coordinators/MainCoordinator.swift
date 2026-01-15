@@ -49,6 +49,12 @@ final class MainCoordinator: Coordinator {
         inviteCoordinator.start()
     }
     
+    func showCameraModal() {
+        let cutomCameraVC = CustomCameraViewController()
+        cutomCameraVC.modalPresentationStyle = .fullScreen
+        navigationController.present(cutomCameraVC, animated: true)
+    }
+    
     func finish() {
         childCoordinators.removeAll()
     }

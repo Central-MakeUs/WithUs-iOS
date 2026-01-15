@@ -20,7 +20,6 @@ final class HomeViewController: BaseViewController {
         $0.backgroundColor = .black
     }
     
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         coordinator?.showInviteModal()
@@ -35,5 +34,16 @@ final class HomeViewController: BaseViewController {
             $0.height.equalTo(50)
             $0.center.equalToSuperview()
         }
+    }
+    
+    override func setupActions() {
+        cameraButton.addTarget(self, action: #selector(showCamera), for: .touchUpInside)
+    }
+    
+    @objc private func showCamera() {
+//        coordinator?.showCameraModal()
+        let cutomCameraVC = CustomCameraViewController()
+        cutomCameraVC.modalPresentationStyle = .fullScreen
+        navigationController?.present(cutomCameraVC, animated: true)
     }
 }

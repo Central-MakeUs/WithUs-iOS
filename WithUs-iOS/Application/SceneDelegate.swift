@@ -21,8 +21,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.backgroundColor = .white
         self.window = window
         
-        appCoordinator = AppCoordinator(window: window)
-        appCoordinator?.start()
+//        appCoordinator = AppCoordinator(window: window)
+//        appCoordinator?.start()
+        
+        let vc = HomeViewController()
+        let navigationController = UINavigationController()
+        window.rootViewController = navigationController
+        window.makeKeyAndVisible()
+        navigationController.setViewControllers([vc], animated: true)
     }
     
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
