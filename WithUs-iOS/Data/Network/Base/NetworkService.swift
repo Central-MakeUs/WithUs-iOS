@@ -31,16 +31,49 @@ public final class NetworkService {
         
         
         do {
-            let response: BaseResponse<T> = try await AF.request(
+            let dataResponse = await AF.request(
                 endpoint.url,
                 method: endpoint.method,
                 parameters: endpoint.parameters,
                 encoding: endpoint.encoding,
                 headers: endpoint.headers
             )
-            .validate()
             .serializingDecodable(BaseResponse<T>.self)
-            .value
+            .response
+            
+            if let statusCode = dataResponse.response?.statusCode {
+                print("Status Code: \(statusCode)")
+                
+                // 400번대, 500번대 에러는 서버 응답 파싱 시도
+                if (400...599).contains(statusCode) {
+                    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    print("⚠️ HTTP Error \(statusCode) - 서버 에러 메시지 확인 중...")
+                    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    
+                    // BaseResponse 디코딩 시도
+                    if case .success(let baseResponse) = dataResponse.result {
+                        // success: false이고 error가 있으면 서버 에러 처리
+                        if !baseResponse.success, let error = baseResponse.error {
+                            print("📝 서버 에러 메시지: \(error.message)")
+                            print("🔢 서버 에러 코드: \(error.code)")
+                            throw NetworkError.serverError(message: error.message, code: error.code)
+                        }
+                    }
+                    
+                    // 서버 에러 파싱 실패 시 일반 HTTP 에러로 처리
+                    print("→ 서버 에러 메시지 없음, 기본 HTTP 에러 처리")
+                    throw NetworkError.httpError(statusCode: statusCode)
+                }
+            }
+            
+            // 정상 응답 처리
+            guard case .success(let response) = dataResponse.result else {
+                if let error = dataResponse.error {
+                    throw NetworkError.unknown(error)
+                }
+                throw NetworkError.invalidResponse
+            }
+            
             print("✅ 응답 성공: \(response.success)")
 
             guard response.success else {
@@ -60,42 +93,10 @@ public final class NetworkService {
         } catch let error as NetworkError {
             throw error
         } catch let decodingError as DecodingError {
-            print("Decoding Error: \(decodingError)")
+            print("❌ Decoding Error: \(decodingError)")
             throw NetworkError.decodingError
-        } catch let afError as AFError {
-            // ✅ Alamofire 에러 (여기가 핵심!)
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            print("❌ Alamofire Error")
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            
-            if let statusCode = afError.responseCode {
-                print("Status Code: \(statusCode)")
-                
-                switch statusCode {
-                case 401:
-                    print("→ 인증 실패 (토큰 문제)")
-                case 404:
-                    print("→ API 경로를 찾을 수 없음")
-                case 500:
-                    print("→ 서버 내부 에러")
-                default:
-                    print("→ HTTP 에러")
-                }
-            }
-            
-            if let url = afError.url {
-                print("URL: \(url)")
-            }
-            
-            if let underlyingError = afError.underlyingError {
-                print("Underlying Error: \(underlyingError)")
-            }
-            
-            print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-            
-            throw NetworkError.unknown(afError)
         } catch {
-            print("Network Error: \(error)")
+            print("❌ Network Error: \(error)")
             throw NetworkError.unknown(error)
         }
     }
@@ -110,16 +111,35 @@ public final class NetworkService {
         }
         
         do {
-            let response: BaseResponse<EmptyResponse> = try await AF.request(
+            let dataResponse = await AF.request(
                 endpoint.url,
                 method: endpoint.method,
                 parameters: endpoint.parameters,
                 encoding: endpoint.encoding,
                 headers: endpoint.headers
             )
-            .validate()
             .serializingDecodable(BaseResponse<EmptyResponse>.self)
-            .value
+            .response
+            
+            // 상태 코드 확인
+            if let statusCode = dataResponse.response?.statusCode {
+                if (400...599).contains(statusCode) {
+                    // BaseResponse 디코딩 시도
+                    if case .success(let baseResponse) = dataResponse.result {
+                        if !baseResponse.success, let error = baseResponse.error {
+                            throw NetworkError.serverError(message: error.message, code: error.code)
+                        }
+                    }
+                    throw NetworkError.httpError(statusCode: statusCode)
+                }
+            }
+            
+            guard case .success(let response) = dataResponse.result else {
+                if let error = dataResponse.error {
+                    throw NetworkError.unknown(error)
+                }
+                throw NetworkError.invalidResponse
+            }
             
             guard response.success else {
                 if let error = response.error {
@@ -151,10 +171,28 @@ public final class NetworkService {
             }
             urlRequest.httpBody = rawBody
             
-            let response: BaseResponse<T> = try await AF.request(urlRequest)
-                .validate()
+            let dataResponse = await AF.request(urlRequest)
                 .serializingDecodable(BaseResponse<T>.self)
-                .value
+                .response
+            
+            // 상태 코드 확인
+            if let statusCode = dataResponse.response?.statusCode {
+                if (400...599).contains(statusCode) {
+                    if case .success(let baseResponse) = dataResponse.result {
+                        if !baseResponse.success, let error = baseResponse.error {
+                            throw NetworkError.serverError(message: error.message, code: error.code)
+                        }
+                    }
+                    throw NetworkError.httpError(statusCode: statusCode)
+                }
+            }
+            
+            guard case .success(let response) = dataResponse.result else {
+                if let error = dataResponse.error {
+                    throw NetworkError.unknown(error)
+                }
+                throw NetworkError.invalidResponse
+            }
             
             guard response.success else {
                 if let error = response.error {
@@ -214,8 +252,24 @@ public final class NetworkService {
                 method: endpoint.method,
                 headers: endpoint.headers
             )
-            .validate()
             .responseDecodable(of: BaseResponse<T>.self) { response in
+                // 상태 코드 확인
+                if let statusCode = response.response?.statusCode, (400...599).contains(statusCode) {
+                    if case .success(let baseResponse) = response.result {
+                        if !baseResponse.success, let error = baseResponse.error {
+                            continuation.resume(
+                                throwing: NetworkError.serverError(
+                                    message: error.message,
+                                    code: error.code
+                                )
+                            )
+                            return
+                        }
+                    }
+                    continuation.resume(throwing: NetworkError.httpError(statusCode: statusCode))
+                    return
+                }
+                
                 switch response.result {
                 case .success(let baseResponse):
                     if baseResponse.success, let data = baseResponse.data {
@@ -253,8 +307,24 @@ public final class NetworkService {
                 method: endpoint.method,
                 headers: endpoint.headers
             )
-            .validate()
             .responseDecodable(of: BaseResponse<EmptyResponse>.self) { response in
+                // 상태 코드 확인
+                if let statusCode = response.response?.statusCode, (400...599).contains(statusCode) {
+                    if case .success(let baseResponse) = response.result {
+                        if !baseResponse.success, let error = baseResponse.error {
+                            continuation.resume(
+                                throwing: NetworkError.serverError(
+                                    message: error.message,
+                                    code: error.code
+                                )
+                            )
+                            return
+                        }
+                    }
+                    continuation.resume(throwing: NetworkError.httpError(statusCode: statusCode))
+                    return
+                }
+                
                 switch response.result {
                 case .success(let baseResponse):
                     if baseResponse.success {

@@ -13,6 +13,7 @@ public enum NetworkError: Error {
     case invalidResponse
     case serverError(message: String, code: String)
     case decodingError
+    case httpError(statusCode: Int)
     case unknown(Error)
     
     public var errorDescription: String {
@@ -29,6 +30,8 @@ public enum NetworkError: Error {
             return "데이터 변환에 실패했습니다."
         case .unknown(let error):
             return error.localizedDescription
+        case .httpError(let statusCode):
+            return statusCode.description
         }
     }
     
