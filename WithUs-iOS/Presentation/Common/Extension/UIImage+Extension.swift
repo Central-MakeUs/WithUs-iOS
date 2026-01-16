@@ -37,3 +37,27 @@ extension UIImage {
         return UIImage(cgImage: croppedCGImage, scale: scale, orientation: .up)
     }
 }
+
+
+extension UIImageView {
+    func loadImage(from urlString: String) {
+        guard let url = URL(string: urlString) else { return }
+
+        self.image = nil
+
+        URLSession.shared.dataTask(with: url) { [weak self] data, response, error in
+            guard
+                let data = data,
+                let image = UIImage(data: data),
+                error == nil
+            else {
+                print("❌ 이미지 로드 실패:", error ?? "unknown error")
+                return
+            }
+
+            DispatchQueue.main.async {
+                self?.image = image
+            }
+        }.resume()
+    }
+}

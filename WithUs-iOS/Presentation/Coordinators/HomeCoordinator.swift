@@ -60,7 +60,7 @@ class HomeCoordinator: Coordinator {
         navigationController.popToRootViewController(animated: true)
         
         if let homeVC = navigationController.viewControllers.first as? HomeViewController {
-//            homeVC.updateSettingStatus(isCompleted: true)
+            homeVC.updateSettingStatus(isCompleted: true)
         }
     }
     
