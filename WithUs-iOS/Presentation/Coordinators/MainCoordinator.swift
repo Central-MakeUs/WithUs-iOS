@@ -26,14 +26,99 @@ final class MainCoordinator: Coordinator {
     }
     
     func start() {
-        showMainTab()
+        showMainTabBar()
     }
     
-    private func showMainTab() {
-        let homeVC = HomeViewController()
-        homeVC.coordinator = self
-        navigationController.setViewControllers([homeVC], animated: false)
+    private func showMainTabBar() {
+        let tabBarController = UITabBarController()
+        
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .white
+        appearance.shadowColor = UIColor.systemGray5
+        
+        appearance.stackedLayoutAppearance.normal.iconColor = .gray500
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [
+            .foregroundColor: UIColor.gray500,
+            .font: UIFont.pretendard10Regular
+        ]
+        
+        appearance.stackedLayoutAppearance.selected.iconColor = .gray900
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [
+            .foregroundColor: UIColor.gray900,
+            .font: UIFont.pretendard(.bold, size: 10)
+        ]
+        
+        tabBarController.tabBar.standardAppearance = appearance
+        tabBarController.tabBar.scrollEdgeAppearance = appearance
+        
+        let homeNavigationController = UINavigationController()
+        let homeCoordinator = HomeCoordinator(navigationController: homeNavigationController)
+        childCoordinators.append(homeCoordinator)
+        homeCoordinator.start()
+        
+        let homeNormalImage = UIImage(named: "ic_home_off")?.withRenderingMode(.alwaysOriginal)
+        let homeSelectedImage = UIImage(named: "ic_home_on")?.withRenderingMode(.alwaysOriginal)
+        
+        homeNavigationController.tabBarItem = UITabBarItem(
+            title: "홈",
+            image: homeNormalImage,
+            selectedImage: homeSelectedImage
+        )
+        
+        let memoryNavigationController = UINavigationController()
+        let memoryCoordinator = MemoryCoordinator(navigationController: memoryNavigationController)
+        childCoordinators.append(memoryCoordinator)
+        memoryCoordinator.start()
+        
+        let memoryNormalImage = UIImage(named: "ic_memory_off")?.withRenderingMode(.alwaysOriginal)
+        let memorySelectedImage = UIImage(named: "ic_memory_on")?.withRenderingMode(.alwaysOriginal)
+        
+        memoryNavigationController.tabBarItem = UITabBarItem(
+            title: "추억",
+            image: memoryNormalImage,
+            selectedImage: memorySelectedImage
+        )
+        
+        let fourCutNavigationController = UINavigationController()
+        let fourCutCoordinator = FourCutCoordinator(navigationController: fourCutNavigationController)
+        childCoordinators.append(fourCutCoordinator)
+        fourCutCoordinator.start()
+        
+        let fourCutNormalImage = UIImage(named: "ic_four_cut_off")?.withRenderingMode(.alwaysOriginal)
+        let fourCutSelectedImage = UIImage(named: "ic_four_cut_on")?.withRenderingMode(.alwaysOriginal)
+        
+        fourCutNavigationController.tabBarItem = UITabBarItem(
+            title: "활동",
+            image: fourCutNormalImage,
+            selectedImage: fourCutSelectedImage
+        )
+        
+        let profileNavigationController = UINavigationController()
+        let profileCoordinator = ProfileCoordinator(navigationController: profileNavigationController)
+        childCoordinators.append(profileCoordinator)
+        profileCoordinator.start()
+        
+        let profileNormalImage = UIImage(named: "ic_user_off")?.withRenderingMode(.alwaysOriginal)
+        let profileSelectedImage = UIImage(named: "ic_user_on")?.withRenderingMode(.alwaysOriginal)
+        
+        profileNavigationController.tabBarItem = UITabBarItem(
+            title: "프로필",
+            image: profileNormalImage,
+            selectedImage: profileSelectedImage
+        )
+        
+        tabBarController.viewControllers = [
+            homeNavigationController,
+            memoryNavigationController,
+            fourCutNavigationController,
+            profileNavigationController
+        ]
+        
+        navigationController.setViewControllers([tabBarController], animated: false)
+        navigationController.setNavigationBarHidden(true, animated: false)
     }
+    
     
     func showInviteModal() {
         let inviteModalVC = InviteViewController()

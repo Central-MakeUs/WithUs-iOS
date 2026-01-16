@@ -104,9 +104,13 @@ class ToastView: UIView {
            position: ToastPosition = .center,
            duration: TimeInterval = 2.0
        ) {
-           guard let window = UIApplication.shared.windows.first(where: { $0.isKeyWindow }) else {
-               return
-           }
+           let window: UIWindow? = UIApplication.shared.connectedScenes
+               .filter { $0.activationState == .foregroundActive }
+               .compactMap { $0 as? UIWindowScene }
+               .flatMap { $0.windows }
+               .first { $0.isKeyWindow }
+
+           guard let window else { return }
            
            let toast = ToastView(message: message, icon: icon)
            window.addSubview(toast)
@@ -153,3 +157,4 @@ class ToastView: UIView {
            }
        }
 }
+

@@ -18,17 +18,24 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         let window = UIWindow(windowScene: windowScene)
-        window.backgroundColor = .white
-        self.window = window
-        
-//        appCoordinator = AppCoordinator(window: window)
-//        appCoordinator?.start()
-        
-        let vc = HomeViewController()
-        let navigationController = UINavigationController()
-        window.rootViewController = navigationController
+        let splashVC = SplashViewController()
+        window.rootViewController = splashVC
         window.makeKeyAndVisible()
-        navigationController.setViewControllers([vc], animated: true)
+        
+        
+        //        appCoordinator = AppCoordinator(window: window)
+        //        appCoordinator?.start()
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+            guard let self else { return }
+            let navigationController = UINavigationController()
+            let mainCoordinator = MainCoordinator(navigationController: navigationController)
+            mainCoordinator.start()
+            
+            window.rootViewController = navigationController
+            window.makeKeyAndVisible()
+            self.window = window
+        }
     }
     
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
