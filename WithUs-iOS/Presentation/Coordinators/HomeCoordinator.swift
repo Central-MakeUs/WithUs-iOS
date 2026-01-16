@@ -46,7 +46,25 @@ class HomeCoordinator: Coordinator {
         print("🔥 push 후 스택: \(navigationController.viewControllers.count)개")
     }
     
+    func showTimeSetting() {
+        let timePickerVC = TimePickerViewController()
+        timePickerVC.coordinator = self
+        timePickerVC.hidesBottomBarWhenPushed = true
+        navigationController.pushViewController(timePickerVC, animated: true)
+        print("🔥 push 완료!")
+        print("🔥 push 후 스택: \(navigationController.viewControllers.count)개")
+    }
+    
+    func finishSetting(selectedTime: String) {
+        print("✅ 설정 완료 - 시간: \(selectedTime)")
+        navigationController.popToRootViewController(animated: true)
+        
+        if let homeVC = navigationController.viewControllers.first as? HomeViewController {
+//            homeVC.updateSettingStatus(isCompleted: true)
+        }
+    }
+    
     func finish() {
-        print("✅ [HomeCoord] finish() 호출됨")
+        
     }
 }

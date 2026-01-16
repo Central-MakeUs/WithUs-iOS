@@ -128,7 +128,7 @@ final class KeywordSettingViewController: BaseViewController {
             .map { $0.text }
         
         print("선택된 키워드: \(selectedKeywordTexts)")
-        // coordinator?.showNextScreen()
+        coordinator?.showTimeSetting()
     }
     
     private func showAddKeywordBottomSheet() {

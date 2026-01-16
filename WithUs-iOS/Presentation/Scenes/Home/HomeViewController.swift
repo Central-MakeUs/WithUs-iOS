@@ -42,7 +42,6 @@ final class HomeViewController: BaseViewController {
     }
     
     override func setupUI() {
-        super.setupUI() // 이거 추가!
         view.addSubview(titleLabel)
         view.addSubview(imageView)
         view.addSubview(subTitleLabel)
