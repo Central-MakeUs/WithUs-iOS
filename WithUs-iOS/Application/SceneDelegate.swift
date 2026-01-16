@@ -26,7 +26,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         //        appCoordinator = AppCoordinator(window: window)
         //        appCoordinator?.start()
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self else { return }
             let navigationController = UINavigationController()
             let mainCoordinator = MainCoordinator(navigationController: navigationController)

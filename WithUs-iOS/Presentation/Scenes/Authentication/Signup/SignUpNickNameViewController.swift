@@ -57,7 +57,7 @@ final class SignUpNickNameViewController: BaseViewController, View {
         $0.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
         $0.rightViewMode = .always
         $0.returnKeyType = .done
-//        $0.clearButtonMode = .whileEditing
+        $0.clearButtonMode = .whileEditing
     }
     
     private let nextButton = UIButton().then {

@@ -9,8 +9,8 @@ import UIKit
 import SnapKit
 import Then
 
-class HomeViewController: BaseViewController {
-    weak var coordinator: HomeCoordinator?
+final class HomeViewController: BaseViewController {
+    var coordinator: HomeCoordinator?
     
     private let titleLabel = UILabel().then {
         $0.font = UIFont.pretendard24Bold
@@ -42,10 +42,12 @@ class HomeViewController: BaseViewController {
     }
     
     override func setupUI() {
+        super.setupUI() // 이거 추가!
         view.addSubview(titleLabel)
         view.addSubview(imageView)
         view.addSubview(subTitleLabel)
         view.addSubview(setupButton)
+        print("✅ [HomeVC] setupUI 완료, coordinator: \(coordinator != nil ? "있음" : "nil")")
     }
     
     override func setupConstraints() {
@@ -70,15 +72,31 @@ class HomeViewController: BaseViewController {
             $0.centerX.equalToSuperview()
             $0.size.equalTo(CGSize(width: 165, height: 48))
         }
+        print("✅ [HomeVC] setupConstraints 완료")
     }
     
     override func setupActions() {
         setupButton.addTarget(self, action: #selector(setupButtonTapped), for: .touchUpInside)
+        print("✅ [HomeVC] setupActions 완료, coordinator: \(coordinator != nil ? "있음" : "nil")")
+        
+        // 추가 확인
+        if coordinator != nil {
+            print("✅ [HomeVC] Coordinator 정상 연결: \(type(of: coordinator!))")
+        }
     }
     
     @objc private func setupButtonTapped() {
-        coordinator?.showRecordingPermission()
+        print("\n🔥🔥🔥 [HomeVC] 버튼 클릭됨! 🔥🔥🔥")
+        print("🔥 coordinator 상태: \(coordinator != nil ? "있음" : "❌ NIL")")
+        
+        if let coord = coordinator {
+            print("✅ coordinator 타입: \(type(of: coord))")
+            print("✅ coordinator.navigationController: \(coord.navigationController)")
+            print("✅ showKeywordSetting() 호출 시작")
+            coord.showKeywordSetting()
+        } else {
+            print("❌❌❌ coordinator가 nil입니다! ❌❌❌")
+        }
     }
 }
-
 
