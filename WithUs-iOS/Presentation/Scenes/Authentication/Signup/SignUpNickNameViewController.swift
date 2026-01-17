@@ -120,6 +120,8 @@ final class SignUpNickNameViewController: BaseViewController, View {
     
     override func setupActions() {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
+        nicknameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+
     }
     
     func bind(reactor: SignUpReactor) {
@@ -183,10 +185,16 @@ final class SignUpNickNameViewController: BaseViewController, View {
     
     @objc private func textFieldDidChange() {
         let text = nicknameTextField.text ?? ""
-        let isValid = !text.isEmpty && text.count >= 2 && text.count <= 8
+        let isValid = text.count >= 2 && text.count <= 8
+        
         nextButton.isEnabled = isValid
-        warningLabel.isHidden = isValid
         nextButton.backgroundColor = isValid ? UIColor.abled : UIColor.disabled
+        
+        if text.isEmpty {
+            warningLabel.isHidden = true
+        } else {
+            warningLabel.isHidden = isValid
+        }
     }
     
     @objc private func nextButtonTapped() {

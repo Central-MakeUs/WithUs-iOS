@@ -132,39 +132,12 @@ final class MainCoordinator: Coordinator {
         navigationController.setViewControllers([tabBarController], animated: false)
         navigationController.setNavigationBarHidden(true, animated: false)
     }
-    
-    func showInviteModal() {
-        let inviteModalVC = InviteViewController()
-        inviteModalVC.coordinator = self
-        inviteModalVC.modalPresentationStyle = .fullScreen
-        navigationController.present(inviteModalVC, animated: true)
-    }
-    
-    func startInviteFlow(_ type: CodeType) {
-        let inviteCoordinator = InviteCoordinator(navigationController: navigationController, type: type)
-        inviteCoordinator.delegate = self
-        childCoordinators.append(inviteCoordinator)
-        inviteCoordinator.start()
-    }
-    
-    func showCameraModal() {
-        let cutomCameraVC = CustomCameraViewController()
-        cutomCameraVC.modalPresentationStyle = .fullScreen
-        navigationController.present(cutomCameraVC, animated: true)
-    }
-    
+
     func finish() {
         childCoordinators.removeAll()
         homeCoordinator = nil
         memoryCoordinator = nil
         fourCutCoordinator = nil
         profileCoordinator = nil
-    }
-}
-
-extension MainCoordinator: InviteCoordinatorDelegate {
-    func inviteCoordinatorDidFinish(_ coordinator: InviteCoordinator) {
-        childCoordinators.removeAll { $0 === coordinator }
-        coordinator.finish()
     }
 }

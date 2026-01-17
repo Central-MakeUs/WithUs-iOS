@@ -10,6 +10,7 @@ import UIKit
 class HomeCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
+    private var inviteCoordinator: InviteCoordinator?
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -64,7 +65,40 @@ class HomeCoordinator: Coordinator {
         }
     }
     
+    func showCameraModal() {
+        let cutomCameraVC = CustomCameraViewController()
+        cutomCameraVC.modalPresentationStyle = .fullScreen
+        navigationController.present(cutomCameraVC, animated: true)
+    }
+    
     func finish() {
-        
+        childCoordinators.removeAll()
+        inviteCoordinator = nil
+    }
+    
+    func showInviteModal() {
+        let inviteModalVC = InviteViewController()
+        inviteModalVC.coordinator = self
+        inviteModalVC.modalPresentationStyle = .fullScreen
+        navigationController.present(inviteModalVC, animated: true)
+    }
+
+    func startInviteFlow(_ type: CodeType) {
+         print("✅ [HomeCoord] startInviteFlow(\(type)) 호출")
+         let inviteCoord = InviteCoordinator(navigationController: navigationController, type: type)
+         inviteCoord.delegate = self
+         self.inviteCoordinator = inviteCoord
+         childCoordinators.append(inviteCoord)
+         inviteCoord.start()
+     }
+     
+}
+
+extension HomeCoordinator: InviteCoordinatorDelegate {
+    func inviteCoordinatorDidFinish(_ coordinator: InviteCoordinator) {
+        print("✅ [HomeCoord] inviteCoordinatorDidFinish 호출")
+        childCoordinators.removeAll { $0 === coordinator }
+        inviteCoordinator = nil
+        coordinator.finish()
     }
 }

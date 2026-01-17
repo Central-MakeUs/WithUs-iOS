@@ -37,7 +37,7 @@ class AuthCoordinator: Coordinator {
         let reactor = LoginReactor(kakaoLoginUseCase: useCase)
         let loginVC = LoginViewController(reactor: reactor)
         loginVC.coordinator = self
-        navigationController.pushViewController(loginVC, animated: true)
+        navigationController.pushViewController(loginVC, animated: false)
     }
     
     func showSignup() {
@@ -48,7 +48,6 @@ class AuthCoordinator: Coordinator {
     }
     
     func didLogin() {
-        //기존 회원
         delegate?.authCoordinatorDidFinish(self)
     }
     

@@ -39,18 +39,19 @@ class SignUpCoordinator: Coordinator {
         guard let reactor else { return }
         let signUpNickNameVC = SignUpNickNameViewController(reactor: reactor)
         signUpNickNameVC.coordinator = self
-        navigationController.pushViewController(signUpNickNameVC, animated: true)
+        navigationController.pushViewController(signUpNickNameVC, animated: false)
     }
     
     func showSignUpProfile() {
         guard let reactor else { return }
         let signUpProfileVC = SignUpProfileViewController(reactor: reactor)
         signUpProfileVC.coordinator = self
-        navigationController.pushViewController(signUpProfileVC, animated: true)
+        navigationController.pushViewController(signUpProfileVC, animated: false)
     }
     
     // 회원가입 완료
     func didCompleteSignUp() {
+        UserDefaults.standard.set(false, forKey: "isSettingCompleted")
         delegate?.signUpCoordinatorDidFinish(self)
     }
     

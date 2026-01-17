@@ -14,7 +14,6 @@ enum QuestionStatus {
     case bothAnswered(myImageURL: String, partnerImageURL: String, question: String) // 4. 둘 다 보냄
 }
 
-// MARK: - Question Data
 struct QuestionData {
     let id: String
     let question: String

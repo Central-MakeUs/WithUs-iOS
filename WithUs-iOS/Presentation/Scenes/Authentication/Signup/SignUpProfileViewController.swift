@@ -100,7 +100,8 @@ final class SignUpProfileViewController: BaseViewController, View {
     }
     
     @objc private func nextBtnTapped() {
-        reactor?.action.onNext(.completeProfile)
+//        reactor?.action.onNext(.completeProfile)
+        coordinator?.didCompleteSignUp()
     }
 }
 

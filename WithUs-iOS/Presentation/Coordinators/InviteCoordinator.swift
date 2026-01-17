@@ -47,27 +47,29 @@ class InviteCoordinator: Coordinator {
     
     func showInviteInputCode(_ reactor: InviteInputCodeReactor) {
         let inviteInputVC = InviteInputCodeViewController(reactor: reactor)
+        inviteInputVC.hidesBottomBarWhenPushed = true
         inviteInputVC.coordinator = self
-        navigationController.pushViewController(inviteInputVC, animated: true)
+        navigationController.pushViewController(inviteInputVC, animated: false)
     }
     
     func showInviteCode(_ reactor: InviteCodeReactor) {
         let inviteCodeVC = InviteCodeViewController(reactor: reactor)
-        navigationController.pushViewController(inviteCodeVC, animated: true)
+        inviteCodeVC.hidesBottomBarWhenPushed = true
+        navigationController.pushViewController(inviteCodeVC, animated: false)
     }
     
     func showInviteVerified() {
         guard let inputReactor else { return }
         let vc = InviteVerifiedViewController(reactor: inputReactor)
         vc.coordinator = self
-        navigationController.pushViewController(vc, animated: true)
+        navigationController.pushViewController(vc, animated: false)
     }
     
     func showConnected() {
         guard let inputReactor else { return }
         let vc = InviteConnectedViewController(reactor: inputReactor)
         vc.coordinator = self
-        navigationController.pushViewController(vc, animated: true)
+        navigationController.pushViewController(vc, animated: false)
     }
     
     func didComplete() {
