@@ -8,12 +8,10 @@
 import Foundation
 
 struct SocialLoginResult {
-    let isInitialized: Bool
-    let needsProfileSetup: Bool
+    let userOnboardingStatus: OnboardingStatus
     
     init(response: SocialLoginResponse) {
-        self.isInitialized = response.isInitialized
-        self.needsProfileSetup = !response.isInitialized
+        self.userOnboardingStatus = response.onboardingStatus
     }
 }
 

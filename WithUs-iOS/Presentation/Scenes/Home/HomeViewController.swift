@@ -9,9 +9,13 @@ import UIKit
 import SnapKit
 import Then
 import SwiftUI
+import ReactorKit
+import RxSwift
+import RxCocoa
 
-final class HomeViewController: BaseViewController {
+final class HomeViewController: BaseViewController, ReactorKit.View {
     var coordinator: HomeCoordinator?
+    var disposeBag = DisposeBag()
     
     private var isSettingCompleted: Bool = false
     private var keywords: [Keyword] = [
@@ -37,34 +41,8 @@ final class HomeViewController: BaseViewController {
     }
     
     // MARK: - Before Setting UI
-    private let titleLabel = UILabel().then {
-        $0.font = UIFont.pretendard24Bold
-        $0.textColor = UIColor.gray900
-        $0.textAlignment = .center
-        $0.numberOfLines = 2
-        $0.text = "기록을 남기기 위한\n마지막 설정이 남아있어요"
-    }
-    
-    private let subTitleLabel = UILabel().then {
-        $0.font = UIFont.pretendard16Regular
-        $0.textColor = UIColor.gray500
-        $0.textAlignment = .center
-        $0.numberOfLines = 2
-        $0.text = "랜덤 질문 알림 시간과\n키워드 설정을 완료해주세요."
-    }
-    
-    private let imageView = UIImageView().then {
-        $0.image = UIImage(systemName: "heart.fill")
-        $0.contentMode = .scaleAspectFit
-        $0.tintColor = .systemPink
-    }
-    
-    private let setupButton = UIButton().then {
-        $0.setTitle("설정하러 가기 →", for: .normal)
-        $0.setTitleColor(.white, for: .normal)
-        $0.backgroundColor = UIColor.gray900
-        $0.layer.cornerRadius = 8
-    }
+    private let settingInviteCodeView = SettingInviteCodeView()
+    private let settingCoupleView = SettingCoupleView()
     
     // MARK: - After Setting UI (공통)
     private lazy var keywordCollectionView: UICollectionView = {
@@ -109,8 +87,11 @@ final class HomeViewController: BaseViewController {
         super.viewDidLoad()
         setupMockQuestion()
         setupMockKeywordData()
-        setupCallbacks()
-        checkInitialSettingStatus()
+        if let reactor {
+            reactor.action.onNext(.viewDidLoad)
+        } else {
+            print("⚠️ Reactor가 nil입니다")
+        }
     }
 
     override func setupUI() {
@@ -118,10 +99,8 @@ final class HomeViewController: BaseViewController {
         view.addSubview(afterSettingContainerView)
         
         // Before Setting
-        beforeSettingContainerView.addSubview(titleLabel)
-        beforeSettingContainerView.addSubview(imageView)
-        beforeSettingContainerView.addSubview(subTitleLabel)
-        beforeSettingContainerView.addSubview(setupButton)
+        beforeSettingContainerView.addSubview(settingCoupleView)
+        beforeSettingContainerView.addSubview(settingInviteCodeView)
         
         // After Setting - 공통
         afterSettingContainerView.addSubview(keywordCollectionView)
@@ -137,8 +116,9 @@ final class HomeViewController: BaseViewController {
         afterSettingContainerView.addSubview(keywordMyOnlyView)
         afterSettingContainerView.addSubview(keywordPartnerOnlyView)
         
-        // 초기 상태: 모두 숨김
-        hideAllViews()
+        // 초기 상태: 모든 뷰 숨김
+//        hideContentViews()
+        hideSettingViews()
     }
     
     override func setupConstraints() {
@@ -148,74 +128,106 @@ final class HomeViewController: BaseViewController {
     
     private func setupBeforeSettingConstraints() {
         beforeSettingContainerView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.edges.equalTo(view.safeAreaLayoutGuide)
         }
-        
-        titleLabel.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(108)
-            $0.centerX.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(24)
-        }
-        
-        imageView.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(42)
-            $0.size.equalTo(167)
-            $0.centerX.equalToSuperview()
-        }
-        
-        subTitleLabel.snp.makeConstraints {
-            $0.top.equalTo(imageView.snp.bottom).offset(32)
-            $0.centerX.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(24)
-        }
-        
-        setupButton.snp.makeConstraints {
-            $0.top.equalTo(subTitleLabel.snp.bottom).offset(32)
-            $0.centerX.equalToSuperview()
-            $0.size.equalTo(CGSize(width: 165, height: 48))
-        }
+        [settingCoupleView, settingInviteCodeView].forEach( { view in
+            view.snp.makeConstraints {
+                $0.edges.equalToSuperview()
+            }
+        })
     }
     
     private func setupAfterSettingConstraints() {
         afterSettingContainerView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.edges.equalTo(view.safeAreaLayoutGuide)
         }
         
         keywordCollectionView.snp.makeConstraints {
-            $0.top.equalTo(afterSettingContainerView.safeAreaLayoutGuide)
-            $0.leading.trailing.equalToSuperview()
+            $0.top.leading.trailing.equalToSuperview()
             $0.height.equalTo(64)
         }
         
-        // 7개 View 모두 동일한 constraints (CollectionView 아래 꽉 채우기)
         [beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
          keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach { view in
             view.snp.makeConstraints {
                 $0.top.equalTo(keywordCollectionView.snp.bottom)
-                $0.leading.trailing.equalToSuperview()
-                $0.bottom.equalTo(self.view.safeAreaLayoutGuide)
+                $0.leading.trailing.bottom.equalToSuperview()
             }
         }
     }
     
     override func setupActions() {
-        setupButton.addTarget(self, action: #selector(setupButtonTapped), for: .touchUpInside)
+        setupCallbacks()
     }
     
-    private func checkInitialSettingStatus() {
-        isSettingCompleted = UserDefaults.standard.bool(forKey: "isSettingCompleted")
-        print("🔴 [HomeVC] 초기 체크 - isSettingCompleted: \(isSettingCompleted)")
+    // MARK: - Reactor Binding
+    func bind(reactor: HomeReactor) {
+        reactor.state.map { $0.onboardingStatus }
+            .compactMap { $0 }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] status in
+                self?.handleOnboardingStatus(status)
+            })
+            .disposed(by: disposeBag)
         
-        switchContainer()
-        
-        if !isSettingCompleted {
+        reactor.state.map { $0.errorMessage }
+            .compactMap { $0 }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] error in
+                print("❌ 에러: \(error)")
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    // MARK: - Onboarding Status Handling
+    private func handleOnboardingStatus(_ status: OnboardingStatus) {
+        print("🔴 [HomeVC] 온보딩 상태: \(status.rawValue)")
+        switch status {
+        case .needUserSetup:
+            print("⚠️ 회원가입이 필요합니다.")
+        case .needCoupleConnect:
+            showBeforeSettingUI()  // ✅ 수정: beforeSettingContainerView를 먼저 보이게 설정
+            setInvite()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.coordinator?.showInviteModal()
+//                self?.coordinator?.showInviteModal()
             }
+        case .needCoupleSetup:
+            showBeforeSettingUI()
+            setCouple()
+        case .completed:
+            self.isSettingCompleted = true
+            showAfterSettingUI()
+        }
+    }
+    
+    private func showBeforeSettingUI() {
+        beforeSettingContainerView.isHidden = false
+        afterSettingContainerView.isHidden = true
+        self.isSettingCompleted = false
+    }
+    
+    private func showAfterSettingUI() {
+        beforeSettingContainerView.isHidden = true
+        afterSettingContainerView.isHidden = false
+        
+        let selectedKeyword = keywords[selectedKeywordIndex].text
+        if selectedKeyword == "오늘의 질문" {
+            updateQuestionUI()
+        } else {
+            updateKeywordUI(keyword: selectedKeyword)
         }
     }
     
     private func setupCallbacks() {
+        settingCoupleView.onTap = { [weak self] in
+            // TODO: 커플 설정 화면으로 이동
+        }
+        
+        settingInviteCodeView.onTap = { [weak self] in
+            // TODO: 초대 코드 입력 화면으로 이동
+        }
+        
         waitingBothView.onSendPhotoTapped = { [weak self] in
             guard let self else { return }
             print("사진 전송하기")
@@ -226,7 +238,6 @@ final class HomeViewController: BaseViewController {
         questionPartnerOnlyView.onAnswerTapped = { [weak self] in
             guard let self else { return }
             print("나도 답변하기")
-            // TODO: 카메라 열기
             self.coordinator?.showCameraModal()
         }
         
@@ -248,45 +259,61 @@ final class HomeViewController: BaseViewController {
         keywordPartnerOnlyView.onSendPhotoTapped = { [weak self] in
             guard let self else { return }
             print("전송하러 가기")
-            // TODO: 카메라 열기
             self.coordinator?.showCameraModal()
         }
     }
     
-    @objc private func setupButtonTapped() {
-        coordinator?.showKeywordSetting()
-    }
-    
     func updateSettingStatus(isCompleted: Bool) {
         self.isSettingCompleted = isCompleted
-        UserDefaults.standard.set(isCompleted, forKey: "isSettingCompleted")
-        switchContainer()
+        
+        if isCompleted {
+            showAfterSettingUI()
+        } else {
+            showBeforeSettingUI()
+        }
     }
     
-    private func switchContainer() {
-        if isSettingCompleted {
-            beforeSettingContainerView.isHidden = true
-            afterSettingContainerView.isHidden = false
-            
-            let selectedKeyword = keywords[selectedKeywordIndex].text
-            if selectedKeyword == "오늘의 질문" {
-                updateQuestionUI()
-            } else {
-                updateKeywordUI(keyword: selectedKeyword)
-            }
-        } else {
-            beforeSettingContainerView.isHidden = false
-            afterSettingContainerView.isHidden = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                
-                self?.coordinator?.showInviteModal()
-            }
+    //MARK: - 세팅 UI
+    private func setInvite() {
+//        hideContentViews()   ✅ 콘텐츠 뷰만 숨김
+        settingInviteCodeView.isHidden = false
+        print("✅ [setInvite] settingInviteCodeView 표시")
+    }
+    
+    private func setCouple() {
+//        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
+        settingCoupleView.isHidden = false
+        print("✅ [setCouple] settingCoupleView 표시")
+    }
+    
+    // MARK: - Hide Views
+    private func hideAllViews() {
+        // 초기 설정 시 모든 뷰 숨김
+        [settingCoupleView, settingInviteCodeView, beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
+         keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach {
+            $0.isHidden = true
+        }
+    }
+    
+    private func hideContentViews() {
+        // 콘텐츠 뷰만 숨김 (설정 뷰는 제외)
+        [beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
+         keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach {
+            $0.isHidden = true
+        }
+    }
+    
+    private func hideSettingViews() {
+        // 설정 뷰만 숨김
+        [settingCoupleView, settingInviteCodeView].forEach {
+            $0.isHidden = true
         }
     }
     
     // MARK: - 오늘의 질문 UI 업데이트
     private func updateQuestionUI() {
-        hideAllViews()
+//        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
+        hideSettingViews()  // ✅ 설정 뷰 숨김
         guard let question = currentQuestion else { return }
         
         switch question.status {
@@ -300,7 +327,13 @@ final class HomeViewController: BaseViewController {
             
         case .partnerOnly(let imageURL, let questionText):
             questionPartnerOnlyView.isHidden = false
-            questionPartnerOnlyView.configure(question: "상대가 가장 사랑스러워 보였던\n순간은 언제인가요?", subTitle: "상대방이 어떤 사진을 보냈는을까요?\n내 사진을 공유하면\n상대방의 사진도 확인할 수 있어요.", partnerName: "jpg", partnerImageURL: imageURL, partmerTime: "PM 12:30")
+            questionPartnerOnlyView.configure(
+                question: "상대가 가장 사랑스러워 보였던\n순간은 언제인가요?",
+                subTitle: "상대방이 어떤 사진을 보냈는을까요?\n내 사진을 공유하면\n상대방의 사진도 확인할 수 있어요.",
+                partnerName: "jpg",
+                partnerImageURL: imageURL,
+                partmerTime: "PM 12:30"
+            )
             
         case .bothAnswered(let myURL, let partnerURL, _):
             questionBothView.isHidden = false
@@ -319,7 +352,8 @@ final class HomeViewController: BaseViewController {
     
     // MARK: - 키워드 UI 업데이트
     private func updateKeywordUI(keyword: String) {
-        hideAllViews()
+//        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
+        hideSettingViews()  // ✅ 설정 뷰 숨김
         
         guard let keywordData = keywordDataDict[keyword],
               let status = keywordData.status else { return }
@@ -356,13 +390,6 @@ final class HomeViewController: BaseViewController {
                 partnerCaption: partnerCap,
                 myName: "쏘피"
             )
-        }
-    }
-    
-    private func hideAllViews() {
-        [beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
-         keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach {
-            $0.isHidden = true
         }
     }
     

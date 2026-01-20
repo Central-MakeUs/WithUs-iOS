@@ -51,7 +51,6 @@ class SignUpCoordinator: Coordinator {
     
     // 회원가입 완료
     func didCompleteSignUp() {
-        UserDefaults.standard.set(false, forKey: "isSettingCompleted")
         delegate?.signUpCoordinatorDidFinish(self)
     }
     

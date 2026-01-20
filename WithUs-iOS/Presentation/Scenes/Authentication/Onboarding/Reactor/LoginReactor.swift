@@ -19,19 +19,14 @@ final class LoginReactor: Reactor {
     
     enum Mutation {
         case setLoading(Bool)
-        case setLoginSuccess(isInitialized: Bool)
+        case setLoginSuccess(status: OnboardingStatus)
         case setError(String)
     }
     
     struct State {
         var isLoading: Bool = false
-        var loginResult: LoginResult?
+        var loginResult: OnboardingStatus?
         var errorMessage: String?
-    }
-    
-    enum LoginResult {
-        case needsSignup
-        case goToMain
     }
     
     let initialState: State
@@ -62,17 +57,10 @@ final class LoginReactor: Reactor {
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
             newState.errorMessage = nil
-            
-        case .setLoginSuccess(let isInitialized):
+        case .setLoginSuccess(let status):
             newState.isLoading = false
             newState.errorMessage = nil
-            
-            if isInitialized {
-                newState.loginResult = .goToMain
-            } else {
-                newState.loginResult = .needsSignup
-            }
-            
+            newState.loginResult = status
         case .setError(let message):
             newState.isLoading = false
             newState.errorMessage = message
@@ -94,16 +82,14 @@ final class LoginReactor: Reactor {
                 Task {
                     do {
                         let oauthToken = try await self.kakaoLogin()
+                        let fcmToken = FCMTokenManager.shared.fcmToken ?? ""
                         
                         let result = try await self.kakaoLoginUseCase.execute(
                             oauthToken: oauthToken,
-                            fcmToken: ""
-                        )
+                            fcmToken: fcmToken
+                        ).userOnboardingStatus
                         
-                        print(result.isInitialized)
-                        print(result.needsProfileSetup)
-                        
-                        observer.onNext(.setLoginSuccess(isInitialized: result.isInitialized))
+                        observer.onNext(.setLoginSuccess(status: result))
                         observer.onCompleted()
                         
                     } catch let error as KakaoLoginError {

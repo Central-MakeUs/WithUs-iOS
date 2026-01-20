@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		93B4F71A2F1F989F006706EC /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 93B4F7192F1F989F006706EC /* FirebaseAnalytics */; };
+		93B4F71C2F1F989F006706EC /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 93B4F71B2F1F989F006706EC /* FirebaseMessaging */; };
 		9913AC7F2F166F3800B74E63 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 9913AC7E2F166F3800B74E63 /* Alamofire */; };
 		9913AC822F166F4F00B74E63 /* ReactorKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9913AC812F166F4F00B74E63 /* ReactorKit */; };
 		9913AC952F1677E600B74E63 /* KakaoSDKAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 9913AC942F1677E600B74E63 /* KakaoSDKAuth */; };
@@ -78,12 +80,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93B4F71C2F1F989F006706EC /* FirebaseMessaging in Frameworks */,
 				9913ACB12F168BCF00B74E63 /* RxRelay in Frameworks */,
 				9913AC7F2F166F3800B74E63 /* Alamofire in Frameworks */,
 				9913ACB32F168BCF00B74E63 /* RxSwift in Frameworks */,
 				991607082F0BF1790056EC8D /* SnapKit in Frameworks */,
 				9913AC822F166F4F00B74E63 /* ReactorKit in Frameworks */,
 				9913AC992F1677E600B74E63 /* KakaoSDKUser in Frameworks */,
+				93B4F71A2F1F989F006706EC /* FirebaseAnalytics in Frameworks */,
 				9916070B2F0BF1840056EC8D /* Then in Frameworks */,
 				9913AC972F1677E600B74E63 /* KakaoSDKCommon in Frameworks */,
 				9913ACAF2F168BCF00B74E63 /* RxCocoa in Frameworks */,
@@ -159,6 +163,8 @@
 				9913ACAE2F168BCF00B74E63 /* RxCocoa */,
 				9913ACB02F168BCF00B74E63 /* RxRelay */,
 				9913ACB22F168BCF00B74E63 /* RxSwift */,
+				93B4F7192F1F989F006706EC /* FirebaseAnalytics */,
+				93B4F71B2F1F989F006706EC /* FirebaseMessaging */,
 			);
 			productName = "WithUs-iOS";
 			productReference = 999F3E1F2F04E5D1002119DE /* WithUs-iOS.app */;
@@ -249,6 +255,7 @@
 				9913AC802F166F4F00B74E63 /* XCRemoteSwiftPackageReference "ReactorKit" */,
 				9913AC932F1677E600B74E63 /* XCRemoteSwiftPackageReference "kakao-ios-sdk" */,
 				9913ACAD2F168BCF00B74E63 /* XCRemoteSwiftPackageReference "RxSwift" */,
+				93B4F7182F1F989F006706EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 999F3E202F04E5D1002119DE /* Products */;
@@ -642,6 +649,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		93B4F7182F1F989F006706EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.8.0;
+			};
+		};
 		9913AC7D2F166F3800B74E63 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
@@ -693,6 +708,16 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		93B4F7192F1F989F006706EC /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 93B4F7182F1F989F006706EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		93B4F71B2F1F989F006706EC /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 93B4F7182F1F989F006706EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
 		9913AC7E2F166F3800B74E63 /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 9913AC7D2F166F3800B74E63 /* XCRemoteSwiftPackageReference "Alamofire" */;

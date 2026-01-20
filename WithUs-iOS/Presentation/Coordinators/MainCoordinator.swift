@@ -58,7 +58,6 @@ final class MainCoordinator: Coordinator {
         tabBarController.tabBar.standardAppearance = appearance
         tabBarController.tabBar.scrollEdgeAppearance = appearance
         
-        // 홈 탭
         let homeNavigationController = UINavigationController()
         let homeCoord = HomeCoordinator(navigationController: homeNavigationController)
         self.homeCoordinator = homeCoord // 프로퍼티에 저장 ✅
@@ -74,7 +73,6 @@ final class MainCoordinator: Coordinator {
             selectedImage: homeSelectedImage
         )
         
-        // 추억 탭
         let memoryNavigationController = UINavigationController()
         let memoryCoord = MemoryCoordinator(navigationController: memoryNavigationController)
         self.memoryCoordinator = memoryCoord // 프로퍼티에 저장 ✅
@@ -90,7 +88,6 @@ final class MainCoordinator: Coordinator {
             selectedImage: memorySelectedImage
         )
         
-        // 네컷 탭
         let fourCutNavigationController = UINavigationController()
         let fourCutCoord = FourCutCoordinator(navigationController: fourCutNavigationController)
         self.fourCutCoordinator = fourCutCoord // 프로퍼티에 저장 ✅
@@ -106,7 +103,6 @@ final class MainCoordinator: Coordinator {
             selectedImage: fourCutSelectedImage
         )
         
-        // 프로필 탭
         let profileNavigationController = UINavigationController()
         let profileCoord = ProfileCoordinator(navigationController: profileNavigationController)
         self.profileCoordinator = profileCoord // 프로퍼티에 저장 ✅

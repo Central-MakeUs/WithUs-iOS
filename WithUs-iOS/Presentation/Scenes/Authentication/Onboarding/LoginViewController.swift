@@ -97,8 +97,6 @@ final class LoginViewController: BaseViewController, View {
         }
     }
     
-    //MARK: TODO(viewmodel 작업, network - async await 작업필수)
-    
     override func setupActions() {
         kakaoButton.addTarget(self, action: #selector(kakaoButtonTapped), for: .touchUpInside)
         appleButton.addTarget(self, action: #selector(appleButtonTapped), for: .touchUpInside)
@@ -108,12 +106,13 @@ final class LoginViewController: BaseViewController, View {
         reactor.state.compactMap { $0.loginResult }
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] result in
-                switch result {
-                case .needsSignup:
-                    self?.coordinator?.showSignup()
-                case .goToMain:
-                    self?.coordinator?.didLogin()
+            .subscribe(onNext: { [weak self] status in
+                guard let self else { return }
+                switch status {
+                case .needUserSetup:
+                    self.coordinator?.showSignup()
+                default:
+                    self.coordinator?.didLogin()
                 }
             })
             .disposed(by: disposeBag)

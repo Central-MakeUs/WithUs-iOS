@@ -15,11 +15,10 @@ final class UserDefaultsManager {
     
     private init() {}
     
-    // MARK: - Keys
-    
     private enum Keys {
         static let accessToken = "accessToken"
         static let refreshToken = "refreshToken"
+        static let fcmToken = "fcmToken"
     }
     
     var accessToken: String? {
@@ -48,8 +47,25 @@ final class UserDefaultsManager {
         }
     }
     
+    var fcmToken: String? {
+        get {
+            return userDefaults.string(forKey: Keys.fcmToken)
+        }
+        set {
+            if let token = newValue {
+                userDefaults.set(token, forKey: Keys.fcmToken)
+            } else {
+                userDefaults.removeObject(forKey: Keys.fcmToken)
+            }
+        }
+    }
+    
     func clearTokens() {
         accessToken = nil
         refreshToken = nil
+    }
+    
+    func clearFCMToken() {
+        fcmToken = nil
     }
 }

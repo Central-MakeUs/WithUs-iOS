@@ -44,7 +44,6 @@ public final class NetworkService {
             if let statusCode = dataResponse.response?.statusCode {
                 print("Status Code: \(statusCode)")
                 
-                // 400번대, 500번대 에러는 서버 응답 파싱 시도
                 if (400...599).contains(statusCode) {
                     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                     print("⚠️ HTTP Error \(statusCode) - 서버 에러 메시지 확인 중...")

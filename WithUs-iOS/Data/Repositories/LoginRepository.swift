@@ -38,9 +38,7 @@ final class LoginRepository: LoginRepositoryProtocol {
             responseType: SocialLoginResponse.self
         )
         
-        print("jwt: \(response.jwt)")
-//        TokenManager.shared.accessToken = response.jwt
-        
+        TokenManager.shared.accessToken = response.jwt
         return response
     }
 }

@@ -14,37 +14,24 @@ class HomeCoordinator: Coordinator {
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
-        print("✅ [HomeCood] 생성됨, navController: \(navigationController)")
     }
     
     func start() {
-        print("✅ [HomeCoord] start() 호출")
+        let networkService = NetworkService.shared
+        let repository = HomeRepository(networkService: networkService)
+        let fetchUserStatusUseCase = FetchUserStatusUseCase(repository: repository)
+        let reactor = HomeReactor(fetchUserStatusUseCase: fetchUserStatusUseCase)
         let homeViewController = HomeViewController()
-        print("✅ [HomeCoord] HomeViewController 생성 완료")
-        
+        homeViewController.reactor = reactor
         homeViewController.coordinator = self
-        print("✅ [HomeCoord] coordinator 연결 완료, 확인: \(homeViewController.coordinator != nil)")
-        
         navigationController.setViewControllers([homeViewController], animated: false)
-        print("✅ [HomeCoord] setViewControllers 완료")
     }
     
     func showKeywordSetting() {
-        print("\n🔥🔥🔥 [HomeCoord] showKeywordSetting() 호출됨! 🔥🔥🔥")
-        print("🔥 navigationController: \(navigationController)")
-        print("🔥 현재 스택: \(navigationController.viewControllers.count)개")
-        
         let keywordSettingVC = KeywordSettingViewController()
         keywordSettingVC.coordinator = self
         keywordSettingVC.hidesBottomBarWhenPushed = true
-        
-        print("🔥 KeywordSettingViewController 생성 완료")
-        print("🔥 push 시작...")
-        
         navigationController.pushViewController(keywordSettingVC, animated: true)
-        
-        print("🔥 push 완료!")
-        print("🔥 push 후 스택: \(navigationController.viewControllers.count)개")
     }
     
     func showTimeSetting() {
@@ -52,12 +39,9 @@ class HomeCoordinator: Coordinator {
         timePickerVC.coordinator = self
         timePickerVC.hidesBottomBarWhenPushed = true
         navigationController.pushViewController(timePickerVC, animated: true)
-        print("🔥 push 완료!")
-        print("🔥 push 후 스택: \(navigationController.viewControllers.count)개")
     }
     
     func finishSetting(selectedTime: String) {
-        print("✅ 설정 완료 - 시간: \(selectedTime)")
         navigationController.popToRootViewController(animated: true)
         
         if let homeVC = navigationController.viewControllers.first as? HomeViewController {
@@ -84,7 +68,6 @@ class HomeCoordinator: Coordinator {
     }
 
     func startInviteFlow(_ type: CodeType) {
-         print("✅ [HomeCoord] startInviteFlow(\(type)) 호출")
          let inviteCoord = InviteCoordinator(navigationController: navigationController, type: type)
          inviteCoord.delegate = self
          self.inviteCoordinator = inviteCoord
@@ -96,7 +79,6 @@ class HomeCoordinator: Coordinator {
 
 extension HomeCoordinator: InviteCoordinatorDelegate {
     func inviteCoordinatorDidFinish(_ coordinator: InviteCoordinator) {
-        print("✅ [HomeCoord] inviteCoordinatorDidFinish 호출")
         childCoordinators.removeAll { $0 === coordinator }
         inviteCoordinator = nil
         coordinator.finish()
