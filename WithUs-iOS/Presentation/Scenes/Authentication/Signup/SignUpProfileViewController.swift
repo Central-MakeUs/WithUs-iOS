@@ -62,7 +62,7 @@ final class SignUpProfileViewController: BaseViewController, View {
         setLeftBarButton(image: UIImage(systemName: "chevron.left"))
         let attributed = createHighlightedAttributedString(
             fullText: "4/4",
-            highlightText: "4 ",
+            highlightRange: NSRange(location: 0, length: 1),
             highlightColor: UIColor(hex: "#EF4044"),
             normalColor: UIColor.gray900,
             font: UIFont.pretendard16SemiBold
@@ -118,7 +118,7 @@ final class SignUpProfileViewController: BaseViewController, View {
     
     func createHighlightedAttributedString(
         fullText: String,
-        highlightText: String,
+        highlightRange: NSRange,
         highlightColor: UIColor,
         normalColor: UIColor,
         font: UIFont
@@ -130,10 +130,7 @@ final class SignUpProfileViewController: BaseViewController, View {
             .foregroundColor: normalColor
         ], range: NSRange(location: 0, length: fullText.count))
         
-        if let range = fullText.range(of: highlightText) {
-            let nsRange = NSRange(range, in: fullText)
-            attributedString.addAttribute(.foregroundColor, value: highlightColor, range: nsRange)
-        }
+        attributedString.addAttribute(.foregroundColor, value: highlightColor, range: highlightRange)
         
         return attributedString
     }

@@ -87,11 +87,11 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         super.viewDidLoad()
         setupMockQuestion()
         setupMockKeywordData()
-        if let reactor {
-            reactor.action.onNext(.viewDidLoad)
-        } else {
-            print("⚠️ Reactor가 nil입니다")
-        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        reactor?.action.onNext(.viewWillAppear)
     }
 
     override func setupUI() {
@@ -180,7 +180,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             .disposed(by: disposeBag)
     }
     
-    // MARK: - Onboarding Status Handling
     private func handleOnboardingStatus(_ status: OnboardingStatus) {
         print("🔴 [HomeVC] 온보딩 상태: \(status.rawValue)")
         switch status {
@@ -276,20 +275,19 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     
     //MARK: - 세팅 UI
     private func setInvite() {
-//        hideContentViews()   ✅ 콘텐츠 뷰만 숨김
+        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
         settingInviteCodeView.isHidden = false
         print("✅ [setInvite] settingInviteCodeView 표시")
     }
     
     private func setCouple() {
-//        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
+        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
         settingCoupleView.isHidden = false
         print("✅ [setCouple] settingCoupleView 표시")
     }
     
     // MARK: - Hide Views
     private func hideAllViews() {
-        // 초기 설정 시 모든 뷰 숨김
         [settingCoupleView, settingInviteCodeView, beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
          keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach {
             $0.isHidden = true
@@ -297,7 +295,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     }
     
     private func hideContentViews() {
-        // 콘텐츠 뷰만 숨김 (설정 뷰는 제외)
         [beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
          keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach {
             $0.isHidden = true
@@ -305,7 +302,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     }
     
     private func hideSettingViews() {
-        // 설정 뷰만 숨김
         [settingCoupleView, settingInviteCodeView].forEach {
             $0.isHidden = true
         }
@@ -313,7 +309,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     
     // MARK: - 오늘의 질문 UI 업데이트
     private func updateQuestionUI() {
-//        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
+        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
         hideSettingViews()  // ✅ 설정 뷰 숨김
         guard let question = currentQuestion else { return }
         
@@ -353,7 +349,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     
     // MARK: - 키워드 UI 업데이트
     private func updateKeywordUI(keyword: String) {
-//        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
+        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
         hideSettingViews()  // ✅ 설정 뷰 숨김
         
         guard let keywordData = keywordDataDict[keyword],

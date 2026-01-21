@@ -10,7 +10,7 @@ import ReactorKit
 
 final class HomeReactor: Reactor {
     enum Action {
-        case viewDidLoad
+        case viewWillAppear
     }
     
     enum Mutation {
@@ -34,7 +34,7 @@ final class HomeReactor: Reactor {
     
     func mutate(action: Action) -> Observable<Mutation> {
         switch action {
-        case .viewDidLoad:
+        case .viewWillAppear:
             fetchUserStatus()
         }
     }
@@ -49,7 +49,7 @@ final class HomeReactor: Reactor {
         case .setOnboardingStatus(let status):
             newState.isLoading = false
             newState.errorMessage = nil
-            newState.onboardingStatus = status == .needCoupleConnect ? .needUserSetup : status
+            newState.onboardingStatus = status == .needCoupleConnect ? .needCoupleSetup : status
         case .setError(let message):
             newState.isLoading = false
             newState.errorMessage = message
