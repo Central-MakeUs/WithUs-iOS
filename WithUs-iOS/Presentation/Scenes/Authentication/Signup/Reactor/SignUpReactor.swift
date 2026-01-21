@@ -14,12 +14,14 @@ final class SignUpReactor: Reactor {
     enum Action {
         case selectImage(Data)
         case updateNickname(String)
+        case updateBirthDate(String)
         case completeProfile
     }
     
     enum Mutation {
         case setProfileImage(Data)
         case setNickname(String)
+        case setBirthDate(String)
         case setLoading(Bool)
         case setSuccess
         case setError(String)
@@ -28,6 +30,7 @@ final class SignUpReactor: Reactor {
     struct State {
         var profileImage: Data?
         var nickname: String = ""
+        var birthDate: String = ""
         var isLoading: Bool = false
         var isCompleted: Bool = false
         var errorMessage: String?
@@ -50,6 +53,9 @@ final class SignUpReactor: Reactor {
             
         case .completeProfile:
             return completeProfileFlow()
+            
+        case .updateBirthDate(let birthDate):
+            return .just(.setBirthDate(birthDate))
         }
     }
     
@@ -73,6 +79,9 @@ final class SignUpReactor: Reactor {
         case .setError(let message):
             newState.isLoading = false
             newState.errorMessage = message
+            
+        case .setBirthDate(let birthDate):
+            newState.birthDate = birthDate
         }
         
         return newState

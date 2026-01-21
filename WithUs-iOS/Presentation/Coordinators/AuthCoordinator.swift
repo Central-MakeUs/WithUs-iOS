@@ -27,7 +27,7 @@ class AuthCoordinator: Coordinator {
     private func showOnboarding() {
         let onboardingVC = OnboardingViewController()
         onboardingVC.coordinator = self
-        navigationController.setViewControllers([onboardingVC], animated: false)
+        navigationController.setViewControllers([onboardingVC], animated: true)
     }
     
     func showLogin() {
@@ -37,7 +37,7 @@ class AuthCoordinator: Coordinator {
         let reactor = LoginReactor(kakaoLoginUseCase: useCase)
         let loginVC = LoginViewController(reactor: reactor)
         loginVC.coordinator = self
-        navigationController.pushViewController(loginVC, animated: false)
+        navigationController.pushViewController(loginVC, animated: true)
     }
     
     func showSignup() {
