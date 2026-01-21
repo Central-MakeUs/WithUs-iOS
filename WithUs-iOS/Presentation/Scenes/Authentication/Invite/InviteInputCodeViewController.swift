@@ -59,7 +59,6 @@ class InviteInputCodeViewController: BaseViewController, View {
         $0.font = UIFont.pretendard14Regular
         $0.text = "초대코드를 다시 확인해주세요."
         $0.textColor = UIColor.redWarning
-        $0.isHidden = true
     }
     
     private let warningStackView = UIStackView().then {
@@ -67,6 +66,7 @@ class InviteInputCodeViewController: BaseViewController, View {
         $0.spacing = 4
         $0.alignment = .center
         $0.distribution = .fill
+        $0.isHidden = true
     }
     
     private var pinDigitViews: [PinDigitView] = []
@@ -89,6 +89,7 @@ class InviteInputCodeViewController: BaseViewController, View {
         setupTextField()
         setupTapGesture()
         setupKeyboardObservers()
+        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -97,7 +98,6 @@ class InviteInputCodeViewController: BaseViewController, View {
     }
     
     override func setupUI() {
-        setupNavigationBar()
         view.addSubview(titleLabel)
         view.addSubview(pinStackView)
         for _ in 0..<pinLength {
@@ -149,22 +149,20 @@ class InviteInputCodeViewController: BaseViewController, View {
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
             .bind(with: self) { owner, data in
+                owner.warningStackView.isHidden = true
                 owner.coordinator?.showInviteVerified()
             }
             .disposed(by: disposeBag)
+        
+        reactor.state.compactMap { $0.errorMessage }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, data in
+                owner.warningStackView.isHidden = false
+                owner.warningLabel.text = data
+            }
+            .disposed(by: disposeBag)
     }
-    
-    private func setupNavigationBar() {
-        let backButton = UIBarButtonItem(
-            image: UIImage(systemName: "chevron.left"),
-            style: .plain,
-            target: self,
-            action: #selector(backButtonTapped)
-        )
-        backButton.tintColor = .black
-        navigationItem.leftBarButtonItem = backButton
-    }
-    
+
     private func setupTextField() {
         hiddenTextField.delegate = self
         hiddenTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
@@ -193,8 +191,7 @@ class InviteInputCodeViewController: BaseViewController, View {
     
     @objc private func nextBtnTapped() {
         if self.nextButton.isEnabled {
-//            reactor?.action.onNext(.verifyCode(pinCode))
-            reactor?.action.onNext(.verifyCode("95659783"))
+            reactor?.action.onNext(.verifyCode(pinCode))
         }
     }
     

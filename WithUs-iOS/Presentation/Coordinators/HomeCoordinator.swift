@@ -11,7 +11,7 @@ class HomeCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     private var inviteCoordinator: InviteCoordinator?
-    
+    weak var mainCoordinator: MainCoordinator?
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
@@ -24,7 +24,11 @@ class HomeCoordinator: Coordinator {
         let homeViewController = HomeViewController()
         homeViewController.reactor = reactor
         homeViewController.coordinator = self
-        navigationController.setViewControllers([homeViewController], animated: false)
+        navigationController.setViewControllers([homeViewController], animated: true)
+    }
+    
+    func handleNeedUserSetup() {
+        mainCoordinator?.handleNeedUserSetup()
     }
     
     func showKeywordSetting() {
@@ -63,7 +67,8 @@ class HomeCoordinator: Coordinator {
     func showInviteModal() {
         let inviteModalVC = InviteViewController()
         inviteModalVC.coordinator = self
-        inviteModalVC.modalPresentationStyle = .fullScreen
+        inviteModalVC.view.backgroundColor = .white
+        inviteModalVC.modalPresentationStyle = .overFullScreen
         navigationController.present(inviteModalVC, animated: true)
     }
 

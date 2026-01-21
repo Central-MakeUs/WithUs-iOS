@@ -24,6 +24,10 @@ class AuthCoordinator: Coordinator {
         showOnboarding()
     }
     
+    func startWithSignUp() {
+        showSignup()
+    }
+    
     private func showOnboarding() {
         let onboardingVC = OnboardingViewController()
         onboardingVC.coordinator = self

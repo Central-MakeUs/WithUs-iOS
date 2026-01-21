@@ -86,6 +86,15 @@ final class SignupBirthDayViewController: BaseViewController, View {
         super.viewDidLoad()
         setupKeyboardObservers()
         setupGestureRecognizer()
+        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        let attributed = createHighlightedAttributedString(
+            fullText: "2/4",
+            highlightText: "2",
+            highlightColor: UIColor(hex: "#EF4044"),
+            normalColor: UIColor.gray900,
+            font: UIFont.pretendard16SemiBold
+        )
+        setRightBarButton(attributedTitle: attributed)
     }
     
     override func setupUI() {
@@ -129,6 +138,28 @@ final class SignupBirthDayViewController: BaseViewController, View {
     
     func bind(reactor: SignUpReactor) {
         
+    }
+    
+    func createHighlightedAttributedString(
+        fullText: String,
+        highlightText: String,
+        highlightColor: UIColor,
+        normalColor: UIColor,
+        font: UIFont
+    ) -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(string: fullText)
+        
+        attributedString.addAttributes([
+            .font: font,
+            .foregroundColor: normalColor
+        ], range: NSRange(location: 0, length: fullText.count))
+        
+        if let range = fullText.range(of: highlightText) {
+            let nsRange = NSRange(range, in: fullText)
+            attributedString.addAttribute(.foregroundColor, value: highlightColor, range: nsRange)
+        }
+        
+        return attributedString
     }
     
     private func setupKeyboardObservers() {
@@ -199,7 +230,7 @@ final class SignupBirthDayViewController: BaseViewController, View {
     @objc private func nextButtonTapped() {
         guard let birthDate = birthDayTextField.text, !birthDate.isEmpty else { return }
         reactor?.action.onNext(.updateBirthDate(birthDate))
-        coordinator?.showSignUpProfile()
+        coordinator?.showKeyword()
     }
     
     @objc private func dismissKeyboard() {

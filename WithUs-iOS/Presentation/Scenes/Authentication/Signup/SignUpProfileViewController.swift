@@ -57,6 +57,19 @@ final class SignUpProfileViewController: BaseViewController, View {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        let attributed = createHighlightedAttributedString(
+            fullText: "4/4",
+            highlightText: "4 ",
+            highlightColor: UIColor(hex: "#EF4044"),
+            normalColor: UIColor.gray900,
+            font: UIFont.pretendard16SemiBold
+        )
+        setRightBarButton(attributedTitle: attributed)
+    }
+    
     override func setupUI() {
         view.addSubview(titleStackView)
         titleStackView.addArrangedSubview(titleLabel)
@@ -102,6 +115,29 @@ final class SignUpProfileViewController: BaseViewController, View {
     @objc private func nextBtnTapped() {
         reactor?.action.onNext(.completeProfile)
     }
+    
+    func createHighlightedAttributedString(
+        fullText: String,
+        highlightText: String,
+        highlightColor: UIColor,
+        normalColor: UIColor,
+        font: UIFont
+    ) -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(string: fullText)
+        
+        attributedString.addAttributes([
+            .font: font,
+            .foregroundColor: normalColor
+        ], range: NSRange(location: 0, length: fullText.count))
+        
+        if let range = fullText.range(of: highlightText) {
+            let nsRange = NSRange(range, in: fullText)
+            attributedString.addAttribute(.foregroundColor, value: highlightColor, range: nsRange)
+        }
+        
+        return attributedString
+    }
+    
 }
 
 extension SignUpProfileViewController: ProfileViewDelegate {

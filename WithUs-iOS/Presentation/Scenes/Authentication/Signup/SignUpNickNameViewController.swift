@@ -71,7 +71,7 @@ final class SignUpNickNameViewController: BaseViewController, View {
         super.init(nibName: nil, bundle: nil)
         self.reactor = reactor
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -83,6 +83,20 @@ final class SignUpNickNameViewController: BaseViewController, View {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupKeyboardObservers()
+        let attributed = createHighlightedAttributedString(
+            fullText: "1/4",
+            highlightText: "1",
+            highlightColor: UIColor(hex: "#EF4044"),
+            normalColor: UIColor.gray900,
+            font: UIFont.pretendard16SemiBold
+        )
+        setRightBarButton(attributedTitle: attributed)
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+        navigationItem.hidesBackButton = true
     }
     
     override func setupUI() {
@@ -121,12 +135,34 @@ final class SignUpNickNameViewController: BaseViewController, View {
     override func setupActions() {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         nicknameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-
     }
     
     func bind(reactor: SignUpReactor) {
         
     }
+    
+    func createHighlightedAttributedString(
+        fullText: String,
+        highlightText: String,
+        highlightColor: UIColor,
+        normalColor: UIColor,
+        font: UIFont
+    ) -> NSAttributedString {
+        let attributedString = NSMutableAttributedString(string: fullText)
+        
+        attributedString.addAttributes([
+            .font: font,
+            .foregroundColor: normalColor
+        ], range: NSRange(location: 0, length: fullText.count))
+        
+        if let range = fullText.range(of: highlightText) {
+            let nsRange = NSRange(range, in: fullText)
+            attributedString.addAttribute(.foregroundColor, value: highlightColor, range: nsRange)
+        }
+        
+        return attributedString
+    }
+
     
     private func setupKeyboardObservers() {
         NotificationCenter.default.addObserver(

@@ -186,11 +186,12 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         switch status {
         case .needUserSetup:
             print("⚠️ 회원가입이 필요합니다.")
+            coordinator?.handleNeedUserSetup()
         case .needCoupleConnect:
-            showBeforeSettingUI()  // ✅ 수정: beforeSettingContainerView를 먼저 보이게 설정
+            showBeforeSettingUI()
             setInvite()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-//                self?.coordinator?.showInviteModal()
+                self?.coordinator?.showInviteModal()
             }
         case .needCoupleSetup:
             showBeforeSettingUI()
@@ -225,7 +226,8 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         }
         
         settingInviteCodeView.onTap = { [weak self] in
-            // TODO: 초대 코드 입력 화면으로 이동
+            guard let self else { return }
+            self.coordinator?.showInviteModal()
         }
         
         waitingBothView.onSendPhotoTapped = { [weak self] in
@@ -255,7 +257,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             }
         }
         
-        // KeywordPartnerOnlyView 콜백
         keywordPartnerOnlyView.onSendPhotoTapped = { [weak self] in
             guard let self else { return }
             print("전송하러 가기")

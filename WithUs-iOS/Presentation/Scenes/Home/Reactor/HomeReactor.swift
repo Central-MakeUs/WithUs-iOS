@@ -49,7 +49,7 @@ final class HomeReactor: Reactor {
         case .setOnboardingStatus(let status):
             newState.isLoading = false
             newState.errorMessage = nil
-            newState.onboardingStatus = status
+            newState.onboardingStatus = status == .needCoupleConnect ? .needUserSetup : status
         case .setError(let message):
             newState.isLoading = false
             newState.errorMessage = message

@@ -49,6 +49,13 @@ class SignUpCoordinator: Coordinator {
         navigationController.pushViewController(signUpBirthDayVC, animated: true)
     }
     
+    func showKeyword() {
+        guard let reactor else { return }
+        let keywordVC = SignUpSetKeywordViewController()
+        keywordVC.coordinator = self
+        navigationController.pushViewController(keywordVC, animated: true)
+    }
+    
     func showSignUpProfile() {
         guard let reactor else { return }
         let signUpProfileVC = SignUpProfileViewController(reactor: reactor)

@@ -35,6 +35,10 @@ final class MainCoordinator: Coordinator {
         showMainTabBar()
     }
     
+    func handleNeedUserSetup() {
+        delegate?.mainCoordinatorDidFinish(self)
+    }
+    
     private func showMainTabBar() {
         let tabBarController = UITabBarController()
         
@@ -60,6 +64,7 @@ final class MainCoordinator: Coordinator {
         
         let homeNavigationController = UINavigationController()
         let homeCoord = HomeCoordinator(navigationController: homeNavigationController)
+        homeCoord.mainCoordinator = self
         self.homeCoordinator = homeCoord // 프로퍼티에 저장 ✅
         childCoordinators.append(homeCoord)
         homeCoord.start()

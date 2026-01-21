@@ -77,6 +77,7 @@ class InviteCodeViewController: BaseViewController, View {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
         reactor?.action.onNext(.getInvitationCode)
     }
     
@@ -90,7 +91,6 @@ class InviteCodeViewController: BaseViewController, View {
     }
     
     override func setupUI() {
-        setupNavigationBar()
         view.addSubview(titleLabel)
         view.addSubview(pinStackView)
         for _ in 0..<pinLength {
@@ -148,18 +148,6 @@ class InviteCodeViewController: BaseViewController, View {
             }
             .disposed(by: disposeBag)
     }
-    
-    private func setupNavigationBar() {
-        let backButton = UIBarButtonItem(
-            image: UIImage(systemName: "chevron.left"),
-            style: .plain,
-            target: self,
-            action: #selector(backButtonTapped)
-        )
-        backButton.tintColor = .black
-        navigationItem.leftBarButtonItem = backButton
-    }
-    
     
     @objc private func backButtonTapped() {
         navigationController?.popViewController(animated: true)
