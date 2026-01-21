@@ -9,25 +9,18 @@ import UIKit
 import SnapKit
 import Then
 import SwiftUI
+import RxSwift
 
 final class SignUpSetKeywordViewController: BaseViewController {
     weak var coordinator: SignUpCoordinator?
+    private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
+    private let reactor: SignUpReactor
+    private let disposeBag = DisposeBag()
     
-    private var keywords: [Keyword] = [
-        Keyword(text: "맛집"),
-        Keyword(text: "여행"),
-        Keyword(text: "데이트"),
-        Keyword(text: "카페"),
-        Keyword(text: "산책"),
-        Keyword(text: "영화"),
-        Keyword(text: "공연"),
-        Keyword(text: "운동"),
-        Keyword(text: "쇼핑"),
-        Keyword(text: "드라이브"),
-        Keyword(text: "새 키워드 추가", isAddButton: true)
-    ]
-    
-    private var selectedKeywords: Set<UUID> = []
+    private var keywords: [Keyword] = []
+    private var selectedKeywords: Set<String> = []
+    private var serverKeywordIds: Set<Int> = []
+    private var customKeywords: [String] = []
     
     private let titleLabel = UILabel().then {
         $0.font = UIFont.pretendard24Bold
@@ -64,16 +57,30 @@ final class SignUpSetKeywordViewController: BaseViewController {
         $0.isEnabled = false
     }
     
+    private let activityIndicator = UIActivityIndicatorView(style: .medium).then {
+        $0.hidesWhenStopped = true
+    }
+    
     private var cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, KeywordCellData> { cell, indexPath, item in
         cell.contentConfiguration = UIHostingConfiguration {
             KeywordCellView(
                 keyword: item.keyword.text,
                 isSelected: item.isSelected,
-                isAddButton: item.keyword.isAddButton,
+                isAddButton: item.keyword.isAddButton
             )
         }
         .margins(.all, 0)
         .background(Color.clear)
+    }
+    
+    init(fetchKeywordsUseCase: FetchKeywordUseCaseProtocol, reactor: SignUpReactor) {
+        self.fetchKeywordsUseCase = fetchKeywordsUseCase
+        self.reactor = reactor
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
     }
     
     override func viewDidLoad() {
@@ -87,15 +94,16 @@ final class SignUpSetKeywordViewController: BaseViewController {
             font: UIFont.pretendard16SemiBold
         )
         setRightBarButton(attributedTitle: attributed)
+        fetchKeywords()
     }
     
     override func setupUI() {
-        view.backgroundColor = .white
-        
+        super.setupUI()
         view.addSubview(titleLabel)
         view.addSubview(subTitleLabel)
         view.addSubview(collectionView)
         view.addSubview(nextButton)
+        view.addSubview(activityIndicator)
     }
     
     override func setupConstraints() {
@@ -120,6 +128,10 @@ final class SignUpSetKeywordViewController: BaseViewController {
             $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-16)
             $0.height.equalTo(52)
         }
+        
+        activityIndicator.snp.makeConstraints {
+            $0.center.equalToSuperview()
+        }
     }
     
     override func setupActions() {
@@ -135,13 +147,45 @@ final class SignUpSetKeywordViewController: BaseViewController {
         return layout
     }
     
+    private func fetchKeywords() {
+        activityIndicator.startAnimating()
+        
+        Task {
+            do {
+                let keywords = try await fetchKeywordsUseCase.execute()
+                
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    self.activityIndicator.stopAnimating()
+                    self.serverKeywordIds = Set(keywords.compactMap { Int($0.id) })
+                    
+                    self.keywords = keywords + [Keyword(
+                        id: "add_button",
+                        text: "새 키워드 추가",
+                        isAddButton: true
+                    )]
+                    self.collectionView.reloadData()
+                }
+            } catch {
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    self.activityIndicator.stopAnimating()
+                    print("❌ 키워드 조회 실패: \(error.localizedDescription)")
+                    // TODO: 에러 처리 (예: 알럿 표시)
+                }
+            }
+        }
+    }
     @objc private func nextButtonTapped() {
-        let selectedKeywordTexts = keywords
-            .filter { selectedKeywords.contains($0.id) && !$0.isAddButton }
-            .map { $0.text }
+        let defaultKeywordIds = keywords
+            .filter { selectedKeywords.contains($0.id) && !$0.isAddButton && !$0.id.hasPrefix("custom_") }
+            .compactMap { Int($0.id) }
         
-        print("선택된 키워드: \(selectedKeywordTexts)")
+        print("📤 서버 전송 데이터:")
+        print("defaultKeywordIds: \(defaultKeywordIds)")
+        print("customKeywords: \(customKeywords)")
         
+        reactor.action.onNext(.updateKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords))
         
         coordinator?.showSignUpProfile()
     }
@@ -177,10 +221,13 @@ final class SignUpSetKeywordViewController: BaseViewController {
             guard let self = self else { return }
             
             let addButtonIndex = self.keywords.firstIndex(where: { $0.isAddButton }) ?? self.keywords.count
-            let newKeywordItem = Keyword(text: newKeyword)
+            let newKeywordItem = Keyword(
+                id: "custom_\(UUID().uuidString)",
+                text: newKeyword
+            )
             self.keywords.insert(newKeywordItem, at: addButtonIndex)
             
-            self.selectedKeywords.insert(newKeywordItem.id)
+            self.customKeywords.append(newKeyword)
             
             self.collectionView.reloadData()
             self.updateNextButtonState()
@@ -191,8 +238,8 @@ final class SignUpSetKeywordViewController: BaseViewController {
     
     private func updateNextButtonState() {
         let selectedCount = selectedKeywords.count
-        nextButton.isEnabled = selectedCount >= 3
-        nextButton.backgroundColor = selectedCount >= 3 ? UIColor.abled : UIColor.disabled
+        nextButton.isEnabled = selectedCount == 2
+        nextButton.backgroundColor = selectedCount == 2 ? UIColor.abled : UIColor.disabled
     }
 }
 
@@ -226,6 +273,7 @@ extension SignUpSetKeywordViewController: UICollectionViewDelegate {
         if selectedKeywords.contains(keyword.id) {
             selectedKeywords.remove(keyword.id)
         } else {
+            guard selectedKeywords.count < 2 else { return }
             selectedKeywords.insert(keyword.id)
         }
         

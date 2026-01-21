@@ -9,36 +9,40 @@ import Foundation
 import Alamofire
 
 enum UserEndpoint {
-    case updateProfile(nickname: String, imageObjectKey: String?)
+    case updateProfile(nickname: String,
+                       birthday: String,
+                       defaultKeywordIds: [Int],
+                       customKeywords: [String],
+                       imageKey: String?)
 }
 
 extension UserEndpoint: EndpointProtocol {
     var path: String {
         switch self {
         case .updateProfile:
-            return "/api/me/user"
+            return "/api/me/onboarding"
         }
     }
     
     var method: HTTPMethod {
         switch self {
         case .updateProfile:
-            return .patch
+            return .put
         }
     }
     
-    // request body, parameter 방식 둘다 상관없이 parametrs를 사용한다.
     var parameters: Parameters? {
         switch self {
-        case .updateProfile(let nickname, let imageObjectKey):
+        case .updateProfile(let nickname, let birthday, let defaultKeywordIds, let customKeywords, let imageKey):
             var params: [String: Any] = [
-                "nickname": nickname
+                "nickname": nickname,
+                "birthday": birthday,
+                "defaultKeywordIds": defaultKeywordIds,
+                "customKeywords": customKeywords
             ]
-            
-            if let imageObjectKey = imageObjectKey {
-                params["imageObjectKey"] = imageObjectKey
+            if let imageKey = imageKey {
+                params["imageKey"] = imageKey
             }
-            
             return params
         }
     }

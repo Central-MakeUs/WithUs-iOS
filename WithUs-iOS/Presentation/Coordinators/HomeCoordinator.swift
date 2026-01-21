@@ -12,30 +12,32 @@ class HomeCoordinator: Coordinator {
     var navigationController: UINavigationController
     private var inviteCoordinator: InviteCoordinator?
     weak var mainCoordinator: MainCoordinator?
+    
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
     
     func start() {
         let networkService = NetworkService.shared
-        let repository = HomeRepository(networkService: networkService)
-        let fetchUserStatusUseCase = FetchUserStatusUseCase(repository: repository)
-        let reactor = HomeReactor(fetchUserStatusUseCase: fetchUserStatusUseCase)
-        let homeViewController = HomeViewController()
-        homeViewController.reactor = reactor
+        
+        // HomeReactor 의존성
+        let homeRepository = HomeRepository(networkService: networkService)
+        let fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
+        let homeReactor = HomeReactor(fetchUserStatusUseCase: fetchUserStatusUseCase)
+        
+        // HomeViewController 의존성
+        let coupleKeywordRepository = CoupleKeywordRepository(networkService: networkService)
+        let fetchCoupleKeywordsUseCase = FetchCoupleKeywordsUseCase(coupleKeywordRepository: coupleKeywordRepository)
+        
+        let homeViewController = HomeViewController(fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase)
+        homeViewController.reactor = homeReactor
         homeViewController.coordinator = self
+        
         navigationController.setViewControllers([homeViewController], animated: true)
     }
     
     func handleNeedUserSetup() {
         mainCoordinator?.handleNeedUserSetup()
-    }
-    
-    func showKeywordSetting() {
-        let keywordSettingVC = KeywordSettingViewController()
-        keywordSettingVC.coordinator = self
-        keywordSettingVC.hidesBottomBarWhenPushed = true
-        navigationController.pushViewController(keywordSettingVC, animated: true)
     }
     
     func showTimeSetting() {
@@ -79,7 +81,6 @@ class HomeCoordinator: Coordinator {
          childCoordinators.append(inviteCoord)
          inviteCoord.start()
      }
-     
 }
 
 extension HomeCoordinator: InviteCoordinatorDelegate {

@@ -31,7 +31,7 @@ class AuthCoordinator: Coordinator {
     private func showOnboarding() {
         let onboardingVC = OnboardingViewController()
         onboardingVC.coordinator = self
-        navigationController.setViewControllers([onboardingVC], animated: true)
+        navigationController.setViewControllers([onboardingVC], animated: false)
     }
     
     func showLogin() {

@@ -8,13 +8,15 @@
 import Foundation
 
 struct Keyword: Hashable {
-    let id: UUID
+    let id: String
     let text: String
+    let displayOrder: Int
     let isAddButton: Bool
     
-    init(id: UUID = UUID(), text: String, isAddButton: Bool = false) {
+    init(id: String, text: String, displayOrder: Int = 0, isAddButton: Bool = false) {
         self.id = id
         self.text = text
+        self.displayOrder = displayOrder
         self.isAddButton = isAddButton
     }
     
@@ -24,5 +26,15 @@ struct Keyword: Hashable {
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
+    }
+}
+
+struct KeywordCellData: Hashable {
+    let keyword: Keyword
+    let isSelected: Bool
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(keyword.id)
+        hasher.combine(isSelected)
     }
 }

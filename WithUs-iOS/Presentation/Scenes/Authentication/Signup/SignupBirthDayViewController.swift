@@ -53,6 +53,7 @@ final class SignupBirthDayViewController: BaseViewController, View {
         $0.borderStyle = .none
         $0.layer.cornerRadius = 8
         $0.backgroundColor = UIColor.gray100
+        $0.textColor = UIColor.gray900
         $0.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
         $0.leftViewMode = .always
         $0.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
@@ -98,6 +99,7 @@ final class SignupBirthDayViewController: BaseViewController, View {
     }
     
     override func setupUI() {
+        super.setupUI()
         view.addSubview(titleStackView)
         titleStackView.addArrangedSubview(titleLabel)
         titleStackView.addArrangedSubview(subTitleLabel)

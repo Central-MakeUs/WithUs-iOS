@@ -61,6 +61,7 @@ final class LoginViewController: BaseViewController, View {
     }
     
     override func setupUI() {
+        super.setupUI()
         view.addSubview(logoImageView)
         view.addSubview(buttonStackView)
         view.addSubview(titleLabel)

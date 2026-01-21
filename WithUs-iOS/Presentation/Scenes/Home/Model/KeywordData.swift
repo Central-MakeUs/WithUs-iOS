@@ -7,15 +7,6 @@
 
 import Foundation
 
-struct KeywordCellData: Hashable {
-    let keyword: Keyword
-    let isSelected: Bool
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(keyword.id)
-        hasher.combine(isSelected)
-    }
-}
 // MARK: - Keyword Status (키워드별 상태)
 enum KeywordStatus {
     case bothAnswered(myImageURL: String, partnerImageURL: String, myCaption: String, partnerCaption: String)

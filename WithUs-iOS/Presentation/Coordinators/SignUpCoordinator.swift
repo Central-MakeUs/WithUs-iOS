@@ -16,9 +16,14 @@ class SignUpCoordinator: Coordinator {
     var navigationController: UINavigationController
     weak var delegate: SignUpCoordinatorDelegate?
     var reactor: SignUpReactor?
+    private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
+        
+        let networkService = NetworkService.shared
+        let keywordRepository = KeywordRepository(networkService: networkService)
+        self.fetchKeywordsUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
     }
     
     func start() {
@@ -51,7 +56,7 @@ class SignUpCoordinator: Coordinator {
     
     func showKeyword() {
         guard let reactor else { return }
-        let keywordVC = SignUpSetKeywordViewController()
+        let keywordVC = SignUpSetKeywordViewController(fetchKeywordsUseCase: fetchKeywordsUseCase, reactor: reactor)
         keywordVC.coordinator = self
         navigationController.pushViewController(keywordVC, animated: true)
     }

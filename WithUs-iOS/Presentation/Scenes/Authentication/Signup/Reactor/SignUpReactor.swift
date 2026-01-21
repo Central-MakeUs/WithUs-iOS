@@ -15,6 +15,7 @@ final class SignUpReactor: Reactor {
         case selectImage(Data)
         case updateNickname(String)
         case updateBirthDate(String)
+        case updateKeywords(defaultKeywordIds: [Int], customKeywords: [String])
         case completeProfile
     }
     
@@ -22,6 +23,7 @@ final class SignUpReactor: Reactor {
         case setProfileImage(Data)
         case setNickname(String)
         case setBirthDate(String)
+        case setKeywords(defaultKeywordIds: [Int], customKeywords: [String])
         case setLoading(Bool)
         case setSuccess
         case setError(String)
@@ -31,6 +33,8 @@ final class SignUpReactor: Reactor {
         var profileImage: Data?
         var nickname: String = ""
         var birthDate: String = ""
+        var defaultKeywordIds: [Int] = []
+        var customKeywords: [String] = []
         var isLoading: Bool = false
         var isCompleted: Bool = false
         var errorMessage: String?
@@ -56,6 +60,8 @@ final class SignUpReactor: Reactor {
             
         case .updateBirthDate(let birthDate):
             return .just(.setBirthDate(birthDate))
+        case .updateKeywords(defaultKeywordIds: let defaultKeywordIds, customKeywords: let customKeywords):
+            return .just(.setKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords))
         }
     }
     
@@ -82,6 +88,10 @@ final class SignUpReactor: Reactor {
             
         case .setBirthDate(let birthDate):
             newState.birthDate = birthDate
+            
+        case .setKeywords(let defaultKeywordIds, let customKeywords):
+            newState.defaultKeywordIds = defaultKeywordIds
+            newState.customKeywords = customKeywords
         }
         
         return newState
@@ -99,24 +109,16 @@ final class SignUpReactor: Reactor {
                 
                 Task { @MainActor in
                     do {
-                        let result = try await self.completeProfileUseCase.execute(
-                            nickname: self.currentState.nickname,
-                            profileImage: self.currentState.profileImage
-                        )
-                        
-                        print("✅ 프로필 설정 완료!")
-                        print("   userId: \(result.userId)")
+                        let result = try await self.completeProfileUseCase.execute(nickname: self.currentState.nickname, birthday: self.currentState.birthDate, defaultKeywordIds: self.currentState.defaultKeywordIds, customKeywords: self.currentState.customKeywords, profileImage: self.currentState.profileImage)
                         print("   nickname: \(result.nickname)")
+                        print("   userId: \(result.userId)")
+                        print("   keywords: \(result.keywords)")
                         print("   profileImageUrl: \(result.profileImageUrl ?? "없음")")
                         
                         observer.onNext(.setSuccess)
                         observer.onCompleted()
                         
                     } catch let error as UploadImageError {
-                        observer.onNext(.setError(error.message))
-                        observer.onCompleted()
-                        
-                    } catch let error as ValidationError {
                         observer.onNext(.setError(error.message))
                         observer.onCompleted()
                         

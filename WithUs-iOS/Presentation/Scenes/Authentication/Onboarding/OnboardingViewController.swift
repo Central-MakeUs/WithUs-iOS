@@ -70,6 +70,7 @@ final class OnboardingViewController: BaseViewController {
     }
     
     override func setupUI() {
+        super.setupUI()
         view.addSubview(collectionView)
         view.addSubview(pageControl)
         view.addSubview(nextButton)

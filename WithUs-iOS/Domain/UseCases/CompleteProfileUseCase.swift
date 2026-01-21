@@ -10,6 +10,9 @@ import Foundation
 protocol CompleteProfileUseCaseProtocol {
     func execute(
         nickname: String,
+        birthday: String,
+        defaultKeywordIds: [Int],
+        customKeywords: [String],
         profileImage: Data?
     ) async throws -> User
 }
@@ -28,6 +31,9 @@ final class CompleteProfileUseCase: CompleteProfileUseCaseProtocol {
     
     func execute(
         nickname: String,
+        birthday: String,
+        defaultKeywordIds: [Int],
+        customKeywords: [String],
         profileImage: Data?
     ) async throws -> User {
         
@@ -50,7 +56,10 @@ final class CompleteProfileUseCase: CompleteProfileUseCaseProtocol {
         
         let response = try await userRepository.updateProfile(
             nickname: nickname,
-            imageObjectKey: imageKey
+            birthday: birthday,
+            defaultKeywordIds: defaultKeywordIds,
+            customKeywords: customKeywords,
+            imageKey: imageKey
         )
         
         print("✅ 프로필 설정 완료!")

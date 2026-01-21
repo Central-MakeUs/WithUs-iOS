@@ -38,6 +38,9 @@ public final class NetworkService {
                 encoding: endpoint.encoding,
                 headers: endpoint.headers
             )
+            .cURLDescription { description in
+                print("📤 cURL: \(description)")  // ✅ 실제 요청 확인
+            }
             .serializingDecodable(BaseResponse<T>.self)
             .response
             
@@ -51,7 +54,6 @@ public final class NetworkService {
                     
                     // BaseResponse 디코딩 시도
                     if case .success(let baseResponse) = dataResponse.result {
-                        // success: false이고 error가 있으면 서버 에러 처리
                         if !baseResponse.success, let error = baseResponse.error {
                             print("📝 서버 에러 메시지: \(error.message)")
                             print("🔢 서버 에러 코드: \(error.code)")

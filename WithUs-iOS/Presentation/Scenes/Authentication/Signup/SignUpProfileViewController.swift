@@ -71,6 +71,7 @@ final class SignUpProfileViewController: BaseViewController, View {
     }
     
     override func setupUI() {
+        super.setupUI()
         view.addSubview(titleStackView)
         titleStackView.addArrangedSubview(titleLabel)
         titleStackView.addArrangedSubview(subTitleLabel)

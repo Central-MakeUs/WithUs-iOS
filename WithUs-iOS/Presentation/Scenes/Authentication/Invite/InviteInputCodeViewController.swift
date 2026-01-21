@@ -98,6 +98,7 @@ class InviteInputCodeViewController: BaseViewController, View {
     }
     
     override func setupUI() {
+        super.setupUI()
         view.addSubview(titleLabel)
         view.addSubview(pinStackView)
         for _ in 0..<pinLength {

@@ -10,7 +10,10 @@ import Foundation
 protocol UserRepositoryProtocol {
     func updateProfile(
         nickname: String,
-        imageObjectKey: String?
+        birthday: String,
+        defaultKeywordIds: [Int],
+        customKeywords: [String],
+        imageKey: String?
     ) async throws -> UpdateProfileResponse
 }
 
@@ -23,11 +26,17 @@ final class UserRepository: UserRepositoryProtocol {
     
     func updateProfile(
         nickname: String,
-        imageObjectKey: String?
+        birthday: String,
+        defaultKeywordIds: [Int],
+        customKeywords: [String],
+        imageKey: String?
     ) async throws -> UpdateProfileResponse {
         let endpoint = UserEndpoint.updateProfile(
             nickname: nickname,
-            imageObjectKey: imageObjectKey
+            birthday: birthday,
+            defaultKeywordIds: defaultKeywordIds,
+            customKeywords: customKeywords,
+            imageKey: imageKey
         )
         
         return try await networkService.request(

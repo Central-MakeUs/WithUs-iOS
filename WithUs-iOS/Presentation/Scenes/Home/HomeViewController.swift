@@ -17,13 +17,9 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     var coordinator: HomeCoordinator?
     var disposeBag = DisposeBag()
     
+    private let fetchCoupleKeywordsUseCase: FetchCoupleKeywordsUseCaseProtocol
     private var isSettingCompleted: Bool = false
-    private var keywords: [Keyword] = [
-        Keyword(text: "오늘의 질문"),
-        Keyword(text: "맛집"),
-        Keyword(text: "여행"),
-        Keyword(text: "데이트")
-    ]
+    private var keywords: [Keyword] = []
     private var selectedKeywordIndex: Int = 0
     
     // 데이터
@@ -53,7 +49,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
         
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        cv.backgroundColor = .clear
+        cv.backgroundColor = .white
         cv.showsHorizontalScrollIndicator = false
         cv.delegate = self
         cv.dataSource = self
@@ -83,6 +79,15 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         .background(Color.clear)
     }
     
+    init(fetchCoupleKeywordsUseCase: FetchCoupleKeywordsUseCaseProtocol) {
+        self.fetchCoupleKeywordsUseCase = fetchCoupleKeywordsUseCase
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupMockQuestion()
@@ -95,6 +100,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     }
 
     override func setupUI() {
+        super.setupUI()
         view.addSubview(beforeSettingContainerView)
         view.addSubview(afterSettingContainerView)
         
@@ -116,8 +122,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         afterSettingContainerView.addSubview(keywordMyOnlyView)
         afterSettingContainerView.addSubview(keywordPartnerOnlyView)
         
-        // 초기 상태: 모든 뷰 숨김
-//        hideContentViews()
+        hideContentViews()
         hideSettingViews()
     }
     
@@ -198,6 +203,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         case .completed:
             self.isSettingCompleted = true
             showAfterSettingUI()
+            fetchCoupleKeywords()
         }
     }
     
@@ -210,18 +216,41 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     private func showAfterSettingUI() {
         beforeSettingContainerView.isHidden = true
         afterSettingContainerView.isHidden = false
-        
-        let selectedKeyword = keywords[selectedKeywordIndex].text
-        if selectedKeyword == "오늘의 질문" {
-            updateQuestionUI()
-        } else {
-            updateKeywordUI(keyword: selectedKeyword)
+    }
+    
+    private func fetchCoupleKeywords() {
+        Task {
+            do {
+                let coupleKeywords = try await fetchCoupleKeywordsUseCase.execute()
+                
+                await MainActor.run { [weak self] in
+                    guard let self = self else { return }
+                    
+                    let todayQuestion = Keyword(
+                        id: "today_question",
+                        text: "오늘의 질문",
+                        displayOrder: 0
+                    )
+                    
+                    self.keywords = [todayQuestion] + coupleKeywords
+                    self.keywordCollectionView.reloadData()
+                    
+                    self.selectedKeywordIndex = 0
+                    self.updateQuestionUI()
+                    
+                    print("✅ 커플 키워드 조회 완료")
+                    print("📋 키워드 목록: \(self.keywords.map { $0.text })")
+                }
+            } catch {
+                print("❌ 커플 키워드 조회 실패: \(error.localizedDescription)")
+                // TODO: 에러 처리 (예: 기본 키워드로 대체 또는 알럿 표시)
+            }
         }
     }
     
     private func setupCallbacks() {
         settingCoupleView.onTap = { [weak self] in
-            // TODO: 커플 설정 화면으로 이동
+            self?.coordinator?.showInviteModal()
         }
         
         settingInviteCodeView.onTap = { [weak self] in
@@ -235,14 +264,12 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             self.coordinator?.showCameraModal()
         }
         
-        // QuestionPartnerOnlyView 콜백
         questionPartnerOnlyView.onAnswerTapped = { [weak self] in
             guard let self else { return }
             print("나도 답변하기")
             self.coordinator?.showCameraModal()
         }
         
-        // KeywordMyOnlyView 콜백
         keywordMyOnlyView.onNotifyTapped = { [weak self] in
             guard let self else { return }
             print("콕 찌르기")
@@ -268,6 +295,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         
         if isCompleted {
             showAfterSettingUI()
+            fetchCoupleKeywords()
         } else {
             showBeforeSettingUI()
         }
@@ -275,25 +303,18 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     
     //MARK: - 세팅 UI
     private func setInvite() {
-        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
+        hideContentViews()
         settingInviteCodeView.isHidden = false
         print("✅ [setInvite] settingInviteCodeView 표시")
     }
     
     private func setCouple() {
-        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
+        hideContentViews()
         settingCoupleView.isHidden = false
         print("✅ [setCouple] settingCoupleView 표시")
     }
     
     // MARK: - Hide Views
-    private func hideAllViews() {
-        [settingCoupleView, settingInviteCodeView, beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
-         keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach {
-            $0.isHidden = true
-        }
-    }
-    
     private func hideContentViews() {
         [beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
          keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach {
@@ -309,8 +330,8 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     
     // MARK: - 오늘의 질문 UI 업데이트
     private func updateQuestionUI() {
-        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
-        hideSettingViews()  // ✅ 설정 뷰 숨김
+        hideContentViews()
+        hideSettingViews()
         guard let question = currentQuestion else { return }
         
         switch question.status {
@@ -349,8 +370,8 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     
     // MARK: - 키워드 UI 업데이트
     private func updateKeywordUI(keyword: String) {
-        hideContentViews()  // ✅ 콘텐츠 뷰만 숨김
-        hideSettingViews()  // ✅ 설정 뷰 숨김
+        hideContentViews()
+        hideSettingViews()
         
         guard let keywordData = keywordDataDict[keyword],
               let status = keywordData.status else { return }
@@ -390,7 +411,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         }
     }
     
-    // MARK: - Mock Data
     private func setupMockQuestion() {
         let scheduledTime = Date().addingTimeInterval(-100)
         
@@ -404,24 +424,24 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     }
     
     private func setupMockKeywordData() {
-        keywordDataDict["맛집"] = KeywordData(
-            keywordName: "맛집",
+        keywordDataDict["밥타임"] = KeywordData(
+            keywordName: "밥타임",
             myImageURL: "https://example.com/my_food.jpg",
             partnerImageURL: "https://example.com/partner_food.jpg",
             myCaption: "나는 떡볶이 먹고 진짜 좋았어!",
             partnerCaption: "그때 맛있었이? 오래됐네 맛집이야 ?"
         )
         
-        keywordDataDict["여행"] = KeywordData(
-            keywordName: "여행",
+        keywordDataDict["출근길"] = KeywordData(
+            keywordName: "출근길",
             myImageURL: "https://example.com/my_travel.jpg",
             partnerImageURL: nil,
             myCaption: "제주도 여행 너무 좋았어!",
             partnerCaption: nil
         )
         
-        keywordDataDict["데이트"] = KeywordData(
-            keywordName: "데이트",
+        keywordDataDict["집 가는 길"] = KeywordData(
+            keywordName: "집 가는 길",
             myImageURL: nil,
             partnerImageURL: "https://example.com/partner_date.jpg",
             myCaption: nil,
