@@ -6,25 +6,39 @@
 //
 
 import UIKit
+import SnapKit
+import Then
 
-class FourCutViewController: UIViewController {
+class FourCutViewController: BaseViewController {
     weak var coordinator: FourCutCoordinator?
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        
-        let label = UILabel()
-        label.text = "활동"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(label)
-        
-        NSLayoutConstraint.activate([
-            label.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: view.centerYAnchor)
-        ])
+    private let addButton = UIButton().then {
+        $0.setImage(UIImage(named: "ic_add_four_cut"), for: .normal)
+    }
+    
+    override func setupUI() {
+        super.setupUI()
+        view.addSubview(addButton)
+    }
+    
+    override func setupConstraints() {
+        addButton.snp.makeConstraints {
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-25)
+            $0.right.equalToSuperview().offset(-18)
+            $0.size.equalTo(CGSize(width: 54, height: 54))
+        }
+    }
+    
+    override func setupActions() {
+        addButton.addTarget(self, action: #selector(didAddButtonTapped), for: .touchUpInside)
+    }
+    
+    override func setNavigation() {
+        self.navigationItem.title = "네컷"
+        setRightBarButton(image: UIImage(named: "ic_four_cut_setting"))
+    }
+    
+    @objc private func didAddButtonTapped() {
+        self.navigationController?.pushViewController(FrameSelectionViewController(), animated: true)
     }
 }
