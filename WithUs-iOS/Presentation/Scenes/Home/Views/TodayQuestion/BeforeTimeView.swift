@@ -54,6 +54,6 @@ final class BeforeTimeView: UIView {
     }
     
     func configure(remainingTime: String) {
-        titleLabel.text = "오늘의 랜덤 질문이\n\(remainingTime) 후에 도착해요!"
+        titleLabel.text = remainingTime
     }
 }

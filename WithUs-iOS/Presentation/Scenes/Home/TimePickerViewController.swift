@@ -94,7 +94,7 @@ final class TimePickerViewController: BaseViewController {
         print("설정 완료: \(timeString)")
         
         
-        coordinator?.finishSetting(selectedTime: timeString)
+//        coordinator?.finishSetting(selectedTime: timeString)
     }
     
 }

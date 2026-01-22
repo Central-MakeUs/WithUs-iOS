@@ -10,11 +10,16 @@ import Photos
 import SnapKit
 import Then
 
+protocol PhotoPreviewDelegate: AnyObject {
+    func photoPreview(_ viewController: PhotoPreviewViewController, didSelectImage image: UIImage)
+}
+
 class PhotoPreviewViewController: BaseViewController {
     
+    weak var delegate: PhotoPreviewDelegate?
+    var dismissCamera: (() -> Void)?
     private let originalImage: UIImage
     private var editedImage: UIImage
-    
     private let imageView = UIImageView().then {
         $0.contentMode = .scaleAspectFit
         $0.backgroundColor = .black
@@ -163,6 +168,27 @@ class PhotoPreviewViewController: BaseViewController {
     @objc private func sendPhoto() {
         captureEditedImage()
         showAlert(title: "준비 완료", message: "편집된 이미지가 준비되었습니다.")
+        delegate?.photoPreview(self, didSelectImage: editedImage)
+    }
+    
+    func showUploadSuccess() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            self.sendButton.setImage(UIImage(named: "ic_sendOkButton"), for: .normal)
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                self?.dismiss(animated: true) {
+                    self?.dismissCamera?()
+                }
+            }
+        }
+    }
+    
+    func showUploadFail() {
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            ToastView.show(message: "업로드에 실패했어요", icon: nil, position: .bottom)
+        }
     }
     
     private func showPermissionAlert() {

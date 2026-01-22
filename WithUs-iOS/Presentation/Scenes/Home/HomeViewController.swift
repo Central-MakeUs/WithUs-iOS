@@ -17,14 +17,9 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     var coordinator: HomeCoordinator?
     var disposeBag = DisposeBag()
     
-    private let fetchCoupleKeywordsUseCase: FetchCoupleKeywordsUseCaseProtocol
-    private var isSettingCompleted: Bool = false
     private var keywords: [Keyword] = []
     private var selectedKeywordIndex: Int = 0
-    
-    // 데이터
-    private var currentQuestion: QuestionData?
-    private var keywordDataDict: [String: KeywordData] = [:]
+    private weak var currentPhotoPreview: PhotoPreviewViewController?
     
     // MARK: - Container Views
     private let beforeSettingContainerView = UIView().then {
@@ -40,7 +35,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     private let settingInviteCodeView = SettingInviteCodeView()
     private let settingCoupleView = SettingCoupleView()
     
-    // MARK: - After Setting UI (공통)
+    // MARK: - After Setting UI
     private lazy var keywordCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
@@ -56,13 +51,13 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         return cv
     }()
     
-    // MARK: - 오늘의 질문 View들 (4개)
+    // MARK: - 오늘의 질문 View들
     private let beforeTimeView = BeforeTimeView()
     private let waitingBothView = WaitingBothView()
     private let questionPartnerOnlyView = QuestionPartnerOnlyView()
     private let questionBothView = QuestionBothAnsweredView()
     
-    // MARK: - 키워드 View들 (3개)
+    // MARK: - 키워드 View들
     private let keywordBothView = KeywordBothAnsweredView()
     private let keywordMyOnlyView = KeywordMyOnlyView()
     private let keywordPartnerOnlyView = KeywordPartnerOnlyView()
@@ -79,45 +74,19 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         .background(Color.clear)
     }
     
-    init(fetchCoupleKeywordsUseCase: FetchCoupleKeywordsUseCaseProtocol) {
-        self.fetchCoupleKeywordsUseCase = fetchCoupleKeywordsUseCase
-        super.init(nibName: nil, bundle: nil)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupMockQuestion()
-        setupMockKeywordData()
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        reactor?.action.onNext(.viewWillAppear)
-    }
-
     override func setupUI() {
         super.setupUI()
         view.addSubview(beforeSettingContainerView)
         view.addSubview(afterSettingContainerView)
         
-        // Before Setting
         beforeSettingContainerView.addSubview(settingCoupleView)
         beforeSettingContainerView.addSubview(settingInviteCodeView)
         
-        // After Setting - 공통
         afterSettingContainerView.addSubview(keywordCollectionView)
-        
-        // 오늘의 질문 View들 추가
         afterSettingContainerView.addSubview(beforeTimeView)
         afterSettingContainerView.addSubview(waitingBothView)
         afterSettingContainerView.addSubview(questionPartnerOnlyView)
         afterSettingContainerView.addSubview(questionBothView)
-        
-        // 키워드 View들 추가
         afterSettingContainerView.addSubview(keywordBothView)
         afterSettingContainerView.addSubview(keywordMyOnlyView)
         afterSettingContainerView.addSubview(keywordPartnerOnlyView)
@@ -127,22 +96,16 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
     }
     
     override func setupConstraints() {
-        setupBeforeSettingConstraints()
-        setupAfterSettingConstraints()
-    }
-    
-    private func setupBeforeSettingConstraints() {
         beforeSettingContainerView.snp.makeConstraints {
             $0.edges.equalTo(view.safeAreaLayoutGuide)
         }
-        [settingCoupleView, settingInviteCodeView].forEach( { view in
+        
+        [settingCoupleView, settingInviteCodeView].forEach { view in
             view.snp.makeConstraints {
                 $0.edges.equalToSuperview()
             }
-        })
-    }
-    
-    private func setupAfterSettingConstraints() {
+        }
+        
         afterSettingContainerView.snp.makeConstraints {
             $0.edges.equalTo(view.safeAreaLayoutGuide)
         }
@@ -161,12 +124,24 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         }
     }
     
+    override func setNavigation() {
+        setRightBarButton(image: UIImage(named: "ic_bell"))
+        setCenterLogo(image: UIImage(named: "navi_logo"), height: 24)
+    }
+    
     override func setupActions() {
         setupCallbacks()
     }
     
     // MARK: - Reactor Binding
     func bind(reactor: HomeReactor) {
+        // Action: 화면 진입
+        rx.viewWillAppear
+            .map { _ in Reactor.Action.viewWillAppear }
+            .bind(to: reactor.action)
+            .disposed(by: disposeBag)
+        
+        // State: 온보딩 상태
         reactor.state.map { $0.onboardingStatus }
             .compactMap { $0 }
             .distinctUntilChanged()
@@ -176,41 +151,92 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
+        // State: 키워드 목록
+        reactor.state.map { $0.keywords }
+            .distinctUntilChanged { $0.map { $0.id } == $1.map { $0.id } }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] keywords in
+                self?.keywords = keywords
+                self?.keywordCollectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+        
+        // State: 선택된 키워드 인덱스
+        reactor.state.map { $0.selectedKeywordIndex }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] index in
+                self?.selectedKeywordIndex = index
+                self?.keywordCollectionView.reloadData()
+            })
+            .disposed(by: disposeBag)
+        
+        // State: 오늘의 질문 데이터
+        reactor.state.map { $0.currentQuestionData }
+            .compactMap { $0 }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] data in
+                self?.updateQuestionUI(with: data)
+            })
+            .disposed(by: disposeBag)
+        
+        // State: 키워드 데이터
+        reactor.state.map { $0.currentKeywordData }
+            .compactMap { $0 }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] data in
+                self?.updateKeywordUI(with: data)
+            })
+            .disposed(by: disposeBag)
+        
+        // State: 에러
         reactor.state.map { $0.errorMessage }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] error in
                 print("❌ 에러: \(error)")
+                self?.currentPhotoPreview?.showUploadFail()
+            })
+            .disposed(by: disposeBag)
+        
+        // State: 이미지 업로드 완료
+        reactor.state.map { $0.uploadedImageUrl }
+            .compactMap { $0 }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] accessUrl in
+                print("✅ 이미지 업로드 완료: \(accessUrl)")
+                self?.currentPhotoPreview?.showUploadSuccess()
             })
             .disposed(by: disposeBag)
     }
     
+    // MARK: - Handle Onboarding Status
     private func handleOnboardingStatus(_ status: OnboardingStatus) {
-        print("🔴 [HomeVC] 온보딩 상태: \(status.rawValue)")
         switch status {
         case .needUserSetup:
-            print("⚠️ 회원가입이 필요합니다.")
             coordinator?.handleNeedUserSetup()
+            
         case .needCoupleConnect:
             showBeforeSettingUI()
             setInvite()
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                 self?.coordinator?.showInviteModal()
             }
+            
         case .needCoupleSetup:
             showBeforeSettingUI()
             setCouple()
+            
         case .completed:
-            self.isSettingCompleted = true
             showAfterSettingUI()
-            fetchCoupleKeywords()
+            reactor?.action.onNext(.fetchCoupleKeywords)
         }
     }
     
+    // MARK: - UI State
     private func showBeforeSettingUI() {
         beforeSettingContainerView.isHidden = false
         afterSettingContainerView.isHidden = true
-        self.isSettingCompleted = false
     }
     
     private func showAfterSettingUI() {
@@ -218,103 +244,16 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         afterSettingContainerView.isHidden = false
     }
     
-    private func fetchCoupleKeywords() {
-        Task {
-            do {
-                let coupleKeywords = try await fetchCoupleKeywordsUseCase.execute()
-                
-                await MainActor.run { [weak self] in
-                    guard let self = self else { return }
-                    
-                    let todayQuestion = Keyword(
-                        id: "today_question",
-                        text: "오늘의 질문",
-                        displayOrder: 0
-                    )
-                    
-                    self.keywords = [todayQuestion] + coupleKeywords
-                    self.keywordCollectionView.reloadData()
-                    
-                    self.selectedKeywordIndex = 0
-                    self.updateQuestionUI()
-                    
-                    print("✅ 커플 키워드 조회 완료")
-                    print("📋 키워드 목록: \(self.keywords.map { $0.text })")
-                }
-            } catch {
-                print("❌ 커플 키워드 조회 실패: \(error.localizedDescription)")
-                // TODO: 에러 처리 (예: 기본 키워드로 대체 또는 알럿 표시)
-            }
-        }
-    }
-    
-    private func setupCallbacks() {
-        settingCoupleView.onTap = { [weak self] in
-            self?.coordinator?.showInviteModal()
-        }
-        
-        settingInviteCodeView.onTap = { [weak self] in
-            guard let self else { return }
-            self.coordinator?.showInviteModal()
-        }
-        
-        waitingBothView.onSendPhotoTapped = { [weak self] in
-            guard let self else { return }
-            print("사진 전송하기")
-            self.coordinator?.showCameraModal()
-        }
-        
-        questionPartnerOnlyView.onAnswerTapped = { [weak self] in
-            guard let self else { return }
-            print("나도 답변하기")
-            self.coordinator?.showCameraModal()
-        }
-        
-        keywordMyOnlyView.onNotifyTapped = { [weak self] in
-            guard let self else { return }
-            print("콕 찌르기")
-            CustomAlertViewController.show(
-                on: self,
-                title: "콕 찌르기 완료!",
-                message: "상대방의 사진이 도착하면\n알림을 보내드릴게요.",
-                confirmTitle: "확인"
-            ) {
-                print("확인 버튼 클릭!")
-            }
-        }
-        
-        keywordPartnerOnlyView.onSendPhotoTapped = { [weak self] in
-            guard let self else { return }
-            print("전송하러 가기")
-            self.coordinator?.showCameraModal()
-        }
-    }
-    
-    func updateSettingStatus(isCompleted: Bool) {
-        self.isSettingCompleted = isCompleted
-        
-        if isCompleted {
-            showAfterSettingUI()
-            fetchCoupleKeywords()
-        } else {
-            showBeforeSettingUI()
-        }
-    }
-    
-    //MARK: - 세팅 UI
     private func setInvite() {
         hideContentViews()
         settingInviteCodeView.isHidden = false
-        print("✅ [setInvite] settingInviteCodeView 표시")
     }
     
     private func setCouple() {
         hideContentViews()
         settingCoupleView.isHidden = false
-        print("✅ [setCouple] settingCoupleView 표시")
     }
     
-    // MARK: - Hide Views
     private func hideContentViews() {
         [beforeTimeView, waitingBothView, questionPartnerOnlyView, questionBothView,
          keywordBothView, keywordMyOnlyView, keywordPartnerOnlyView].forEach {
@@ -328,125 +267,166 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         }
     }
     
-    // MARK: - 오늘의 질문 UI 업데이트
-    private func updateQuestionUI() {
+    // MARK: - Update UI
+    private func updateQuestionUI(with data: TodayQuestionResponse) {
         hideContentViews()
         hideSettingViews()
-        guard let question = currentQuestion else { return }
         
-        switch question.status {
-        case .beforeTime(let remainingTime):
+        // coupleQuestionId가 nil이면 질문 생성 전
+        guard let _ = data.coupleQuestionId else {
             beforeTimeView.isHidden = false
-            beforeTimeView.configure(remainingTime: remainingTime)
-            
-        case .waitingBoth(let questionText):
+            beforeTimeView.configure(remainingTime: data.question)
+            return
+        }
+        
+        let myAnswered = data.myInfo?.questionImageUrl != nil
+        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
+        
+        switch (myAnswered, partnerAnswered) {
+        case (false, false):
             waitingBothView.isHidden = false
-            waitingBothView.configure(question: questionText)
+            waitingBothView.configure(question: data.question)
             
-        case .partnerOnly(let imageURL, let questionText):
+        case (false, true):
             questionPartnerOnlyView.isHidden = false
             questionPartnerOnlyView.configure(
-                question: "상대가 가장 사랑스러워 보였던\n순간은 언제인가요?",
+                question: data.question,
                 subTitle: "상대방이 어떤 사진을 보냈는을까요?\n내 사진을 공유하면\n상대방의 사진도 확인할 수 있어요.",
-                partnerName: "jpg",
-                partnerImageURL: imageURL,
-                partmerTime: "PM 12:30"
+                partnerName: data.partnerInfo?.name ?? "",
+                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+                partmerTime: data.partnerInfo?.answeredAt ?? ""
             )
             
-        case .bothAnswered(let myURL, let partnerURL, _):
+        case (true, false):
+            keywordMyOnlyView.isHidden = false
+            keywordMyOnlyView.configure(
+                myImageURL: data.myInfo?.questionImageUrl ?? "",
+                myName: data.myInfo?.name ?? "",
+                myTime: data.myInfo?.answeredAt ?? "",
+                myCaption: data.question
+            )
+            
+        case (true, true):
             questionBothView.isHidden = false
             questionBothView.configure(
-                myImageURL: myURL,
-                myName: "쏘피",
-                myTime: "PM 12:30",
-                myCaption: "같이 도서관 갔을 때 너무 사랑스러웠어!",
-                partnerImageURL: partnerURL,
-                partnerName: "성희",
-                partnerTime: "PM 12:30",
-                partnerCaption: "같이 산책 갔을 때 매"
+                myImageURL: data.myInfo?.questionImageUrl ?? "",
+                myName: data.myInfo?.name ?? "",
+                myTime: data.myInfo?.answeredAt ?? "",
+                myCaption: data.question,
+                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+                partnerName: data.partnerInfo?.name ?? "",
+                partnerTime: data.partnerInfo?.answeredAt ?? "",
+                partnerCaption: data.question
             )
         }
     }
     
-    // MARK: - 키워드 UI 업데이트
-    private func updateKeywordUI(keyword: String) {
+    private func updateKeywordUI(with data: TodayKeywordResponse) {
         hideContentViews()
         hideSettingViews()
         
-        guard let keywordData = keywordDataDict[keyword],
-              let status = keywordData.status else { return }
+        let myAnswered = data.myInfo?.questionImageUrl != nil
+        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
         
-        switch status {
-        case .bothAnswered(let myURL, let partnerURL, let myCap, let partnerCap):
-            keywordBothView.isHidden = false
-            keywordBothView.configure(
-                myImageURL: myURL,
-                myName: "쏘피",
-                myTime: "PM 12:30",
-                myCaption: myCap,
-                partnerImageURL: partnerURL,
-                partnerName: "jpg",
-                partnerTime: "PM 12:30",
-                partnerCaption: partnerCap
-            )
+        switch (myAnswered, partnerAnswered) {
+        case (false, false):
+            waitingBothView.isHidden = false
+            waitingBothView.configure(question: data.question)
             
-        case .myAnswerOnly(let myURL, let myCap):
-            keywordMyOnlyView.isHidden = false
-            keywordMyOnlyView.configure(
-                myImageURL: myURL,
-                myName: "쏘피",
-                myTime: "PM 12:30",
-                myCaption: myCap
-            )
-            
-        case .partnerOnly(let partnerURL, let partnerCap):
+        case (false, true):
             keywordPartnerOnlyView.isHidden = false
             keywordPartnerOnlyView.configure(
-                partnerImageURL: partnerURL,
-                partnerName: "jpg",
-                partnerTime: "PM 12:30",
-                partnerCaption: partnerCap,
-                myName: "쏘피"
+                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+                partnerName: data.partnerInfo?.name ?? "",
+                partnerTime: data.partnerInfo?.answeredAt ?? "",
+                partnerCaption: data.question,
+                myName: data.myInfo?.name ?? ""
+            )
+            
+        case (true, false):
+            keywordMyOnlyView.isHidden = false
+            keywordMyOnlyView.configure(
+                myImageURL: data.myInfo?.questionImageUrl ?? "",
+                myName: data.myInfo?.name ?? "",
+                myTime: data.myInfo?.answeredAt ?? "",
+                myCaption: data.question
+            )
+            
+        case (true, true):
+            keywordBothView.isHidden = false
+            keywordBothView.configure(
+                myImageURL: data.myInfo?.questionImageUrl ?? "",
+                myName: data.myInfo?.name ?? "",
+                myTime: data.myInfo?.answeredAt ?? "",
+                myCaption: data.question,
+                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+                partnerName: data.partnerInfo?.name ?? "",
+                partnerTime: data.partnerInfo?.answeredAt ?? "",
+                partnerCaption: data.question
             )
         }
     }
     
-    private func setupMockQuestion() {
-        let scheduledTime = Date().addingTimeInterval(-100)
+    // MARK: - Camera
+    private func openCameraForQuestion() {
+        guard let coupleQuestionId = reactor?.currentState.currentQuestionData?.coupleQuestionId else {
+            print("❌ coupleQuestionId가 없습니다")
+            return
+        }
         
-        currentQuestion = QuestionData(
-            id: "1",
-            question: "상대가 가장 사랑스러워 보였던 순간은 언제인가요?",
-            scheduledTime: scheduledTime,
-            myImageURL: nil,
-            partnerImageURL: "https://example.com/partner.jpg"
-        )
+        // ✅ 업로드 타입과 함께 카메라 열기
+        coordinator?.showCamera(for: .question(coupleQuestionId: coupleQuestionId), delegate: self)
     }
     
-    private func setupMockKeywordData() {
-        keywordDataDict["밥타임"] = KeywordData(
-            keywordName: "밥타임",
-            myImageURL: "https://example.com/my_food.jpg",
-            partnerImageURL: "https://example.com/partner_food.jpg",
-            myCaption: "나는 떡볶이 먹고 진짜 좋았어!",
-            partnerCaption: "그때 맛있었이? 오래됐네 맛집이야 ?"
-        )
+    private func openCameraForKeyword() {
+        guard let coupleKeywordId = reactor?.currentState.currentKeywordData?.coupleKeywordId else {
+            print("❌ coupleKeywordId가 없습니다")
+            return
+        }
         
-        keywordDataDict["출근길"] = KeywordData(
-            keywordName: "출근길",
-            myImageURL: "https://example.com/my_travel.jpg",
-            partnerImageURL: nil,
-            myCaption: "제주도 여행 너무 좋았어!",
-            partnerCaption: nil
-        )
+        // ✅ 업로드 타입과 함께 카메라 열기
+        coordinator?.showCamera(for: .keyword(coupleKeywordId: coupleKeywordId), delegate: self)
+    }
+    
+    // MARK: - Callbacks
+    private func setupCallbacks() {
+        settingCoupleView.onTap = { [weak self] in
+            self?.coordinator?.showInviteModal()
+        }
         
-        keywordDataDict["집 가는 길"] = KeywordData(
-            keywordName: "집 가는 길",
-            myImageURL: nil,
-            partnerImageURL: "https://example.com/partner_date.jpg",
-            myCaption: nil,
-            partnerCaption: "오늘 데이트 너무 행복했어!"
-        )
+        settingInviteCodeView.onTap = { [weak self] in
+            self?.coordinator?.showInviteModal()
+        }
+        
+        waitingBothView.onSendPhotoTapped = { [weak self] in
+            guard let self = self else { return }
+            if self.keywords[self.selectedKeywordIndex].id == "today_question" {
+                self.openCameraForQuestion()
+            } else {
+                self.openCameraForKeyword()
+            }
+        }
+        
+        questionPartnerOnlyView.onAnswerTapped = { [weak self] in
+            self?.openCameraForQuestion()
+        }
+        
+        keywordPartnerOnlyView.onSendPhotoTapped = { [weak self] in
+            self?.openCameraForKeyword()
+        }
+        
+        keywordMyOnlyView.onNotifyTapped = { [weak self] in
+            guard let self = self else { return }
+            let partnerUserId = self.reactor?.currentState.currentKeywordData?.partnerInfo?.userId ?? 0
+            print("콕 찌르기 - Partner ID: \(partnerUserId)")
+            
+            CustomAlertViewController.show(
+                on: self,
+                title: "콕 찌르기 완료!",
+                message: "상대방의 사진이 도착하면\n알림을 보내드릴게요.",
+                confirmTitle: "확인"
+            ) {}
+        }
     }
 }
 
@@ -471,15 +451,35 @@ extension HomeViewController: UICollectionViewDataSource {
 
 extension HomeViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        selectedKeywordIndex = indexPath.item
-        collectionView.reloadData()
+        reactor?.action.onNext(.selectKeyword(index: indexPath.item))
+    }
+}
+
+extension HomeViewController: PhotoPreviewDelegate {
+    func photoPreview(_ viewController: PhotoPreviewViewController, didSelectImage image: UIImage) {
+        currentPhotoPreview = viewController
         
-        let selectedKeyword = keywords[indexPath.item].text
-        
-        if selectedKeyword == "오늘의 질문" {
-            updateQuestionUI()
+        // ✅ 현재 선택된 키워드에 따라 업로드
+        if keywords[selectedKeywordIndex].id == "today_question" {
+            guard let coupleQuestionId = reactor?.currentState.currentQuestionData?.coupleQuestionId else {
+                viewController.showUploadFail()
+                return
+            }
+            
+            reactor?.action.onNext(.uploadQuestionImage(
+                coupleQuestionId: coupleQuestionId,
+                image: image
+            ))
         } else {
-            updateKeywordUI(keyword: selectedKeyword)
+            guard let coupleKeywordId = reactor?.currentState.currentKeywordData?.coupleKeywordId else {
+                viewController.showUploadFail()
+                return
+            }
+            
+            reactor?.action.onNext(.uploadKeywordImage(
+                coupleKeywordId: coupleKeywordId,
+                image: image
+            ))
         }
     }
 }

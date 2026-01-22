@@ -17,6 +17,7 @@ class BaseViewController: UIViewController {
     
     func setupActions() {}
     
+    func setNavigation() {}
     
     /// 네비게이션 바 왼쪽에 버튼 추가
     /// - Parameters:
@@ -99,6 +100,23 @@ class BaseViewController: UIViewController {
         let barButtonItem = UIBarButtonItem(customView: button)
         navigationItem.rightBarButtonItem = barButtonItem
     }
+    
+    func setCenterLogo(image: UIImage?, width: CGFloat? = nil, height: CGFloat = 20) {
+            guard let logoImage = image else { return }
+            
+            let imageView = UIImageView(image: logoImage)
+            imageView.contentMode = .scaleAspectFit
+            
+            // 이미지의 비율을 유지하면서 높이를 기준으로 너비를 계산합니다.
+            let imageRatio = logoImage.size.width / logoImage.size.height
+            let finalWidth = width ?? (height * imageRatio)
+            
+            let containerView = UIView(frame: CGRect(x: 0, y: 0, width: finalWidth, height: height))
+            imageView.frame = containerView.bounds
+            containerView.addSubview(imageView)
+            
+            self.navigationItem.titleView = containerView
+        }
     
     @objc private func defaultBackAction() {
         navigationController?.popViewController(animated: true)

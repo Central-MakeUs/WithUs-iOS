@@ -110,6 +110,14 @@ public final class NetworkService {
         guard NetworkMonitor.shared.isConnected else {
             throw NetworkError.disconnected
         }
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("🌐 API 요청")
+        print("URL: \(endpoint.url)")
+        print("Method: \(endpoint.method)")
+        print("Headers: \(endpoint.headers)")
+        print("Parameters: \(endpoint.parameters ?? [:])")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        
         
         do {
             let dataResponse = await AF.request(
@@ -119,18 +127,32 @@ public final class NetworkService {
                 encoding: endpoint.encoding,
                 headers: endpoint.headers
             )
-            .serializingDecodable(BaseResponse<EmptyResponse>.self)
-            .response
+                .cURLDescription { description in
+                    print("📤 cURL: \(description)")  // ✅ 실제 요청 확인
+                }
+                .serializingDecodable(BaseResponse<EmptyResponse>.self)
+                .response
             
             // 상태 코드 확인
             if let statusCode = dataResponse.response?.statusCode {
+                print("Status Code: \(statusCode)")
+                
                 if (400...599).contains(statusCode) {
-                    // BaseResponse 디코딩 시도
+                    
+                    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    print("⚠️ HTTP Error \(statusCode) - 서버 에러 메시지 확인 중...")
+                    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    
                     if case .success(let baseResponse) = dataResponse.result {
                         if !baseResponse.success, let error = baseResponse.error {
+                            
+                            print("📝 서버 에러 메시지: \(error.message)")
+                            print("🔢 서버 에러 코드: \(error.code)")
+                            
                             throw NetworkError.serverError(message: error.message, code: error.code)
                         }
                     }
+                    print("→ 서버 에러 메시지 없음, 기본 HTTP 에러 처리")
                     throw NetworkError.httpError(statusCode: statusCode)
                 }
             }
@@ -141,6 +163,8 @@ public final class NetworkService {
                 }
                 throw NetworkError.invalidResponse
             }
+            
+            print("✅ 응답 성공: \(response.success)")
             
             guard response.success else {
                 if let error = response.error {

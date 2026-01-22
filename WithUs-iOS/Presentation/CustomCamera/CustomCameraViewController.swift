@@ -11,8 +11,14 @@ import Photos
 import SnapKit
 import Then
 
+enum ImageUploadType {
+    case question(coupleQuestionId: Int)
+    case keyword(coupleKeywordId: Int)
+}
+
 class CustomCameraViewController: BaseViewController {
     
+    var onImageCaptured: ((UIImage) -> Void)?
     private var captureSession: AVCaptureSession?
     private var videoPreviewLayer: AVCaptureVideoPreviewLayer?
     private var photoOutput: AVCapturePhotoOutput?
@@ -310,22 +316,18 @@ extension CustomCameraViewController: AVCapturePhotoCaptureDelegate {
         }
         
         let croppedImage = image.cropToSquare()
-        
-        let previewVC = PhotoPreviewViewController(image: croppedImage)
-        previewVC.modalPresentationStyle = .fullScreen
-        present(previewVC, animated: true)
+        onImageCaptured?(croppedImage)
     }
 }
 
 extension CustomCameraViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-        picker.dismiss(animated: true)
-        
-        if let image = info[.originalImage] as? UIImage {
-            let croppedImage = image.cropToSquare()
-            let previewVC = PhotoPreviewViewController(image: croppedImage)
-            previewVC.modalPresentationStyle = .fullScreen
-            present(previewVC, animated: true)
+        picker.dismiss(animated: true) { [weak self] in
+            guard let self else { return }
+            if let image = info[.originalImage] as? UIImage {
+                let croppedImage = image.cropToSquare()
+                self.onImageCaptured?(croppedImage)
+            }
         }
     }
 }

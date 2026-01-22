@@ -12,6 +12,7 @@ class HomeCoordinator: Coordinator {
     var navigationController: UINavigationController
     private var inviteCoordinator: InviteCoordinator?
     weak var mainCoordinator: MainCoordinator?
+    private weak var homeReactor: HomeReactor?
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -20,16 +21,44 @@ class HomeCoordinator: Coordinator {
     func start() {
         let networkService = NetworkService.shared
         
-        // HomeReactor 의존성
+        // Repositories
         let homeRepository = HomeRepository(networkService: networkService)
-        let fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
-        let homeReactor = HomeReactor(fetchUserStatusUseCase: fetchUserStatusUseCase)
-        
-        // HomeViewController 의존성
         let coupleKeywordRepository = CoupleKeywordRepository(networkService: networkService)
-        let fetchCoupleKeywordsUseCase = FetchCoupleKeywordsUseCase(coupleKeywordRepository: coupleKeywordRepository)
+        let homeContentRepository = HomeContentRepository(networkService: networkService)
+        let imageRepository = ImageRepository(networkService: networkService)
         
-        let homeViewController = HomeViewController(fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase)
+        // Use Cases
+        let fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
+        let fetchCoupleKeywordsUseCase = FetchCoupleKeywordsUseCase(coupleKeywordRepository: coupleKeywordRepository)
+        let fetchTodayQuestionUseCase = FetchTodayQuestionUseCase(repository: homeContentRepository)
+        let fetchTodayKeywordUseCase = FetchTodayKeywordUseCase(repository: homeContentRepository)
+        
+        // ✅ 기존 UploadImageUseCase 생성
+        let uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
+        
+        // ✅ UploadImageUseCase를 주입
+        let uploadQuestionImageUseCase = UploadQuestionImageUseCase(
+            repository: homeContentRepository,
+            uploadImageUseCase: uploadImageUseCase
+        )
+        let uploadKeywordImageUseCase = UploadKeywordImageUseCase(
+            repository: homeContentRepository,
+            uploadImageUseCase: uploadImageUseCase
+        )
+        
+        // Reactor
+        let homeReactor = HomeReactor(
+            fetchUserStatusUseCase: fetchUserStatusUseCase,
+            fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase,
+            fetchTodayQuestionUseCase: fetchTodayQuestionUseCase,
+            uploadQuestionImageUseCase: uploadQuestionImageUseCase,
+            fetchTodayKeywordUseCase: fetchTodayKeywordUseCase,
+            uploadKeywordImageUseCase: uploadKeywordImageUseCase
+        )
+        self.homeReactor = homeReactor
+        
+        // ViewController
+        let homeViewController = HomeViewController()
         homeViewController.reactor = homeReactor
         homeViewController.coordinator = self
         
@@ -40,30 +69,30 @@ class HomeCoordinator: Coordinator {
         mainCoordinator?.handleNeedUserSetup()
     }
     
-    func showTimeSetting() {
-        let timePickerVC = TimePickerViewController()
-        timePickerVC.coordinator = self
-        timePickerVC.hidesBottomBarWhenPushed = true
-        navigationController.pushViewController(timePickerVC, animated: true)
-    }
-    
-    func finishSetting(selectedTime: String) {
-        navigationController.popToRootViewController(animated: true)
+    func showCamera(for uploadType: ImageUploadType, delegate: PhotoPreviewDelegate) {
+        let customCameraVC = CustomCameraViewController()
+        customCameraVC.modalPresentationStyle = .fullScreen
         
-        if let homeVC = navigationController.viewControllers.first as? HomeViewController {
-            homeVC.updateSettingStatus(isCompleted: true)
+        customCameraVC.onImageCaptured = { [weak self] image in
+            let photoPreviewVC = PhotoPreviewViewController(image: image)
+            photoPreviewVC.modalPresentationStyle = .fullScreen
+            photoPreviewVC.delegate = delegate
+            photoPreviewVC.dismissCamera = {
+                customCameraVC.dismiss(animated: true)
+            }
+            
+            customCameraVC.present(photoPreviewVC, animated: true)
         }
+        
+        navigationController.present(customCameraVC, animated: true)
     }
     
-    func showCameraModal() {
-        let cutomCameraVC = CustomCameraViewController()
-        cutomCameraVC.modalPresentationStyle = .fullScreen
-        navigationController.present(cutomCameraVC, animated: true)
-    }
-    
-    func finish() {
-        childCoordinators.removeAll()
-        inviteCoordinator = nil
+    private func showPhotoPreview(image: UIImage, uploadType: ImageUploadType, delegate: PhotoPreviewDelegate) {
+        let photoPreviewVC = PhotoPreviewViewController(image: image)
+        photoPreviewVC.modalPresentationStyle = .fullScreen
+        photoPreviewVC.delegate = delegate // ✅ delegate 설정
+        
+        navigationController.present(photoPreviewVC, animated: true)
     }
     
     func showInviteModal() {
@@ -81,6 +110,11 @@ class HomeCoordinator: Coordinator {
          childCoordinators.append(inviteCoord)
          inviteCoord.start()
      }
+     
+    func finish() {
+        childCoordinators.removeAll()
+        inviteCoordinator = nil
+    }
 }
 
 extension HomeCoordinator: InviteCoordinatorDelegate {
