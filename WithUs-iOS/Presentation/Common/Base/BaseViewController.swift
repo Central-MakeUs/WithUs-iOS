@@ -6,6 +6,7 @@ class BaseViewController: UIViewController {
         setupUI()
         setupConstraints()
         setupActions()
+        setNavigation()
     }
     
     func setupUI() {

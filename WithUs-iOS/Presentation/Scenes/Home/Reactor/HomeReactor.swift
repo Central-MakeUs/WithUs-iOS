@@ -15,6 +15,7 @@ final class HomeReactor: Reactor {
         case viewWillAppear
         case fetchCoupleKeywords
         case selectKeyword(index: Int)
+        case selectDefaultKeyword
         case uploadQuestionImage(coupleQuestionId: Int, image: UIImage)
         case uploadKeywordImage(coupleKeywordId: Int, image: UIImage)
     }
@@ -102,6 +103,11 @@ final class HomeReactor: Reactor {
             
         case .uploadKeywordImage(let coupleKeywordId, let image):
             return uploadKeywordImageAsync(coupleKeywordId: coupleKeywordId, image: image)
+        case .selectDefaultKeyword:
+              return Observable.concat([
+                  .just(.setSelectedKeywordIndex(0)),
+                  fetchTodayQuestionAsync()
+              ])
         }
     }
     

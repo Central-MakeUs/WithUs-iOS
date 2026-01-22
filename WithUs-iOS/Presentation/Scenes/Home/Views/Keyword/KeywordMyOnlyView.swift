@@ -91,13 +91,12 @@ final class KeywordMyOnlyView: UIView {
         myImageURL: String,
         myName: String,
         myTime: String,
-        myCaption: String
+        myProfileURL: String
     ) {
         myImageCard.configure(
             imageURL: myImageURL,
-            name: myName,
-            time: myTime,
-            caption: myCaption
+            profileImageURL: myProfileURL, name: myName,
+            time: myTime
         )
     }
 }

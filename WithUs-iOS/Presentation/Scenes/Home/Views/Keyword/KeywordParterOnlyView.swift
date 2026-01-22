@@ -99,8 +99,7 @@ final class KeywordPartnerOnlyView: UIView {
         partnerImageCard.configure(
             imageURL: partnerImageURL,
             name: partnerName,
-            time: partnerTime,
-            caption: partnerCaption
+            time: partnerTime
         )
         
         infoLabel.text = "\(partnerName)님이 \(myName)님의 사진을\n기다리고 있어요!"

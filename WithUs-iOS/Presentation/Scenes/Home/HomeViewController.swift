@@ -141,7 +141,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             .bind(to: reactor.action)
             .disposed(by: disposeBag)
         
-        // State: 온보딩 상태
         reactor.state.map { $0.onboardingStatus }
             .compactMap { $0 }
             .distinctUntilChanged()
@@ -151,7 +150,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 키워드 목록
         reactor.state.map { $0.keywords }
             .distinctUntilChanged { $0.map { $0.id } == $1.map { $0.id } }
             .observe(on: MainScheduler.instance)
@@ -161,7 +159,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 선택된 키워드 인덱스
         reactor.state.map { $0.selectedKeywordIndex }
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
@@ -171,7 +168,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 오늘의 질문 데이터
         reactor.state.map { $0.currentQuestionData }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
@@ -180,7 +176,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 키워드 데이터
         reactor.state.map { $0.currentKeywordData }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
@@ -199,7 +194,6 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 이미지 업로드 완료
         reactor.state.map { $0.uploadedImageUrl }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
@@ -230,6 +224,9 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         case .completed:
             showAfterSettingUI()
             reactor?.action.onNext(.fetchCoupleKeywords)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                self?.reactor?.action.onNext(.selectDefaultKeyword)
+            }
         }
     }
     
@@ -303,7 +300,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
                 myImageURL: data.myInfo?.questionImageUrl ?? "",
                 myName: data.myInfo?.name ?? "",
                 myTime: data.myInfo?.answeredAt ?? "",
-                myCaption: data.question
+                myProfileURL: data.question
             )
             
         case (true, true):
@@ -349,7 +346,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
                 myImageURL: data.myInfo?.questionImageUrl ?? "",
                 myName: data.myInfo?.name ?? "",
                 myTime: data.myInfo?.answeredAt ?? "",
-                myCaption: data.question
+                myProfileURL: data.myInfo?.profileImageUrl ?? "",
             )
             
         case (true, true):
@@ -459,7 +456,6 @@ extension HomeViewController: PhotoPreviewDelegate {
     func photoPreview(_ viewController: PhotoPreviewViewController, didSelectImage image: UIImage) {
         currentPhotoPreview = viewController
         
-        // ✅ 현재 선택된 키워드에 따라 업로드
         if keywords[selectedKeywordIndex].id == "today_question" {
             guard let coupleQuestionId = reactor?.currentState.currentQuestionData?.coupleQuestionId else {
                 viewController.showUploadFail()

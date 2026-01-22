@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import Then
+import Kingfisher
 
 final class ImageCardView: UIView {
     
@@ -83,29 +84,25 @@ final class ImageCardView: UIView {
     }
     
     func configure(
-        image: UIImage?,
-        profileImage: UIImage? = nil,
-        name: String,
-        time: String,
-        caption: String
-    ) {
-        imageView.image = image
-        profileImageView.image = profileImage
-        nameLabel.text = name
-        timeLabel.text = time
-    }
-    
-    /// URL로 이미지 설정
-    func configure(
         imageURL: String,
         profileImageURL: String? = nil,
         name: String,
         time: String,
-        caption: String
     ) {
         nameLabel.text = name
         timeLabel.text = time
-        
+        if let url = URL(string: imageURL) {
+            imageView.kf.setImage(
+                with: url,
+                placeholder: UIImage(systemName: "xmark.circle.fill"),
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
+        } else {
+            imageView.image = UIImage(systemName: "xmark.circle.fill")
+        }
         // TODO: 이미지 로딩 라이브러리 사용
         // imageView.kf.setImage(with: URL(string: imageURL))
         // if let profileURL = profileImageURL {
