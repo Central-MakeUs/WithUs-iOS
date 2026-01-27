@@ -21,6 +21,12 @@ class ProfileCoordinator: Coordinator {
         navigationController.setViewControllers([profileViewController], animated: false)
     }
     
+    func showProfileModification() {
+        let modifyVC = ModifyProfileViewController(reactor: ProfileReactor())
+        modifyVC.coordinator = self
+        navigationController.pushViewController(modifyVC, animated: true)
+    }
+    
     func finish() {
         
     }
