@@ -12,6 +12,7 @@ import SwiftUI
 
 final class ProfileViewController: BaseViewController {
     weak var coordinator: ProfileCoordinator?
+    private var isConnected: Bool = false
     
     private let profileView = UIView().then {
         $0.backgroundColor = .white
@@ -273,7 +274,11 @@ extension ProfileViewController: UICollectionViewDelegate {
         case .account:
             self.coordinator?.showAccountModification()
         case .connect:
-            self.coordinator?.showCancleConnect()
+            if isConnected {
+                self.coordinator?.showCancleConnect()
+            } else {
+                self.coordinator?.showConnectCoupleFlow()
+            }
         default:
             break
         }

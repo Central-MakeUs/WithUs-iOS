@@ -1,5 +1,5 @@
 //
-//  MemoryCoordinator.swift
+//  ArchiveCoordinator.swift
 //  WithUs-iOS
 //
 //  Created by Hubriz iOS on 1/16/26.
@@ -7,7 +7,7 @@
 
 import UIKit
 
-class MemoryCoordinator: Coordinator {
+class ArchiveCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     
@@ -16,9 +16,9 @@ class MemoryCoordinator: Coordinator {
     }
     
     func start() {
-        let memoryViewController = MemoryViewController()
-        memoryViewController.coordinator = self
-        navigationController.setViewControllers([memoryViewController], animated: false)
+        let archiveViewController = ArchiveViewController()
+        archiveViewController.coordinator = self
+        navigationController.setViewControllers([archiveViewController], animated: false)
     }
     
     func finish() {

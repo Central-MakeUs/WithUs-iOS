@@ -230,7 +230,7 @@ final class ModifyKeywordViewController: BaseViewController {
     
     private func updateSaveButtonState() {
         let selectedCount = selectedKeywords.count
-        let isValid = selectedCount == 2
+        let isValid = selectedCount == 3
         navigationItem.rightBarButtonItem?.isEnabled = isValid
     }
 }
@@ -265,7 +265,7 @@ extension ModifyKeywordViewController: UICollectionViewDelegate {
         if selectedKeywords.contains(keyword.id) {
             selectedKeywords.remove(keyword.id)
         } else {
-            guard selectedKeywords.count < 2 else { return }
+            guard selectedKeywords.count < 3 else { return }
             selectedKeywords.insert(keyword.id)
         }
         

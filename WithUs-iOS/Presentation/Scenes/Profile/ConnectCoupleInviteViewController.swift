@@ -101,8 +101,8 @@ final class ConnectCoupleInviteViewController: BaseViewController {
     
     override func setupConstraints() {
         titleStackView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(52)
-            $0.centerX.equalToSuperview()
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(52)
+            $0.centerX.equalTo(view.safeAreaLayoutGuide)
         }
         
         imageView.snp.makeConstraints {
@@ -134,16 +134,18 @@ final class ConnectCoupleInviteViewController: BaseViewController {
     }
     
     @objc private func inputCodeBtnTapped() {
-        self.dismiss(animated: true) { [weak self] in
-            guard let self else { return }
-            
+        if let connectCoordinator = coordinator as? ConnectCoupleCoordinator {
+            connectCoordinator.showInviteInputCode()
+        } else {
+            print("down castion error")
         }
     }
     
     @objc private func inviteBtnTapped() {
-        self.dismiss(animated: true) { [weak self] in
-            guard let self else { return }
-            
+        if let connectCoordinator = coordinator as? ConnectCoupleCoordinator {
+            connectCoordinator.showInviteCode()
+        } else {
+            print("down castion error")
         }
     }
 }

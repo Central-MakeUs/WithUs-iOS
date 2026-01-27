@@ -238,8 +238,8 @@ final class SignUpSetKeywordViewController: BaseViewController {
     
     private func updateNextButtonState() {
         let selectedCount = selectedKeywords.count
-        nextButton.isEnabled = selectedCount == 2
-        nextButton.backgroundColor = selectedCount == 2 ? UIColor.abled : UIColor.disabled
+        nextButton.isEnabled = selectedCount == 3
+        nextButton.backgroundColor = selectedCount == 3 ? UIColor.abled : UIColor.disabled
     }
 }
 
@@ -273,7 +273,7 @@ extension SignUpSetKeywordViewController: UICollectionViewDelegate {
         if selectedKeywords.contains(keyword.id) {
             selectedKeywords.remove(keyword.id)
         } else {
-            guard selectedKeywords.count < 2 else { return }
+            guard selectedKeywords.count < 3 else { return }
             selectedKeywords.insert(keyword.id)
         }
         

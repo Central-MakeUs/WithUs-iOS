@@ -38,7 +38,6 @@ class ConnectCoupleCoordinator: Coordinator, InviteCoordinatorProtocol {
         navigationController.pushViewController(connectVC, animated: true)
     }
     
-    // InviteCoordinator와 동일한 화면들
     func showInviteInputCode() {
         let networkService = NetworkService.shared
         let inputRepository = InviteVerificationAndAcceptRepository(networkService: networkService)
