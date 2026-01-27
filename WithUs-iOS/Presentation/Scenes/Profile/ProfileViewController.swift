@@ -10,7 +10,7 @@ import SnapKit
 import Then
 import SwiftUI
 
-class ProfileViewController: BaseViewController {
+final class ProfileViewController: BaseViewController {
     weak var coordinator: ProfileCoordinator?
     
     private let profileView = UIView().then {
@@ -270,6 +270,8 @@ extension ProfileViewController: UICollectionViewDelegate {
         switch item.id {
         case .keyword:
             self.coordinator?.showKeywordModification()
+        case .account:
+            self.coordinator?.showAccountModification()
         default:
             break
         }

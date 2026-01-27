@@ -38,6 +38,12 @@ class ProfileCoordinator: Coordinator {
         navigationController.pushViewController(keywordVC, animated: true)
     }
     
+    func showAccountModification() {
+        let accountVC = ModifyAccountViewController()
+        accountVC.coordinator = self
+        navigationController.pushViewController(accountVC, animated: true)
+    }
+    
     func finish() {
         
     }
