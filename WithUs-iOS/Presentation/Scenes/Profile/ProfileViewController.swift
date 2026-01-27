@@ -76,21 +76,32 @@ class ProfileViewController: BaseViewController {
     
     struct SettingItem {
         let title: String
-        let id: String
+        let id: MyProfileCategory
+    }
+    
+    enum MyProfileCategory {
+        case notification
+        case keyword
+        case account
+        case connect
+        case kakao
+        case review
+        case terms
+        case privacy
     }
     
     private let sections: [(title: String, items: [SettingItem])] = [
         ("설정", [
-            SettingItem(title: "알림", id: "notification"),
-            SettingItem(title: "일상 키워드 관리", id: "keyword"),
-            SettingItem(title: "계정 관리", id: "account")
+            SettingItem(title: "알림", id: .notification),
+            SettingItem(title: "일상 키워드 관리", id: .keyword),
+            SettingItem(title: "계정 관리", id: .account)
         ]),
         ("정보", [
-            SettingItem(title: "커플 연결 정보", id: "connect"),
-            SettingItem(title: "카카오 채널 문의하기", id: "kakao"),
-            SettingItem(title: "앱 리뷰 남기기", id: "review"),
-            SettingItem(title: "이용 약관", id: "terms"),
-            SettingItem(title: "개인정보 처리방침", id: "privacy")
+            SettingItem(title: "커플 연결 정보", id: .connect),
+            SettingItem(title: "카카오 채널 문의하기", id: .kakao),
+            SettingItem(title: "앱 리뷰 남기기", id: .review),
+            SettingItem(title: "이용 약관", id: .terms),
+            SettingItem(title: "개인정보 처리방침", id: .privacy)
         ])
     ]
     
@@ -256,5 +267,11 @@ extension ProfileViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let item = sections[indexPath.section].items[indexPath.item]
         print("선택된 항목: \(item.title), ID: \(item.id)")
+        switch item.id {
+        case .keyword:
+            self.coordinator?.showKeywordModification()
+        default:
+            break
+        }
     }
 }
