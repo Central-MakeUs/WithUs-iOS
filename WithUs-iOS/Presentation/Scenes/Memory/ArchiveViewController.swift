@@ -26,16 +26,7 @@ class ArchiveViewController: BaseViewController {
         return cv
     }()
     
-    private let calendarView = UIView().then {
-        $0.backgroundColor = .white
-        let label = UILabel()
-        label.text = "캘린더 화면"
-        label.textAlignment = .center
-        label.font = UIFont.pretendard18SemiBold
-        $0.addSubview(label)
-        label.snp.makeConstraints {
-            $0.center.equalToSuperview()
-        }
+    private let calendarView = CalendarView().then {
         $0.isHidden = true
     }
     
@@ -102,7 +93,8 @@ class ArchiveViewController: BaseViewController {
         }
         
         calendarView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.top.equalToSuperview().offset(16)
+            $0.leading.trailing.bottom.equalToSuperview()
         }
         
         questionView.snp.makeConstraints {
@@ -169,6 +161,17 @@ class ArchiveViewController: BaseViewController {
             ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil)
         ]
     }
+    
+    private func loadCalendarData() {
+        // 서버에서 데이터 받기
+        let photoData: [String: PhotoData] = [
+            "2025-12-01": PhotoData(thumbnailURL: "https://...", photoCount: 3),
+            "2025-12-09": PhotoData(thumbnailURL: "https://...", photoCount: 1),
+            "2025-12-15": PhotoData(thumbnailURL: "https://...", photoCount: 2)
+        ]
+        
+        calendarView.updatePhotoData(photoData)
+    }
 }
 
 extension ArchiveViewController: CustomSegmentedControlDelegate {
@@ -187,6 +190,18 @@ extension ArchiveViewController: CustomSegmentedControlDelegate {
         default:
             break
         }
+    }
+}
+
+extension ArchiveViewController: CalendarViewDelegate {
+    func calendarView(_ view: CalendarView, didSelectDate date: Date) {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let dateString = dateFormatter.string(from: date)
+        
+        print("선택된 날짜: \(dateString)")
+        // TODO: 해당 날짜의 사진들을 보여주는 화면으로 이동
+        // coordinator?.showPhotosForDate(dateString)
     }
 }
 

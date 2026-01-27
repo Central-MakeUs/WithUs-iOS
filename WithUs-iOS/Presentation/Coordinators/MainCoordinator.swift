@@ -88,7 +88,7 @@ final class MainCoordinator: Coordinator {
         let archiveSelectedImage = UIImage(named: "ic_memory_on")?.withRenderingMode(.alwaysOriginal)
         
         archiveNavigationController.tabBarItem = UITabBarItem(
-            title: "추억",
+            title: "보관",
             image: archiveNormalImage,
             selectedImage: archiveSelectedImage
         )
