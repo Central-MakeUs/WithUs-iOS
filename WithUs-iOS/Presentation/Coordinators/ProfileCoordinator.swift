@@ -7,7 +7,7 @@
 
 import UIKit
 
-class ProfileCoordinator: Coordinator {
+class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
@@ -84,6 +84,21 @@ class ProfileCoordinator: Coordinator {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 onComplete()
             }
+        }
+    }
+    
+    func showConnectCoupleFlow() {
+        let connectCoordinator = ConnectCoupleCoordinator(navigationController: navigationController)
+        connectCoordinator.delegate = self
+        childCoordinators.append(connectCoordinator)
+        connectCoordinator.start()
+    }
+    
+    func connectCoupleCoordinatorDidFinish(_ coordinator: ConnectCoupleCoordinator) {
+        childCoordinators.removeAll { $0 === coordinator }
+        
+        if let profileVC = navigationController.viewControllers.first(where: { $0 is ProfileViewController }) {
+            navigationController.popToViewController(profileVC, animated: true)
         }
     }
     

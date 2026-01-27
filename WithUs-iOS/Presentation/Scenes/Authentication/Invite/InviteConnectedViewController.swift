@@ -16,7 +16,7 @@ final class InviteConnectedViewController: BaseViewController, View {
     
     var disposeBag: DisposeBag = DisposeBag()
     
-    weak var coordinator: InviteCoordinator?
+    weak var coordinator: InviteCoordinatorProtocol?
     
     private let titleStackView = UIStackView().then {
         $0.axis = .vertical
