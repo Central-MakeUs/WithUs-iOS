@@ -44,6 +44,12 @@ class ProfileCoordinator: Coordinator {
         navigationController.pushViewController(accountVC, animated: true)
     }
     
+    func showWithdrawal() {
+        let withdrawalVC = WithdrawalViewController()
+        withdrawalVC.coordinator = self
+        navigationController.pushViewController(withdrawalVC, animated: true)
+    }
+    
     func finish() {
         
     }

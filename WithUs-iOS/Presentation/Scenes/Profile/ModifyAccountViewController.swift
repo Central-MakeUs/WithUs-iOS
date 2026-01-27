@@ -43,6 +43,17 @@ final class ModifyAccountViewController: BaseViewController {
         setupCellRegistration()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+        self.tabBarController?.tabBar.isHidden = true
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        self.tabBarController?.tabBar.isHidden = false
+    }
+    
     private func setupCellRegistration() {
         cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, SettingItem> { cell, indexPath, item in
             cell.contentConfiguration = UIHostingConfiguration {
@@ -119,8 +130,8 @@ extension ModifyAccountViewController: UICollectionViewDelegate {
         switch item.id {
         case .logout:
             CustomAlertViewController.showWithCancel(on: self, title: "로그아웃 하시겠어요?", message: "언제든 다시 로그인해서\n이어서 사용할 수 있어요.", confirmTitle: "로그아웃", cancelTitle: "취소")
-        default:
-            break
+        case .delete:
+            coordinator?.showWithdrawal()
         }
     }
 }
