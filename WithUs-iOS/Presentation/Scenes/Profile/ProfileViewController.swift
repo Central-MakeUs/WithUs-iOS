@@ -272,6 +272,8 @@ extension ProfileViewController: UICollectionViewDelegate {
             self.coordinator?.showKeywordModification()
         case .account:
             self.coordinator?.showAccountModification()
+        case .connect:
+            self.coordinator?.showCancleConnect()
         default:
             break
         }

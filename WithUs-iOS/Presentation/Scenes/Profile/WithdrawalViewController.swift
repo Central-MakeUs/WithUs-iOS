@@ -11,7 +11,7 @@ import Then
 final class WithdrawalViewController: BaseViewController {
     
     weak var coordinator: ProfileCoordinator?
-    
+    let isConnected = true
     // MARK: - UI Components
     private let titleLabel = UILabel().then {
         $0.text = "정말 WITHUS를 떠나시나요?"
@@ -324,17 +324,24 @@ final class WithdrawalViewController: BaseViewController {
     
     @objc private func withdrawalButtonTapped() {
         guard isAgreed else { return }
-        CustomAlertViewController
-            .showWithCancel(
-                on: self,
-                title: "아직 연결 해제가 안되었어요!",
-                message: "현재 상대방과 연결된 상태에요.\n회원 탈퇴를 위해 연결을 해제하시겠어요?",
-                confirmTitle: "해제하러 가기",
-                cancelTitle: "취소",
-                confirmAction: { [weak self] in
-                    self?.coordinator?.showConnectSettings()
-                }
-            )
+        if isConnected {
+            CustomAlertViewController
+                .showWithCancel(
+                    on: self,
+                    title: "아직 연결 해제가 안되었어요!",
+                    message: "현재 상대방과 연결된 상태에요.\n회원 탈퇴를 위해 연결을 해제하시겠어요?",
+                    confirmTitle: "해제하러 가기",
+                    cancelTitle: "취소",
+                    confirmAction: { [weak self] in
+                        self?.coordinator?.showCancleConnectForWithdrawal {
+                            self?.coordinator?.showConnectSettings()
+                        }
+                    }
+                )
+        } else {
+            // 연결되지 않은 상태면 바로 탈퇴 사유 선택 화면으로 이동
+            coordinator?.showConnectSettings()
+        }
     }
     
     // MARK: - Private Methods

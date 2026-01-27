@@ -56,6 +56,19 @@ class ProfileCoordinator: Coordinator {
         navigationController.pushViewController(reasonVC, animated: true)
     }
     
+    func showCancleConnect() {
+        let cancleVC = CancleConnectViewController()
+        cancleVC.coordinator = self
+        navigationController.pushViewController(cancleVC, animated: true)
+    }
+    
+    func showCancleConnectForWithdrawal(completion: @escaping () -> Void) {
+        let cancleVC = CancleConnectViewController()
+        cancleVC.coordinator = self
+        cancleVC.onDisconnectComplete = completion
+        navigationController.pushViewController(cancleVC, animated: true)
+    }
+    
     func finish() {
         
     }
