@@ -324,10 +324,17 @@ final class WithdrawalViewController: BaseViewController {
     
     @objc private func withdrawalButtonTapped() {
         guard isAgreed else { return }
-        
-        // TODO: 다음 화면으로 이동 (최종 탈퇴 확인 또는 탈퇴 처리)
-        print("회원 탈퇴 진행")
-        // coordinator?.showWithdrawalConfirmation()
+        CustomAlertViewController
+            .showWithCancel(
+                on: self,
+                title: "아직 연결 해제가 안되었어요!",
+                message: "현재 상대방과 연결된 상태에요.\n회원 탈퇴를 위해 연결을 해제하시겠어요?",
+                confirmTitle: "해제하러 가기",
+                cancelTitle: "취소",
+                confirmAction: { [weak self] in
+                    self?.coordinator?.showConnectSettings()
+                }
+            )
     }
     
     // MARK: - Private Methods

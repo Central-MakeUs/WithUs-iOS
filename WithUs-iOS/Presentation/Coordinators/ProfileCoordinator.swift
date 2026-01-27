@@ -50,6 +50,12 @@ class ProfileCoordinator: Coordinator {
         navigationController.pushViewController(withdrawalVC, animated: true)
     }
     
+    func showConnectSettings() {
+        let reasonVC = WithdrawalReasonViewController()
+        reasonVC.coordinator = self
+        navigationController.pushViewController(reasonVC, animated: true)
+    }
+    
     func finish() {
         
     }
