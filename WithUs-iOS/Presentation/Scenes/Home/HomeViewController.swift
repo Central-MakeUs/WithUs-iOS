@@ -151,7 +151,9 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             .disposed(by: disposeBag)
         
         reactor.state.map { $0.keywords }
-            .distinctUntilChanged { $0.map { $0.id } == $1.map { $0.id } }
+            .distinctUntilChanged { lhs, rhs in
+                lhs.map { $0.id } == rhs.map { $0.id }
+            }
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] keywords in
                 self?.keywords = keywords
