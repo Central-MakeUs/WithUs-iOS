@@ -62,11 +62,29 @@ class ProfileCoordinator: Coordinator {
         navigationController.pushViewController(cancleVC, animated: true)
     }
     
+    // 회원 탈퇴 플로우에서의 연결 해제
     func showCancleConnectForWithdrawal(completion: @escaping () -> Void) {
         let cancleVC = CancleConnectViewController()
         cancleVC.coordinator = self
         cancleVC.onDisconnectComplete = completion
         navigationController.pushViewController(cancleVC, animated: true)
+    }
+    
+    // CancleNotificationViewController 표시
+    func showCancleNotification(onDisconnectComplete: (() -> Void)? = nil) {
+        let notificationVC = CancleNotificationViewController()
+        notificationVC.coordinator = self
+        notificationVC.onDisconnectComplete = onDisconnectComplete
+        navigationController.pushViewController(notificationVC, animated: true)
+    }
+    
+    func handleDisconnectComplete(onComplete: @escaping () -> Void) {
+        if let withdrawalVC = navigationController.viewControllers.first(where: { $0 is WithdrawalViewController }) {
+            navigationController.popToViewController(withdrawalVC, animated: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                onComplete()
+            }
+        }
     }
     
     func finish() {

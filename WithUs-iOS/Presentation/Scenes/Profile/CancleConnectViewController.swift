@@ -194,53 +194,8 @@ final class CancleConnectViewController: BaseViewController {
     }
     
     @objc private func disconnectButtonTapped() {
-        let alert = UIAlertController(
-            title: "연결을 해제하시겠어요?",
-            message: "연결을 해제하면 상대방과 공유된\n모든 데이터가 삭제됩니다.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "해제하기", style: .destructive) { [weak self] _ in
-            self?.performDisconnect()
-        })
-        
-        present(alert, animated: true)
-    }
-    
-    private func performDisconnect() {
-        // TODO: 서버에 연결 해제 요청
-        // reactor?.action.onNext(.disconnectPartner)
-        
-        // 로딩 표시
-        // showLoadingIndicator()
-        
-        // 임시: 바로 성공했다고 가정
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            // hideLoadingIndicator()
-            self?.showDisconnectSuccessAlert()
-        }
-    }
-    
-    private func showDisconnectSuccessAlert() {
-        let alert = UIAlertController(
-            title: "연결이 해제되었습니다",
-            message: nil,
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "확인", style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            
-            if let onDisconnectComplete = self.onDisconnectComplete {
-                self.navigationController?.popViewController(animated: true)
-                onDisconnectComplete()
-            } else {
-                self.navigationController?.popViewController(animated: true)
-            }
-        })
-        
-        present(alert, animated: true)
+        coordinator?.showCancleNotification(onDisconnectComplete: onDisconnectComplete)
+
     }
 }
 
