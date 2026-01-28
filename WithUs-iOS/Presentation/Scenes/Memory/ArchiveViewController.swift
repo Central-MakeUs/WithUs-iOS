@@ -51,6 +51,7 @@ class ArchiveViewController: BaseViewController {
         super.viewDidLoad()
         setupCellRegistration()
         loadMockData()
+        loadCalendarData()
     }
     
     private func setupCellRegistration() {
@@ -163,11 +164,28 @@ class ArchiveViewController: BaseViewController {
     }
     
     private func loadCalendarData() {
-        // 서버에서 데이터 받기
+        let dummyImages = [
+            "https://picsum.photos/200/200?random=1",
+            "https://picsum.photos/200/200?random=2",
+            "https://picsum.photos/200/200?random=3",
+            "https://picsum.photos/200/200?random=4",
+            "https://picsum.photos/200/200?random=5"
+        ]
+        
         let photoData: [String: PhotoData] = [
-            "2025-12-01": PhotoData(thumbnailURL: "https://...", photoCount: 3),
-            "2025-12-09": PhotoData(thumbnailURL: "https://...", photoCount: 1),
-            "2025-12-15": PhotoData(thumbnailURL: "https://...", photoCount: 2)
+            // 1월 테스트
+            "2026-01-01": PhotoData(thumbnailURL: dummyImages[0], photoCount: 3),
+            "2026-01-05": PhotoData(thumbnailURL: dummyImages[1], photoCount: 1),
+            "2026-01-12": PhotoData(thumbnailURL: dummyImages[2], photoCount: 2),
+            "2026-01-15": PhotoData(thumbnailURL: dummyImages[3], photoCount: 5),
+            "2026-01-20": PhotoData(thumbnailURL: dummyImages[4], photoCount: 1),
+            "2026-01-25": PhotoData(thumbnailURL: dummyImages[0], photoCount: 4),
+            
+            // 12월 테스트
+            "2025-12-01": PhotoData(thumbnailURL: dummyImages[1], photoCount: 3),
+            "2025-12-09": PhotoData(thumbnailURL: dummyImages[2], photoCount: 1),
+            "2025-12-15": PhotoData(thumbnailURL: dummyImages[3], photoCount: 2),
+            "2025-12-25": PhotoData(thumbnailURL: dummyImages[4], photoCount: 1),
         ]
         
         calendarView.updatePhotoData(photoData)
@@ -227,11 +245,4 @@ extension ArchiveViewController: UICollectionViewDelegate {
         print("선택된 사진: \(photo.id)")
         // TODO: 사진 상세 화면으로 이동
     }
-}
-
-struct ArchivePhoto {
-    let id: String
-    let date: String?
-    let imageURL: String?
-    let hugCount: String?
 }
