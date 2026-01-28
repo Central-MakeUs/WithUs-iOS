@@ -64,6 +64,7 @@ struct CalendarDayCellView: View {
             if day.day == 0 {
                 Color.clear
             } else if day.hasPhoto {
+                #warning("테스트중")
                 //                ZStack {
                 //                    if let imageURL = day.thumbnailURL {
                 //                        AsyncImage(url: URL(string: imageURL)) { image in

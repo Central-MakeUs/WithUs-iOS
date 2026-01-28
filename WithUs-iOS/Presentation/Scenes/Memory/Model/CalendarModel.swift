@@ -25,10 +25,3 @@ struct PhotoData {
     let photoCount: Int?
 }
 
-struct ArchivePhoto {
-    let id: String
-    let date: String?
-    let imageURL: String?
-    let hugCount: String?
-}
-

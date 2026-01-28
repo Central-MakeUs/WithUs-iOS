@@ -30,17 +30,9 @@ class ArchiveViewController: BaseViewController {
         $0.isHidden = true
     }
     
-    private let questionView = UIView().then {
-        $0.backgroundColor = .white
-        let label = UILabel()
-        label.text = "질문 화면"
-        label.textAlignment = .center
-        label.font = UIFont.pretendard18SemiBold
-        $0.addSubview(label)
-        label.snp.makeConstraints {
-            $0.center.equalToSuperview()
-        }
+    private let questionView = QuestionListView().then {
         $0.isHidden = true
+        $0.addShadow()
     }
     
     private var photos: [ArchivePhoto] = []
