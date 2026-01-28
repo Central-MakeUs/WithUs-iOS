@@ -26,13 +26,14 @@ class ArchiveViewController: BaseViewController {
         return cv
     }()
     
-    private let calendarView = CalendarView().then {
+    private lazy var calendarView = CalendarView().then {
         $0.isHidden = true
+        $0.delegate = self
     }
     
-    private let questionView = QuestionListView().then {
+    private lazy var questionView = QuestionListView().then {
         $0.isHidden = true
-        $0.addShadow()
+        $0.delegate = self
     }
     
     private var photos: [ArchivePhoto] = []
@@ -203,6 +204,18 @@ extension ArchiveViewController: CustomSegmentedControlDelegate {
     }
 }
 
+//extension ArchiveViewController: CalendarViewDelegate {
+//    func calendarView(_ view: CalendarView, didSelectDate date: Date) {
+//        let dateFormatter = DateFormatter()
+//        dateFormatter.dateFormat = "yyyy-MM-dd"
+//        let dateString = dateFormatter.string(from: date)
+//        
+//        print("선택된 날짜: \(dateString)")
+//        // TODO: 해당 날짜의 사진들을 보여주는 화면으로 이동
+//        // coordinator?.showPhotosForDate(dateString)
+//    }
+//}
+
 extension ArchiveViewController: CalendarViewDelegate {
     func calendarView(_ view: CalendarView, didSelectDate date: Date) {
         let dateFormatter = DateFormatter()
@@ -210,8 +223,42 @@ extension ArchiveViewController: CalendarViewDelegate {
         let dateString = dateFormatter.string(from: date)
         
         print("선택된 날짜: \(dateString)")
-        // TODO: 해당 날짜의 사진들을 보여주는 화면으로 이동
-        // coordinator?.showPhotosForDate(dateString)
+        
+        // 테스트용 데이터
+        let testData = SinglePhotoData(
+            date: "2025.12.09",
+            question: "지금까지 받은 사진 중\n가장 이쁘게 담긴 제페토의 사진은?",
+            imageURL: "https://1x.com/quickimg/4bf2f73146695b7e313936b92dff691b.jpg",
+            name: "JPG",
+            time: "PM 02:35", kind: .combined
+        )
+        
+        let vc = ArchiveDetailViewController(photoData: testData)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+}
+
+//extension ArchiveViewController: QuestionListViewDelegate {
+//    func didSelectQuestion(_ question: Question) {
+//        print("선택된 question: \(question)")
+//    }
+//}
+
+extension ArchiveViewController: QuestionListViewDelegate {
+    func didSelectQuestion(_ question: Question) {
+        print("선택된 question: \(question)")
+        
+        // 테스트용 데이터
+        let testData = SinglePhotoData(
+            date: "2025.12.09",
+            question: question.text,
+            imageURL: "https://1x.com/quickimg/4bf2f73146695b7e313936b92dff691b.jpg",
+            name: "JPG",
+            time: "PM 02:35", kind: .single
+        )
+        
+        let vc = ArchiveDetailViewController(photoData: testData)
+        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
@@ -230,11 +277,27 @@ extension ArchiveViewController: UICollectionViewDataSource {
         )
     }
 }
+//
+//extension ArchiveViewController: UICollectionViewDelegate {
+//    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+//        let photo = photos[indexPath.item]
+//        print("선택된 사진: \(photo.id)")
+//        // TODO: 사진 상세 화면으로 이동
+//    }
+//}
 
 extension ArchiveViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let photo = photos[indexPath.item]
-        print("선택된 사진: \(photo.id)")
-        // TODO: 사진 상세 화면으로 이동
+        // 테스트용 데이터
+        let testData = SinglePhotoData(
+            date: "2025.12.09",
+            question: "지금까지 받은 사진 중\n가장 이쁘게 담긴 제페토의 사진은?",
+            imageURL: "https://1x.com/quickimg/4bf2f73146695b7e313936b92dff691b.jpg",
+            name: "JPG",
+            time: "PM 02:35", kind: .combined
+        )
+        
+        let vc = ArchiveDetailViewController(photoData: testData)
+        navigationController?.pushViewController(vc, animated: true)
     }
 }

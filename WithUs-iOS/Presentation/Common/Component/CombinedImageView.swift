@@ -9,6 +9,7 @@ import UIKit
 import SnapKit
 import Then
 
+//MARK: -- ImageView의 특성은 .scaleAspectFill이다 -> image가 1대1로 들어오면 가로에 맞추고 위아래가 잘린다.
 // MARK: - CombinedImageView (두 이미지를 상하로 합침)
 final class CombinedImageView: UIView {
     
@@ -227,5 +228,31 @@ final class CombinedImageView: UIView {
         print("🔵 [CombinedImageView] 이미지 로드")
         print("  - Top: \(topImageURL)")
         print("  - Bottom: \(bottomImageURL)")
+        
+        if let topUrl = URL(string: topImageURL),
+           let bottomUrl = URL(string: bottomImageURL) {
+            loadImage(from: topUrl, completion: { [weak self] image in
+                self?.topImageView.image = image
+            })
+            
+            loadImage(from: bottomUrl, completion: { [weak self] image in
+                self?.bottomImageView.image = image
+            })
+        }
+    }
+    
+    private func loadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
+        DispatchQueue.global().async {
+            if let data = try? Data(contentsOf: url),
+               let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    completion(image)
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
+            }
+        }
     }
 }

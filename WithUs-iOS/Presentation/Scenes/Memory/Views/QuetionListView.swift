@@ -9,11 +9,16 @@ import UIKit
 import SnapKit
 import Then
 
+protocol QuestionListViewDelegate: AnyObject {
+    func didSelectQuestion(_ question: Question)
+}
+
 class QuestionListView: UIView {
+    
+    weak var delegate: QuestionListViewDelegate?
     
     private var questions: [Question] = []
     
-    // MARK: - UI Components
     private let tableView = UITableView().then {
         $0.backgroundColor = .white
         $0.separatorStyle = .none
@@ -91,6 +96,7 @@ extension QuestionListView: UITableViewDelegate {
         let question = questions[indexPath.row]
         print("선택된 질문: \(question.text)")
         // TODO: 질문 상세 화면으로 이동
+        delegate?.didSelectQuestion(question)
     }
 }
 
