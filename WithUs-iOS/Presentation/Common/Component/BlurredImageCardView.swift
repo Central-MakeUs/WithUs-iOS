@@ -22,7 +22,7 @@ final class BlurredImageCardView: UIView {
     private let profileImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.backgroundColor = .white
-        $0.layer.cornerRadius = 12
+        $0.layer.cornerRadius = 10
         $0.clipsToBounds = true
     }
     

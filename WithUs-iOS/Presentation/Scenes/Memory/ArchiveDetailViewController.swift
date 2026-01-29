@@ -7,65 +7,6 @@ import UIKit
 import Then
 import SnapKit
 
-final class BlurredDetailCell: UICollectionViewCell {
-    static let reuseId = "BlurredDetailCell"
-    
-    private let blurredView = BlurredDetailImageView()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        contentView.addSubview(blurredView)
-        blurredView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func configure(with data: SinglePhotoData) {
-        blurredView.configure(
-            imageURL: data.imageURL,
-            name: data.name,
-            time: data.time
-        )
-    }
-}
-
-final class CombinedImageCell: UICollectionViewCell {
-    static let reuseId = "CombinedImageCell"
-    
-    private let combinedView = CombinedImageView()
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        contentView.addSubview(combinedView)
-        combinedView.snp.makeConstraints {
-            $0.edges.equalToSuperview()
-        }
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    func configure(with data: SinglePhotoData) {
-        // TODO: Adjust configure parameters if different from below
-        combinedView
-            .configure(
-                topImageURL: data.imageURL,
-                topName: data.name,
-                topTime: data.date,
-                topCaption: "",
-                bottomImageURL: data.imageURL,
-                bottomName: data.name,
-                bottomTime: data.date,
-                bottomCaption: ""
-            )
-    }
-}
-
 class ArchiveDetailViewController: BaseViewController {
     weak var coordinator: ArchiveCoordinator?
     
@@ -333,32 +274,3 @@ extension ArchiveDetailViewController: UICollectionViewDataSource, UICollectionV
     }
 }
 
-struct SinglePhotoData {
-    enum Kind {
-        case single
-        case combined
-    }
-    
-    let date: String
-    let question: String
-    let imageURL: String
-    let name: String
-    let time: String
-    let kind: Kind
-    
-    let secondImageURL: String?
-    let secondName: String?
-    let secondTime: String?
-    
-    init(date: String, question: String, imageURL: String, name: String, time: String, kind: Kind, secondImageURL: String? = nil, secondName: String? = nil, secondTime: String? = nil) {
-        self.date = date
-        self.question = question
-        self.imageURL = imageURL
-        self.name = name
-        self.time = time
-        self.kind = kind
-        self.secondImageURL = secondImageURL
-        self.secondName = secondName
-        self.secondTime = secondTime
-    }
-}
