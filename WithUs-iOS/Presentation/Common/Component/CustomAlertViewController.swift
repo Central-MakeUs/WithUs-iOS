@@ -142,28 +142,27 @@ final class CustomAlertViewController: UIViewController {
         }
         
         if cancelTitle != nil {
-            cancelButton.snp.makeConstraints {
-                $0.top.equalTo(separatorLine.snp.bottom)
-                $0.leading.equalToSuperview()
-                $0.bottom.equalToSuperview()
-                $0.height.equalTo(56)
-                $0.width.equalTo(confirmButton)
-            }
-            
-            buttonSeparator.snp.makeConstraints {
-                $0.leading.equalTo(cancelButton.snp.trailing)
-                $0.top.equalTo(separatorLine.snp.bottom)
-                $0.bottom.equalToSuperview()
-                $0.width.equalTo(1)
-            }
             
             confirmButton.snp.makeConstraints {
                 $0.top.equalTo(separatorLine.snp.bottom)
-                $0.leading.equalTo(buttonSeparator.snp.trailing)
-                $0.trailing.equalToSuperview()
-                $0.bottom.equalToSuperview()
+                $0.horizontalEdges.equalToSuperview()
                 $0.height.equalTo(56)
             }
+            
+            buttonSeparator.snp.makeConstraints {
+                $0.top.equalTo(confirmButton.snp.bottom)
+                $0.horizontalEdges.equalToSuperview()
+                $0.height.equalTo(1)
+            }
+            
+            cancelButton.snp.makeConstraints {
+                $0.top.equalTo(buttonSeparator.snp.bottom)
+                $0.horizontalEdges.equalToSuperview()
+                $0.height.equalTo(56)
+                $0.bottom.equalToSuperview()
+            }
+            
+
         } else {
             confirmButton.snp.makeConstraints {
                 $0.top.equalTo(separatorLine.snp.bottom)

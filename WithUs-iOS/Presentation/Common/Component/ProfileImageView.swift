@@ -86,4 +86,8 @@ class ProfileImageView: UIView {
     func setProfileImage(_ image: UIImage?) {
         profileImageView.image = image
     }
+    
+    func hideCameraButton() {
+        cameraButton.isHidden = true
+    }
 }

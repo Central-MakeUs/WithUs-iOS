@@ -11,7 +11,7 @@ protocol InviteCoordinatorDelegate: AnyObject {
     func inviteCoordinatorDidFinish(_ coordinator: InviteCoordinator)
 }
 
-class InviteCoordinator: Coordinator {
+class InviteCoordinator: Coordinator, InviteCoordinatorProtocol {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     var type: CodeType

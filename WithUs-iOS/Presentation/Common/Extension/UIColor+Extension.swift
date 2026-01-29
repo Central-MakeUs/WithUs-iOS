@@ -25,6 +25,7 @@ extension UIColor {
     static let gray600 = UIColor(hex: "#94989F")
     static let gray700 = UIColor(hex: "#565656")
     static let gray900 = UIColor(hex: "#212121")
+    static let gray950 = UIColor(hex: "#000000")
     
     convenience init(hex: String, alpha: CGFloat = 1.0) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)

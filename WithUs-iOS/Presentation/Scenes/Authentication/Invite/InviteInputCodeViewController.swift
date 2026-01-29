@@ -14,7 +14,7 @@ import RxCocoa
 
 class InviteInputCodeViewController: BaseViewController, View {
     
-    weak var coordinator: InviteCoordinator?
+    weak var coordinator: InviteCoordinatorProtocol?
     var disposeBag: DisposeBag = DisposeBag()
     
     private let pinLength = 8

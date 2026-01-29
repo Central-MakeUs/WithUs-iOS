@@ -7,18 +7,99 @@
 
 import UIKit
 
-class ProfileCoordinator: Coordinator {
+class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
+    private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
+        
+        let networkService = NetworkService.shared
+        let keywordRepository = KeywordRepository(networkService: networkService)
+        self.fetchKeywordsUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
     }
     
     func start() {
         let profileViewController = ProfileViewController()
         profileViewController.coordinator = self
         navigationController.setViewControllers([profileViewController], animated: false)
+    }
+    
+    func showProfileModification() {
+        let modifyVC = ModifyProfileViewController(reactor: ProfileReactor())
+        modifyVC.coordinator = self
+        navigationController.pushViewController(modifyVC, animated: true)
+    }
+    
+    func showKeywordModification() {
+        let keywordVC = ModifyKeywordViewController(fetchKeywordsUseCase: fetchKeywordsUseCase)
+        keywordVC.coordinator = self
+        navigationController.pushViewController(keywordVC, animated: true)
+    }
+    
+    func showAccountModification() {
+        let accountVC = ModifyAccountViewController()
+        accountVC.coordinator = self
+        navigationController.pushViewController(accountVC, animated: true)
+    }
+    
+    func showWithdrawal() {
+        let withdrawalVC = WithdrawalViewController()
+        withdrawalVC.coordinator = self
+        navigationController.pushViewController(withdrawalVC, animated: true)
+    }
+    
+    func showConnectSettings() {
+        let reasonVC = WithdrawalReasonViewController()
+        reasonVC.coordinator = self
+        navigationController.pushViewController(reasonVC, animated: true)
+    }
+    
+    func showCancleConnect() {
+        let cancleVC = CancleConnectViewController()
+        cancleVC.coordinator = self
+        navigationController.pushViewController(cancleVC, animated: true)
+    }
+    
+    // 회원 탈퇴 플로우에서의 연결 해제
+    func showCancleConnectForWithdrawal(completion: @escaping () -> Void) {
+        let cancleVC = CancleConnectViewController()
+        cancleVC.coordinator = self
+        cancleVC.onDisconnectComplete = completion
+        navigationController.pushViewController(cancleVC, animated: true)
+    }
+    
+    // CancleNotificationViewController 표시
+    func showCancleNotification(onDisconnectComplete: (() -> Void)? = nil) {
+        let notificationVC = CancleNotificationViewController()
+        notificationVC.coordinator = self
+        notificationVC.onDisconnectComplete = onDisconnectComplete
+        navigationController.pushViewController(notificationVC, animated: true)
+    }
+    
+    func handleDisconnectComplete(onComplete: @escaping () -> Void) {
+        if let withdrawalVC = navigationController.viewControllers.first(where: { $0 is WithdrawalViewController }) {
+            navigationController.popToViewController(withdrawalVC, animated: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                onComplete()
+            }
+        }
+    }
+    
+    func showConnectCoupleFlow() {
+        let connectCoordinator = ConnectCoupleCoordinator(navigationController: navigationController)
+        connectCoordinator.delegate = self
+        childCoordinators.append(connectCoordinator)
+        connectCoordinator.start()
+    }
+    
+    func connectCoupleCoordinatorDidFinish(_ coordinator: ConnectCoupleCoordinator) {
+        childCoordinators.removeAll { $0 === coordinator }
+        
+        if let profileVC = navigationController.viewControllers.first(where: { $0 is ProfileViewController }) {
+            navigationController.popToViewController(profileVC, animated: true)
+        }
     }
     
     func finish() {

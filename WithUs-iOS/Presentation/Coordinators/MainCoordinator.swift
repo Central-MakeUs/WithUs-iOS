@@ -23,7 +23,7 @@ final class MainCoordinator: Coordinator {
     
     // Coordinator들을 프로퍼티로 저장 (강한 참조 유지) ✅
     private var homeCoordinator: HomeCoordinator?
-    private var memoryCoordinator: MemoryCoordinator?
+    private var memoryCoordinator: ArchiveCoordinator?
     private var fourCutCoordinator: FourCutCoordinator?
     private var profileCoordinator: ProfileCoordinator?
     
@@ -78,19 +78,19 @@ final class MainCoordinator: Coordinator {
             selectedImage: homeSelectedImage
         )
         
-        let memoryNavigationController = UINavigationController()
-        let memoryCoord = MemoryCoordinator(navigationController: memoryNavigationController)
-        self.memoryCoordinator = memoryCoord // 프로퍼티에 저장 ✅
-        childCoordinators.append(memoryCoord)
-        memoryCoord.start()
+        let archiveNavigationController = UINavigationController()
+        let archiveCoord = ArchiveCoordinator(navigationController: archiveNavigationController)
+        self.memoryCoordinator = archiveCoord // 프로퍼티에 저장 ✅
+        childCoordinators.append(archiveCoord)
+        archiveCoord.start()
         
-        let memoryNormalImage = UIImage(named: "ic_memory_off")?.withRenderingMode(.alwaysOriginal)
-        let memorySelectedImage = UIImage(named: "ic_memory_on")?.withRenderingMode(.alwaysOriginal)
+        let archiveNormalImage = UIImage(named: "ic_memory_off")?.withRenderingMode(.alwaysOriginal)
+        let archiveSelectedImage = UIImage(named: "ic_memory_on")?.withRenderingMode(.alwaysOriginal)
         
-        memoryNavigationController.tabBarItem = UITabBarItem(
-            title: "추억",
-            image: memoryNormalImage,
-            selectedImage: memorySelectedImage
+        archiveNavigationController.tabBarItem = UITabBarItem(
+            title: "보관",
+            image: archiveNormalImage,
+            selectedImage: archiveSelectedImage
         )
         
         let fourCutNavigationController = UINavigationController()
@@ -125,8 +125,8 @@ final class MainCoordinator: Coordinator {
         
         tabBarController.viewControllers = [
             homeNavigationController,
-            memoryNavigationController,
             fourCutNavigationController,
+            archiveNavigationController,
             profileNavigationController
         ]
         
