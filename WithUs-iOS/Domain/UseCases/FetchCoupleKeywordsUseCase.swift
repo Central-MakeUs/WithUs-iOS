@@ -9,6 +9,7 @@ import Foundation
 
 protocol FetchCoupleKeywordsUseCaseProtocol {
     func execute() async throws -> [Keyword]
+    func execute(defaultKeywordIds: [Int], customKeywords: [String]) async throws
 }
 
 final class FetchCoupleKeywordsUseCase: FetchCoupleKeywordsUseCaseProtocol {
@@ -20,5 +21,10 @@ final class FetchCoupleKeywordsUseCase: FetchCoupleKeywordsUseCaseProtocol {
     
     func execute() async throws -> [Keyword] {
         return try await coupleKeywordRepository.fetchCoupleKeywords()
+    }
+    
+    func execute(defaultKeywordIds: [Int], customKeywords: [String]) async throws {
+        return try await coupleKeywordRepository
+            .updateCoupleKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords)
     }
 }

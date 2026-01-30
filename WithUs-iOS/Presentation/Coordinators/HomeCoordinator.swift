@@ -13,9 +13,12 @@ class HomeCoordinator: Coordinator {
     private var inviteCoordinator: InviteCoordinator?
     weak var mainCoordinator: MainCoordinator?
     private weak var homeReactor: HomeReactor?
+    private let keywordService: KeywordEventServiceProtocol
+    private var keywordSettingReactor: KeywordSettingReactor?
     
-    init(navigationController: UINavigationController) {
+    init(navigationController: UINavigationController, keywordService: KeywordEventServiceProtocol) {
         self.navigationController = navigationController
+        self.keywordService = keywordService
     }
     
     func start() {
@@ -53,9 +56,13 @@ class HomeCoordinator: Coordinator {
             fetchTodayQuestionUseCase: fetchTodayQuestionUseCase,
             uploadQuestionImageUseCase: uploadQuestionImageUseCase,
             fetchTodayKeywordUseCase: fetchTodayKeywordUseCase,
-            uploadKeywordImageUseCase: uploadKeywordImageUseCase
+            uploadKeywordImageUseCase: uploadKeywordImageUseCase, keywordService: keywordService
         )
+        
+        let keywordSettingReactor = KeywordSettingReactor(fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase, keywordService: keywordService)
+        
         self.homeReactor = homeReactor
+        self.keywordSettingReactor = keywordSettingReactor
         
         // ViewController
         let homeViewController = HomeViewController()
@@ -110,6 +117,19 @@ class HomeCoordinator: Coordinator {
          childCoordinators.append(inviteCoord)
          inviteCoord.start()
      }
+    
+    func showKeywordModification() {
+        guard let keywordSettingReactor = keywordSettingReactor else { return }
+        
+        let networkService = NetworkService.shared
+        let keywordRepository = KeywordRepository(networkService: networkService)
+        let fetchKeywordsUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
+        let keywordVC = ModifyKeywordViewController(fetchKeywordsUseCase: fetchKeywordsUseCase)
+        
+        keywordVC.homeCoordinator = self
+        keywordVC.reactor = keywordSettingReactor
+        navigationController.pushViewController(keywordVC, animated: true)
+    }
      
     func finish() {
         childCoordinators.removeAll()

@@ -27,6 +27,8 @@ final class MainCoordinator: Coordinator {
     private var fourCutCoordinator: FourCutCoordinator?
     private var profileCoordinator: ProfileCoordinator?
     
+    let keywordService = KeywordEventService()
+    
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
     }
@@ -63,7 +65,7 @@ final class MainCoordinator: Coordinator {
         tabBarController.tabBar.scrollEdgeAppearance = appearance
         
         let homeNavigationController = UINavigationController()
-        let homeCoord = HomeCoordinator(navigationController: homeNavigationController)
+        let homeCoord = HomeCoordinator(navigationController: homeNavigationController, keywordService: keywordService)
         homeCoord.mainCoordinator = self
         self.homeCoordinator = homeCoord // 프로퍼티에 저장 ✅
         childCoordinators.append(homeCoord)
@@ -109,7 +111,7 @@ final class MainCoordinator: Coordinator {
         )
         
         let profileNavigationController = UINavigationController()
-        let profileCoord = ProfileCoordinator(navigationController: profileNavigationController)
+        let profileCoord = ProfileCoordinator(navigationController: profileNavigationController, keywordService: keywordService)
         self.profileCoordinator = profileCoord // 프로퍼티에 저장 ✅
         childCoordinators.append(profileCoord)
         profileCoord.start()

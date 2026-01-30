@@ -10,12 +10,13 @@ import SnapKit
 import Then
 import SwiftUI
 import RxSwift
+import ReactorKit
+import RxCocoa
 
-final class KeywordSettingViewController: BaseViewController {
-    weak var coordinator: SignUpCoordinator?
+final class KeywordSettingViewController: BaseViewController, ReactorKit.View{
+    weak var coordinator: ProfileCoordinator?
     private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
-    private let reactor: SignUpReactor
-    private let disposeBag = DisposeBag()
+    var disposeBag = DisposeBag()
     
     private var keywords: [Keyword] = []
     private var selectedKeywords: Set<String> = []
@@ -73,9 +74,8 @@ final class KeywordSettingViewController: BaseViewController {
         .background(Color.clear)
     }
     
-    init(fetchKeywordsUseCase: FetchKeywordUseCaseProtocol, reactor: SignUpReactor) {
+    init(fetchKeywordsUseCase: FetchKeywordUseCaseProtocol) {
         self.fetchKeywordsUseCase = fetchKeywordsUseCase
-        self.reactor = reactor
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -138,6 +138,15 @@ final class KeywordSettingViewController: BaseViewController {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
     }
     
+    func bind(reactor: KeywordSettingReactor) {
+        reactor.state.map { $0.isCompleted }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] isCompleted in
+                
+            })
+            .disposed(by: disposeBag)
+    }
+    
     private func createLayout() -> UICollectionViewLayout {
         let layout = LeftAlignedCollectionViewFlowLayout()
         layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
@@ -185,9 +194,8 @@ final class KeywordSettingViewController: BaseViewController {
         print("defaultKeywordIds: \(defaultKeywordIds)")
         print("customKeywords: \(customKeywords)")
         
-        reactor.action.onNext(.updateKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords))
+        reactor?.action.onNext(.updateKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords))
         
-        coordinator?.showSignUpProfile()
     }
     
     func createHighlightedAttributedString(

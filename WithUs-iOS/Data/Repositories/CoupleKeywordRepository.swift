@@ -9,6 +9,7 @@ import Foundation
 
 protocol CoupleKeywordRepositoryProtocol {
     func fetchCoupleKeywords() async throws -> [Keyword]
+    func updateCoupleKeywords(defaultKeywordIds: [Int], customKeywords: [String]) async throws
 }
 
 final class CoupleKeywordRepository: CoupleKeywordRepositoryProtocol {
@@ -27,6 +28,12 @@ final class CoupleKeywordRepository: CoupleKeywordRepositoryProtocol {
         )
         
         return response.coupleKeywords.map { $0.toDomain() }
+    }
+    
+    func updateCoupleKeywords(defaultKeywordIds: [Int], customKeywords: [String]) async throws {
+        let endPoint = CoupleKeywordEndpoint.setCoupleKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords)
+        
+        try await networkService.requestWithoutData(endpoint: endPoint)
     }
 }
 

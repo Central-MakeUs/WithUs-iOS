@@ -15,7 +15,7 @@ final class HomeReactor: Reactor {
         case viewWillAppear
         case selectKeyword(index: Int) // 상단 탭 선택 (오늘의 질문 or 오늘의 일상)
         case selectDefaultKeyword
-        case loadDailyKeyword(coupleKeywordId: Int) // PageControl 스와이프시 특정 키워드 데이터 로드
+        case loadDailyKeyword(coupleKeywordId: Int, pageIndex: Int) // PageControl 스와이프시 특정 키워드 데이터 로드
         case uploadQuestionImage(coupleQuestionId: Int, image: UIImage)
         case uploadKeywordImage(coupleKeywordId: Int, image: UIImage)
     }
@@ -25,12 +25,14 @@ final class HomeReactor: Reactor {
         case setOnboardingStatus(OnboardingStatus)
         case setCoupleKeywords([Keyword]) // 키워드 리스트
         case setSelectedKeywordIndex(Int) // 상단 탭 인덱스
+        case setCurrentDailyPageIndex(Int) // ✅ 현재 일상 페이지 인덱스
         case setTodayQuestion(TodayQuestionResponse)
         case setTodayKeyword(TodayKeywordResponse) // 특정 키워드 데이터
         case setImageUploadSuccess(String)
         case setError(String)
         case clearCurrentData
         case showDailyCoupleSetup
+        case resetKeywordLoadState
     }
     
     struct State {
@@ -43,6 +45,8 @@ final class HomeReactor: Reactor {
         var uploadedImageUrl: String?
         var errorMessage: String?
         var shouldShowDailyCoupleSetup: Bool = false
+        var hasLoadedKeywords: Bool = false // ✅ 키워드 리스트 로드 여부
+        var currentDailyPageIndex: Int = 0 // ✅ 현재 보고 있는 일상 키워드 페이지 인덱스
     }
     
     let initialState: State = .init()
@@ -53,6 +57,7 @@ final class HomeReactor: Reactor {
     private let uploadQuestionImageUseCase: UploadQuestionImageUseCaseProtocol
     private let fetchTodayKeywordUseCase: FetchTodayKeywordUseCaseProtocol
     private let uploadKeywordImageUseCase: UploadKeywordImageUseCaseProtocol
+    private let keywordService: KeywordEventServiceProtocol
     
     init(
         fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol,
@@ -60,14 +65,22 @@ final class HomeReactor: Reactor {
         fetchTodayQuestionUseCase: FetchTodayQuestionUseCaseProtocol,
         uploadQuestionImageUseCase: UploadQuestionImageUseCaseProtocol,
         fetchTodayKeywordUseCase: FetchTodayKeywordUseCaseProtocol,
-        uploadKeywordImageUseCase: UploadKeywordImageUseCaseProtocol
-    ) {
+        uploadKeywordImageUseCase: UploadKeywordImageUseCaseProtocol,
+        keywordService: KeywordEventServiceProtocol) {
         self.fetchUserStatusUseCase = fetchUserStatusUseCase
         self.fetchCoupleKeywordsUseCase = fetchCoupleKeywordsUseCase
         self.fetchTodayQuestionUseCase = fetchTodayQuestionUseCase
         self.uploadQuestionImageUseCase = uploadQuestionImageUseCase
         self.fetchTodayKeywordUseCase = fetchTodayKeywordUseCase
         self.uploadKeywordImageUseCase = uploadKeywordImageUseCase
+            self.keywordService = keywordService
+    }
+    
+    func transform(mutation: Observable<Mutation>) -> Observable<Mutation> {
+        let keywordResetMutation = keywordService.event
+            .map { _ in Mutation.resetKeywordLoadState }
+        
+        return Observable.merge(mutation, keywordResetMutation)
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
@@ -98,27 +111,51 @@ final class HomeReactor: Reactor {
                     ])
                 }
                 
-                // completed 상태라면 키워드 리스트 가져오고 첫 번째 키워드 데이터 로드
+                // completed 상태
                 else if status == .completed {
-                    return Observable.concat([
-                        .just(.clearCurrentData),
-                        .just(.setSelectedKeywordIndex(index)),
-                        fetchCoupleKeywordsAndFirstKeywordData()
-                    ])
+                    // ✅ 이미 키워드를 로드한 적이 있으면 현재 보던 키워드 데이터 가져오기
+                    if currentState.hasLoadedKeywords {
+                        let currentIndex = currentState.currentDailyPageIndex
+                        guard currentIndex < currentState.keywords.count,
+                              let coupleKeywordId = Int(currentState.keywords[currentIndex].id) else {
+                            return Observable.concat([
+                                .just(.clearCurrentData),
+                                .just(.setSelectedKeywordIndex(index))
+                            ])
+                        }
+                        
+                        return Observable.concat([
+                            .just(.clearCurrentData),
+                            .just(.setSelectedKeywordIndex(index)),
+                            fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
+                        ])
+                    }
+                    // ✅ 최초 진입이면 키워드 리스트 + 첫번째 데이터 모두 가져오기
+                    else {
+                        return Observable.concat([
+                            .just(.clearCurrentData),
+                            .just(.setSelectedKeywordIndex(index)),
+                            fetchCoupleKeywordsAndFirstKeywordData()
+                        ])
+                    }
                 }
                 
                 return .just(.setSelectedKeywordIndex(index))
             }
             
         case .selectDefaultKeyword:
+            // 초기 진입시 "오늘의 질문" 선택
             return Observable.concat([
                 .just(.setSelectedKeywordIndex(0)),
                 fetchTodayQuestionAsync()
             ])
             
-        case .loadDailyKeyword(let coupleKeywordId):
-            // PageControl 스와이프시 해당 키워드 데이터 로드
-            return fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
+        case .loadDailyKeyword(let coupleKeywordId, let pageIndex):
+            // PageControl 스와이프시 해당 키워드 데이터 로드 + 인덱스 저장
+            return Observable.concat([
+                .just(.setCurrentDailyPageIndex(pageIndex)),
+                fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
+            ])
             
         case .uploadQuestionImage(let coupleQuestionId, let image):
             return uploadQuestionImageAsync(coupleQuestionId: coupleQuestionId, image: image)
@@ -143,9 +180,13 @@ final class HomeReactor: Reactor {
             
         case .setCoupleKeywords(let keywords):
             newState.keywords = keywords
+            newState.hasLoadedKeywords = true
             
         case .setSelectedKeywordIndex(let index):
             newState.selectedKeywordIndex = index
+            
+        case .setCurrentDailyPageIndex(let index):
+            newState.currentDailyPageIndex = index
             
         case .setTodayQuestion(let data):
             newState.currentQuestionData = data
@@ -173,6 +214,8 @@ final class HomeReactor: Reactor {
             
         case .showDailyCoupleSetup:
             newState.shouldShowDailyCoupleSetup = true
+        case .resetKeywordLoadState:
+            newState.hasLoadedKeywords = false
         }
         
         return newState

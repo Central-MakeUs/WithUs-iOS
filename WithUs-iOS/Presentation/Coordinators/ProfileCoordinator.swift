@@ -11,13 +11,18 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
+    private let fetchCoupleKeyUseCase: FetchCoupleKeywordsUseCaseProtocol
+    private let keywordService: KeywordEventServiceProtocol
     
-    init(navigationController: UINavigationController) {
+    init(navigationController: UINavigationController, keywordService: KeywordEventServiceProtocol) {
         self.navigationController = navigationController
         
         let networkService = NetworkService.shared
         let keywordRepository = KeywordRepository(networkService: networkService)
+        let coupleKeywordRepository = CoupleKeywordRepository(networkService: networkService)
         self.fetchKeywordsUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
+        self.fetchCoupleKeyUseCase = FetchCoupleKeywordsUseCase(coupleKeywordRepository: coupleKeywordRepository)
+        self.keywordService = keywordService
     }
     
     func start() {
@@ -30,12 +35,6 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         let modifyVC = ModifyProfileViewController(reactor: ProfileReactor())
         modifyVC.coordinator = self
         navigationController.pushViewController(modifyVC, animated: true)
-    }
-    
-    func showKeywordModification() {
-        let keywordVC = ModifyKeywordViewController(fetchKeywordsUseCase: fetchKeywordsUseCase)
-        keywordVC.coordinator = self
-        navigationController.pushViewController(keywordVC, animated: true)
     }
     
     func showAccountModification() {
@@ -100,6 +99,28 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         if let profileVC = navigationController.viewControllers.first(where: { $0 is ProfileViewController }) {
             navigationController.popToViewController(profileVC, animated: true)
         }
+    }
+    
+    
+    func showKeywordModification() {
+        let keywordVC = ModifyKeywordViewController(fetchKeywordsUseCase: fetchKeywordsUseCase)
+        keywordVC.coordinator = self
+        let reactor = KeywordSettingReactor(
+            fetchCoupleKeywordsUseCase: fetchCoupleKeyUseCase,
+            keywordService: keywordService
+        )
+        keywordVC.reactor = reactor
+        navigationController.pushViewController(keywordVC, animated: true)
+    }
+    
+    func showCoupleSetup() {
+        let reactor = KeywordSettingReactor(
+            fetchCoupleKeywordsUseCase: fetchCoupleKeyUseCase,
+            keywordService: keywordService
+        )
+        let vc = KeywordSettingViewController(fetchKeywordsUseCase: fetchKeywordsUseCase)
+        vc.reactor = reactor
+        navigationController.pushViewController(vc, animated: true)
     }
     
     func finish() {

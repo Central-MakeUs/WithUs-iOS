@@ -10,11 +10,13 @@ import SnapKit
 import Then
 import SwiftUI
 import RxSwift
+import ReactorKit
 
-final class ModifyKeywordViewController: BaseViewController {
+final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     weak var coordinator: ProfileCoordinator?
+    weak var homeCoordinator: HomeCoordinator?
     private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
-    private let disposeBag = DisposeBag()
+    var disposeBag: DisposeBag = DisposeBag()
     
     private var keywords: [Keyword] = []
     private var selectedKeywords: Set<String> = []
@@ -150,6 +152,14 @@ final class ModifyKeywordViewController: BaseViewController {
         }
     }
     
+    func bind(reactor: KeywordSettingReactor) {
+        reactor.state.map { $0.isCompleted }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] isCompleted in
+            })
+            .disposed(by: disposeBag)
+    }
+    
     private func createLayout() -> UICollectionViewLayout {
         let layout = LeftAlignedCollectionViewFlowLayout()
         layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
@@ -197,11 +207,7 @@ final class ModifyKeywordViewController: BaseViewController {
         print("📤 서버 전송 데이터:")
         print("defaultKeywordIds: \(defaultKeywordIds)")
         print("customKeywords: \(customKeywords)")
-        
-        // TODO: Reactor action 호출
-        // reactor.action.onNext(.updateKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords))
-        
-        navigationController?.popViewController(animated: true)
+         reactor?.action.onNext(.updateKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords))
     }
     
     private func showAddKeywordBottomSheet() {
