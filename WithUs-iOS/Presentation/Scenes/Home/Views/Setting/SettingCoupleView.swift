@@ -62,7 +62,7 @@ final class SettingCoupleView: UIView {
 
     private func setupConstraints() {
         titleLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(108)
+            $0.top.equalToSuperview().offset(51)
             $0.centerX.equalToSuperview()
             $0.leading.trailing.equalToSuperview().inset(24)
         }

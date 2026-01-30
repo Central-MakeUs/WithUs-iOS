@@ -1,5 +1,5 @@
 //
-//  HomeReactor.swift (완전 버전)
+//  HomeReactor.swift
 //  WithUs-iOS
 //
 //  Created by Hubriz iOS on 1/22/26.
@@ -13,9 +13,9 @@ import UIKit
 final class HomeReactor: Reactor {
     enum Action {
         case viewWillAppear
-        case fetchCoupleKeywords
-        case selectKeyword(index: Int)
+        case selectKeyword(index: Int) // 상단 탭 선택 (오늘의 질문 or 오늘의 일상)
         case selectDefaultKeyword
+        case loadDailyKeyword(coupleKeywordId: Int) // PageControl 스와이프시 특정 키워드 데이터 로드
         case uploadQuestionImage(coupleQuestionId: Int, image: UIImage)
         case uploadKeywordImage(coupleKeywordId: Int, image: UIImage)
     }
@@ -23,24 +23,26 @@ final class HomeReactor: Reactor {
     enum Mutation {
         case setLoading(Bool)
         case setOnboardingStatus(OnboardingStatus)
-        case setCoupleKeywords([Keyword])
-        case setSelectedKeywordIndex(Int)
+        case setCoupleKeywords([Keyword]) // 키워드 리스트
+        case setSelectedKeywordIndex(Int) // 상단 탭 인덱스
         case setTodayQuestion(TodayQuestionResponse)
-        case setTodayKeyword(TodayKeywordResponse)
+        case setTodayKeyword(TodayKeywordResponse) // 특정 키워드 데이터
         case setImageUploadSuccess(String)
         case setError(String)
         case clearCurrentData
+        case showDailyCoupleSetup
     }
     
     struct State {
         var isLoading: Bool = false
         var onboardingStatus: OnboardingStatus?
-        var keywords: [Keyword] = []
-        var selectedKeywordIndex: Int = 0
+        var keywords: [Keyword] = [] // 서버에서 가져온 키워드 리스트
+        var selectedKeywordIndex: Int = 0 // 상단 탭 (0: 오늘의 질문, 1: 오늘의 일상)
         var currentQuestionData: TodayQuestionResponse?
-        var currentKeywordData: TodayKeywordResponse?
+        var currentKeywordData: TodayKeywordResponse? // 현재 보고 있는 키워드 데이터
         var uploadedImageUrl: String?
         var errorMessage: String?
+        var shouldShowDailyCoupleSetup: Bool = false
     }
     
     let initialState: State = .init()
@@ -73,40 +75,56 @@ final class HomeReactor: Reactor {
         case .viewWillAppear:
             return fetchUserStatus()
             
-        case .fetchCoupleKeywords:
-            return fetchCoupleKeywordsAsync()
-            
         case .selectKeyword(let index):
-            let keyword = currentState.keywords[index]
+            let status = currentState.onboardingStatus
             
-            if keyword.id == "today_question" {
+            // ✅ "오늘의 질문" 선택 (index 0)
+            if index == 0 {
                 return Observable.concat([
                     .just(.clearCurrentData),
                     .just(.setSelectedKeywordIndex(index)),
                     fetchTodayQuestionAsync()
                 ])
-            } else {
-                guard let coupleKeywordId = Int(keyword.id) else {
-                    return .just(.setError("Invalid keyword ID"))
+            }
+            
+            // ✅ "오늘의 일상" 선택 (index 1)
+            else {
+                // needCoupleSetup 상태라면 커플 설정 UI 표시
+                if status == .needCoupleSetup {
+                    return Observable.concat([
+                        .just(.clearCurrentData),
+                        .just(.setSelectedKeywordIndex(index)),
+                        .just(.showDailyCoupleSetup)
+                    ])
                 }
                 
-                return Observable.concat([
-                    .just(.clearCurrentData),
-                    .just(.setSelectedKeywordIndex(index)),
-                    fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
-                ])
+                // completed 상태라면 키워드 리스트 가져오고 첫 번째 키워드 데이터 로드
+                else if status == .completed {
+                    return Observable.concat([
+                        .just(.clearCurrentData),
+                        .just(.setSelectedKeywordIndex(index)),
+                        fetchCoupleKeywordsAndFirstKeywordData()
+                    ])
+                }
+                
+                return .just(.setSelectedKeywordIndex(index))
             }
+            
+        case .selectDefaultKeyword:
+            return Observable.concat([
+                .just(.setSelectedKeywordIndex(0)),
+                fetchTodayQuestionAsync()
+            ])
+            
+        case .loadDailyKeyword(let coupleKeywordId):
+            // PageControl 스와이프시 해당 키워드 데이터 로드
+            return fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
             
         case .uploadQuestionImage(let coupleQuestionId, let image):
             return uploadQuestionImageAsync(coupleQuestionId: coupleQuestionId, image: image)
             
         case .uploadKeywordImage(let coupleKeywordId, let image):
             return uploadKeywordImageAsync(coupleKeywordId: coupleKeywordId, image: image)
-        case .selectDefaultKeyword:
-              return Observable.concat([
-                  .just(.setSelectedKeywordIndex(0)),
-                  fetchTodayQuestionAsync()
-              ])
         }
     }
     
@@ -124,12 +142,7 @@ final class HomeReactor: Reactor {
             newState.onboardingStatus = status
             
         case .setCoupleKeywords(let keywords):
-            let todayQuestion = Keyword(
-                id: "today_question",
-                text: "오늘의 질문",
-                displayOrder: 0
-            )
-            newState.keywords = [todayQuestion] + keywords
+            newState.keywords = keywords
             
         case .setSelectedKeywordIndex(let index):
             newState.selectedKeywordIndex = index
@@ -137,10 +150,12 @@ final class HomeReactor: Reactor {
         case .setTodayQuestion(let data):
             newState.currentQuestionData = data
             newState.currentKeywordData = nil
+            newState.shouldShowDailyCoupleSetup = false
             
         case .setTodayKeyword(let data):
             newState.currentKeywordData = data
             newState.currentQuestionData = nil
+            newState.shouldShowDailyCoupleSetup = false
             
         case .setImageUploadSuccess(let imageKey):
             newState.uploadedImageUrl = imageKey
@@ -154,10 +169,16 @@ final class HomeReactor: Reactor {
             newState.currentKeywordData = nil
             newState.uploadedImageUrl = nil
             newState.errorMessage = nil
+            newState.shouldShowDailyCoupleSetup = false
+            
+        case .showDailyCoupleSetup:
+            newState.shouldShowDailyCoupleSetup = true
         }
         
         return newState
     }
+    
+    // MARK: - Private Methods
     
     private func fetchUserStatus() -> Observable<Mutation> {
         return Observable.concat([
@@ -186,27 +207,6 @@ final class HomeReactor: Reactor {
         ])
     }
     
-    private func fetchCoupleKeywordsAsync() -> Observable<Mutation> {
-        return Observable.create { [weak self] observer in
-            guard let self else {
-                observer.onCompleted()
-                return Disposables.create()
-            }
-            
-            Task {
-                do {
-                    let keywords = try await self.fetchCoupleKeywordsUseCase.execute()
-                    observer.onNext(.setCoupleKeywords(keywords))
-                    observer.onCompleted()
-                } catch {
-                    observer.onNext(.setError(error.localizedDescription))
-                    observer.onCompleted()
-                }
-            }
-            return Disposables.create()
-        }
-    }
-    
     private func fetchTodayQuestionAsync() -> Observable<Mutation> {
         return Observable.create { [weak self] observer in
             guard let self else {
@@ -218,6 +218,37 @@ final class HomeReactor: Reactor {
                 do {
                     let data = try await self.fetchTodayQuestionUseCase.execute()
                     observer.onNext(.setTodayQuestion(data))
+                    observer.onCompleted()
+                } catch {
+                    observer.onNext(.setError(error.localizedDescription))
+                    observer.onCompleted()
+                }
+            }
+            return Disposables.create()
+        }
+    }
+    
+    // ✅ 키워드 리스트 가져오고 + 첫 번째 키워드 데이터 로드
+    private func fetchCoupleKeywordsAndFirstKeywordData() -> Observable<Mutation> {
+        return Observable.create { [weak self] observer in
+            guard let self else {
+                observer.onCompleted()
+                return Disposables.create()
+            }
+            
+            Task {
+                do {
+                    // 1. 키워드 리스트 가져오기
+                    let keywords = try await self.fetchCoupleKeywordsUseCase.execute()
+                    observer.onNext(.setCoupleKeywords(keywords))
+                    
+                    // 2. 첫 번째 키워드 데이터 로드
+                    if let firstKeyword = keywords.first,
+                       let coupleKeywordId = Int(firstKeyword.id) {
+                        let data = try await self.fetchTodayKeywordUseCase.execute(coupleKeywordId: coupleKeywordId)
+                        observer.onNext(.setTodayKeyword(data))
+                    }
+                    
                     observer.onCompleted()
                 } catch {
                     observer.onNext(.setError(error.localizedDescription))
