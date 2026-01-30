@@ -34,7 +34,7 @@ class FourCutViewController: BaseViewController {
     }
     
     override func setNavigation() {
-        self.navigationItem.title = "네컷"
+        self.navigationItem.leftBarButtonItem?.title = "네컷"
         setRightBarButton(image: UIImage(named: "ic_four_cut_setting"))
     }
     

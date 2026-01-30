@@ -11,8 +11,6 @@ protocol UserRepositoryProtocol {
     func updateProfile(
         nickname: String,
         birthday: String,
-        defaultKeywordIds: [Int],
-        customKeywords: [String],
         imageKey: String?
     ) async throws -> UpdateProfileResponse
 }
@@ -27,15 +25,11 @@ final class UserRepository: UserRepositoryProtocol {
     func updateProfile(
         nickname: String,
         birthday: String,
-        defaultKeywordIds: [Int],
-        customKeywords: [String],
         imageKey: String?
     ) async throws -> UpdateProfileResponse {
         let endpoint = UserEndpoint.updateProfile(
             nickname: nickname,
             birthday: birthday,
-            defaultKeywordIds: defaultKeywordIds,
-            customKeywords: customKeywords,
             imageKey: imageKey
         )
         

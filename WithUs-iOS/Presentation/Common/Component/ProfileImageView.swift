@@ -26,7 +26,6 @@ class ProfileImageView: UIView {
         $0.contentMode = .scaleAspectFill
         $0.backgroundColor = .white
         $0.clipsToBounds = true
-        $0.image = UIImage(systemName: "person.fill")
     }
     
     let cameraButton = UIButton().then {
@@ -83,8 +82,20 @@ class ProfileImageView: UIView {
         delegate?.setProfileTapped()
     }
     
-    func setProfileImage(_ image: UIImage?) {
-        profileImageView.image = image
+    func setProfileImage(_ url: String?) {
+        if let profileUrl = url,
+        let profile = URL(string: profileUrl) {
+            profileImageView.kf.setImage(
+                with: profile,
+                placeholder: UIImage(systemName: "person.fill"),
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
+        } else {
+            profileImageView.image = UIImage(systemName: "person.fill")
+        }
     }
     
     func hideCameraButton() {

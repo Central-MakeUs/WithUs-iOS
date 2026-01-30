@@ -12,6 +12,7 @@ import AVFoundation
 import RxSwift
 import RxCocoa
 import ReactorKit
+import Kingfisher
 
 final class SignUpProfileViewController: BaseViewController, View {
     
@@ -61,7 +62,7 @@ final class SignUpProfileViewController: BaseViewController, View {
         super.viewDidLoad()
         setLeftBarButton(image: UIImage(systemName: "chevron.left"))
         let attributed = createHighlightedAttributedString(
-            fullText: "4/4",
+            fullText: "3 / 3",
             highlightRange: NSRange(location: 0, length: 1),
             highlightColor: UIColor(hex: "#EF4044"),
             normalColor: UIColor.gray900,
@@ -111,6 +112,13 @@ final class SignUpProfileViewController: BaseViewController, View {
                 self?.coordinator?.didCompleteSignUp()
             })
             .disposed(by: disposeBag)
+        
+        reactor.state.compactMap { $0.user }
+            .map { $0.profileImageUrl }
+            .subscribe(onNext: { [weak self] url in
+                self?.setImage(url)
+            })
+            .disposed(by: disposeBag)
     }
     
     @objc private func nextBtnTapped() {
@@ -136,6 +144,9 @@ final class SignUpProfileViewController: BaseViewController, View {
         return attributedString
     }
     
+    private func setImage(_ url: String?) {
+        profileView.setProfileImage(url)
+    }
 }
 
 extension SignUpProfileViewController: ProfileViewDelegate {

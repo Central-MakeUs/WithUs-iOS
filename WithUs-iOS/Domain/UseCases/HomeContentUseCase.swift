@@ -62,7 +62,7 @@ final class UploadQuestionImageUseCase: UploadQuestionImageUseCaseProtocol {
         )
         
         print("🎉 오늘의 질문 이미지 업로드 완료!")
-        return uploadResult.accessUrl
+        return uploadResult.imageKey
     }
 }
 
@@ -125,6 +125,6 @@ final class UploadKeywordImageUseCase: UploadKeywordImageUseCaseProtocol {
         )
         
         print("🎉 키워드 이미지 업로드 완료!")
-        return uploadResult.accessUrl
+        return uploadResult.imageKey
     }
 }

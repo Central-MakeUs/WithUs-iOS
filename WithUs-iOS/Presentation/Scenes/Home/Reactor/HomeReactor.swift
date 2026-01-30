@@ -29,7 +29,7 @@ final class HomeReactor: Reactor {
         case setTodayKeyword(TodayKeywordResponse)
         case setImageUploadSuccess(String)
         case setError(String)
-        case clearCurrentData  // ✅ 추가
+        case clearCurrentData
     }
     
     struct State {
@@ -45,7 +45,6 @@ final class HomeReactor: Reactor {
     
     let initialState: State = .init()
     
-    // Use Cases
     private let fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol
     private let fetchCoupleKeywordsUseCase: FetchCoupleKeywordsUseCaseProtocol
     private let fetchTodayQuestionUseCase: FetchTodayQuestionUseCaseProtocol
@@ -82,7 +81,7 @@ final class HomeReactor: Reactor {
             
             if keyword.id == "today_question" {
                 return Observable.concat([
-                    .just(.clearCurrentData),  // ✅ 먼저 이전 데이터 클리어
+                    .just(.clearCurrentData),
                     .just(.setSelectedKeywordIndex(index)),
                     fetchTodayQuestionAsync()
                 ])
@@ -92,7 +91,7 @@ final class HomeReactor: Reactor {
                 }
                 
                 return Observable.concat([
-                    .just(.clearCurrentData),  // ✅ 먼저 이전 데이터 클리어
+                    .just(.clearCurrentData),
                     .just(.setSelectedKeywordIndex(index)),
                     fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
                 ])
@@ -143,14 +142,14 @@ final class HomeReactor: Reactor {
             newState.currentKeywordData = data
             newState.currentQuestionData = nil
             
-        case .setImageUploadSuccess(let accessUrl):
-            newState.uploadedImageUrl = accessUrl
+        case .setImageUploadSuccess(let imageKey):
+            newState.uploadedImageUrl = imageKey
             
         case .setError(let message):
             newState.isLoading = false
             newState.errorMessage = message
             
-        case .clearCurrentData:  // ✅ 추가
+        case .clearCurrentData:
             newState.currentQuestionData = nil
             newState.currentKeywordData = nil
             newState.uploadedImageUrl = nil
@@ -159,8 +158,6 @@ final class HomeReactor: Reactor {
         
         return newState
     }
-    
-    // MARK: - Private Methods
     
     private func fetchUserStatus() -> Observable<Mutation> {
         return Observable.concat([
@@ -263,11 +260,11 @@ final class HomeReactor: Reactor {
                 
                 Task {
                     do {
-                        let accessUrl = try await self.uploadQuestionImageUseCase.execute(
+                        let imageKey = try await self.uploadQuestionImageUseCase.execute(
                             coupleQuestionId: coupleQuestionId,
                             image: image
                         )
-                        observer.onNext(.setImageUploadSuccess(accessUrl))
+                        observer.onNext(.setImageUploadSuccess(imageKey))
                         
                         // 업로드 후 새로고침
                         let data = try await self.fetchTodayQuestionUseCase.execute()
@@ -295,11 +292,11 @@ final class HomeReactor: Reactor {
                 
                 Task {
                     do {
-                        let accessUrl = try await self.uploadKeywordImageUseCase.execute(
+                        let imageKey = try await self.uploadKeywordImageUseCase.execute(
                             coupleKeywordId: coupleKeywordId,
                             image: image
                         )
-                        observer.onNext(.setImageUploadSuccess(accessUrl))
+                        observer.onNext(.setImageUploadSuccess(imageKey))
                         
                         // 업로드 후 새로고침
                         let data = try await self.fetchTodayKeywordUseCase.execute(coupleKeywordId: coupleKeywordId)

@@ -89,7 +89,7 @@ final class SignupBirthDayViewController: BaseViewController, View {
         setupGestureRecognizer()
         setLeftBarButton(image: UIImage(systemName: "chevron.left"))
         let attributed = createHighlightedAttributedString(
-            fullText: "2/4",
+            fullText: "2 / 3",
             highlightText: "2",
             highlightColor: UIColor(hex: "#EF4044"),
             normalColor: UIColor.gray900,
@@ -232,7 +232,7 @@ final class SignupBirthDayViewController: BaseViewController, View {
     @objc private func nextButtonTapped() {
         guard let birthDate = birthDayTextField.text, !birthDate.isEmpty else { return }
         reactor?.action.onNext(.updateBirthDate(birthDate))
-        coordinator?.showKeyword()
+        coordinator?.showSignUpProfile()
     }
     
     @objc private func dismissKeyboard() {

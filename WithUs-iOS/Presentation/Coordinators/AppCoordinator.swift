@@ -21,7 +21,6 @@ class AppCoordinator: Coordinator {
     func start() {
         window.rootViewController = navigationController
         window.makeKeyAndVisible()
-        
         checkAutoLogin()
     }
     

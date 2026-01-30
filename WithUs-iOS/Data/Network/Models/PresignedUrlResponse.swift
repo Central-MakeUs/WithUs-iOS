@@ -9,6 +9,5 @@ import Foundation
 
 struct PresignedUrlResponse: Decodable {
     let uploadUrl: String
-    let accessUrl: String
     let imageKey: String
 }

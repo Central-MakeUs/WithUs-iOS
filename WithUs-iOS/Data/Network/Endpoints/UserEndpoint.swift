@@ -11,8 +11,6 @@ import Alamofire
 enum UserEndpoint {
     case updateProfile(nickname: String,
                        birthday: String,
-                       defaultKeywordIds: [Int],
-                       customKeywords: [String],
                        imageKey: String?)
 }
 
@@ -33,12 +31,10 @@ extension UserEndpoint: EndpointProtocol {
     
     var parameters: Parameters? {
         switch self {
-        case .updateProfile(let nickname, let birthday, let defaultKeywordIds, let customKeywords, let imageKey):
+        case .updateProfile(let nickname, let birthday, let imageKey):
             var params: [String: Any] = [
                 "nickname": nickname,
                 "birthday": birthday,
-                "defaultKeywordIds": defaultKeywordIds,
-                "customKeywords": customKeywords
             ]
             if let imageKey = imageKey {
                 params["imageKey"] = imageKey

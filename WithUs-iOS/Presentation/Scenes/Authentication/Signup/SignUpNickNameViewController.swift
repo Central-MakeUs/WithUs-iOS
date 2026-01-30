@@ -85,7 +85,7 @@ final class SignUpNickNameViewController: BaseViewController, View {
         super.viewDidLoad()
         setupKeyboardObservers()
         let attributed = createHighlightedAttributedString(
-            fullText: "1/4",
+            fullText: "1 / 3",
             highlightText: "1",
             highlightColor: UIColor(hex: "#EF4044"),
             normalColor: UIColor.gray900,

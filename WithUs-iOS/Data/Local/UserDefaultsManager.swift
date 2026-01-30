@@ -19,6 +19,49 @@ final class UserDefaultsManager {
         static let accessToken = "accessToken"
         static let refreshToken = "refreshToken"
         static let fcmToken = "fcmToken"
+        static let nickname = "nickname"
+        static let userId = "userId"
+        static let profileImageUrl = "profileImageUrl"
+    
+    }
+    
+    var nickname: String? {
+        get {
+            return userDefaults.string(forKey: Keys.nickname)
+        }
+        set {
+            if let nickname = newValue {
+                userDefaults.set(nickname, forKey: Keys.nickname)
+            } else {
+                userDefaults.removeObject(forKey: Keys.nickname)
+            }
+        }
+    }
+    
+    var userId: String? {
+        get {
+            return userDefaults.string(forKey: Keys.userId)
+        }
+        set {
+            if let userId = newValue {
+                userDefaults.set(userId, forKey: Keys.userId)
+            } else {
+                userDefaults.removeObject(forKey: Keys.userId)
+            }
+        }
+    }
+    
+    var profileImageUrl: String? {
+        get {
+            return userDefaults.string(forKey: Keys.profileImageUrl)
+        }
+        set {
+            if let url = newValue {
+                userDefaults.set(url, forKey: Keys.profileImageUrl)
+            } else {
+                userDefaults.removeObject(forKey: Keys.profileImageUrl)
+            }
+        }
     }
     
     var accessToken: String? {

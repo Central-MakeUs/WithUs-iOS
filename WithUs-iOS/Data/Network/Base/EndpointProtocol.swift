@@ -19,7 +19,7 @@ public protocol EndpointProtocol {
 
 extension EndpointProtocol {
     public var baseURL: String {
-        return "http://withus.p-e.kr" // TODO: 실제 baseURL로 변경
+        return "https://withus.p-e.kr" // TODO: 실제 baseURL로 변경
     }
     
     public var headers: HTTPHeaders {

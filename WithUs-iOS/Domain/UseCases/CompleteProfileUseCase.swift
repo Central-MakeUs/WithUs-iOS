@@ -11,8 +11,6 @@ protocol CompleteProfileUseCaseProtocol {
     func execute(
         nickname: String,
         birthday: String,
-        defaultKeywordIds: [Int],
-        customKeywords: [String],
         profileImage: Data?
     ) async throws -> User
 }
@@ -32,8 +30,6 @@ final class CompleteProfileUseCase: CompleteProfileUseCaseProtocol {
     func execute(
         nickname: String,
         birthday: String,
-        defaultKeywordIds: [Int],
-        customKeywords: [String],
         profileImage: Data?
     ) async throws -> User {
         
@@ -57,8 +53,6 @@ final class CompleteProfileUseCase: CompleteProfileUseCaseProtocol {
         let response = try await userRepository.updateProfile(
             nickname: nickname,
             birthday: birthday,
-            defaultKeywordIds: defaultKeywordIds,
-            customKeywords: customKeywords,
             imageKey: imageKey
         )
         

@@ -9,11 +9,9 @@ import Foundation
 
 struct UploadImageResult {
     let imageKey: String
-    let accessUrl: String
     
     init(from response: PresignedUrlResponse) {
         self.imageKey = response.imageKey
-        self.accessUrl = response.accessUrl
     }
 }
 

@@ -25,11 +25,13 @@ final class SignUpReactor: Reactor {
         case setBirthDate(String)
         case setKeywords(defaultKeywordIds: [Int], customKeywords: [String])
         case setLoading(Bool)
+        case setUser(User)
         case setSuccess
         case setError(String)
     }
     
     struct State {
+        var user: User?
         var profileImage: Data?
         var nickname: String = ""
         var birthDate: String = ""
@@ -92,6 +94,8 @@ final class SignUpReactor: Reactor {
         case .setKeywords(let defaultKeywordIds, let customKeywords):
             newState.defaultKeywordIds = defaultKeywordIds
             newState.customKeywords = customKeywords
+        case .setUser(let user):
+            newState.user = user
         }
         
         return newState
@@ -109,17 +113,23 @@ final class SignUpReactor: Reactor {
                 
                 Task { @MainActor in
                     do {
-                        let result = try await self.completeProfileUseCase.execute(nickname: self.currentState.nickname, birthday: self.currentState.birthDate, defaultKeywordIds: self.currentState.defaultKeywordIds, customKeywords: self.currentState.customKeywords, profileImage: self.currentState.profileImage)
+                        let result = try await self.completeProfileUseCase.execute(nickname: self.currentState.nickname, birthday: self.currentState.birthDate, profileImage: self.currentState.profileImage)
                         print("   nickname: \(result.nickname)")
                         print("   userId: \(result.userId)")
-                        print("   keywords: \(result.keywords)")
                         print("   profileImageUrl: \(result.profileImageUrl ?? "없음")")
-                        
+                        UserManager.shared.userId = result.userId
+                        UserManager.shared.nickName = result.nickname
+                        UserManager.shared.profileImageUrl = result.profileImageUrl
+                        observer.onNext(.setUser(result))
                         observer.onNext(.setSuccess)
                         observer.onCompleted()
                         
                     } catch let error as UploadImageError {
                         observer.onNext(.setError(error.message))
+                        observer.onCompleted()
+                        
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
                         observer.onCompleted()
                         
                     } catch {
