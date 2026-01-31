@@ -62,51 +62,98 @@ struct CalendarDayCellView: View {
     var body: some View {
         ZStack {
             if day.day == 0 {
+                // 빈 칸
                 Color.clear
-            } else if day.hasPhoto {
-                #warning("테스트중")
-                //                ZStack {
-                //                    if let imageURL = day.thumbnailURL {
-                //                        AsyncImage(url: URL(string: imageURL)) { image in
-                //                            image
-                //                                .resizable()
-                //                                .aspectRatio(contentMode: .fill)
-                //                        } placeholder: {
-                //                            Color.gray.opacity(0.3)
-                //                        }
-                //                    } else {
-                //                        Color.gray.opacity(0.3)
-                //                    }
-                //
-                //                    Text(String(format: "%02d", day.day))
-                //                        .font(Font(UIFont.pretendard12Regular))
-                //                        .foregroundColor(.white)
-                //                }
-                //                .frame(width: 42, height: 42)
-                //                .cornerRadius(8)
-                //                .clipped()
-                ZStack {
-                    // 임시: 랜덤 색상으로 테스트
-                    Color(
-                        red: Double.random(in: 0.3...0.7),
-                        green: Double.random(in: 0.3...0.7),
-                        blue: Double.random(in: 0.3...0.7)
-                    )
+                
+            } else if day.hasPhoto, let photoData = day.photoData {
+                // 사진 있는 날짜
+                ZStack(alignment: .center) {
+                    switch photoData.kind {
+                    case .combined:
+                        CombinedThumbnailView(imageURL: photoData.imageURL)
+                    case .single:
+                        SingleThumbnailView(imageURL: photoData.imageURL)
+                    }
                     
-                    // 흰색 날짜
+                    // 날짜 텍스트
                     Text(String(format: "%02d", day.day))
                         .font(Font(UIFont.pretendard12Regular))
+                        .fontWeight(.semibold)
                         .foregroundColor(.white)
-                        .fontWeight(.semibold)  // 더 잘 보이게
+                        .shadow(color: .black.opacity(0.4), radius: 2, x: 0, y: 1)
                 }
+                .frame(width: 42, height: 42)
                 .cornerRadius(8)
                 .clipped()
+                
             } else {
+                // 사진 없는 날짜
                 Text(String(format: "%02d", day.day))
                     .font(Font(UIFont.pretendard12Regular))
                     .foregroundColor(Color(uiColor: .gray500))
             }
         }
         .frame(width: 42, height: 42)
+    }
+}
+
+// MARK: - Combined: 내 사진(위) + 상대방 사진(아래)
+
+private struct CombinedThumbnailView: View {
+    let imageURL: String?
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 위: 내 사진
+            ThumbnailImageView(imageURL: imageURL)
+                .frame(maxWidth: .infinity)
+                .frame(height: 21) // 42의 절반
+                .clipped(antialiased: false)
+            
+            // 아래: 상대방 사진
+            ThumbnailImageView(imageURL: imageURL)
+                .frame(maxWidth: .infinity)
+                .frame(height: 21)
+                .clipped(antialiased: false)
+        }
+    }
+}
+
+// MARK: - Single: 이미지 하나만
+
+private struct SingleThumbnailView: View {
+    let imageURL: String?
+    
+    var body: some View {
+        ThumbnailImageView(imageURL: imageURL)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .clipped(antialiased: false)
+    }
+}
+
+// MARK: - 공통 이미지 뷰
+
+private struct ThumbnailImageView: View {
+    let imageURL: String?
+    
+    var body: some View {
+        if let url = imageURL.flatMap({ URL(string: $0) }) {
+            AsyncImage(url: url) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                case .failure:
+                    Color.gray.opacity(0.3)
+                case .empty:
+                    Color.gray.opacity(0.3)
+                @unknown default:
+                    Color.gray.opacity(0.3)
+                }
+            }
+        } else {
+            Color.gray.opacity(0.3)
+        }
     }
 }

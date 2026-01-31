@@ -36,7 +36,7 @@ class ArchiveViewController: BaseViewController {
         $0.delegate = self
     }
     
-    private var photos: [ArchivePhoto] = []
+    private var photos: [SinglePhotoData] = []
     
     private var cellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, ArchivePhoto>!
     
@@ -48,13 +48,14 @@ class ArchiveViewController: BaseViewController {
     }
     
     private func setupCellRegistration() {
-        cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, ArchivePhoto> { cell, indexPath, item in
-            cell.contentConfiguration = UIHostingConfiguration {
-                ArchivePhotoCellView(photo: item)
-            }
-            .margins(.all, 0)
-            .background(Color.clear)
-        }
+        recentCollectionView.register(
+            CombinedImageCell.self,
+            forCellWithReuseIdentifier: CombinedImageCell.reuseId
+        )
+        recentCollectionView.register(
+            BlurredDetailCell.self,
+            forCellWithReuseIdentifier: BlurredDetailCell.reuseId
+        )
     }
     
     override func setupUI() {
@@ -137,52 +138,241 @@ class ArchiveViewController: BaseViewController {
     }
     
     private func loadMockData() {
-        photos = [
-            ArchivePhoto(id: "1", date: "1월 12일", imageURL: nil, hugCount: "37 Hug × 21 Hug"),
-            ArchivePhoto(id: "2", date: "1월 9일", imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "3", date: "1월 9일", imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "4", date: "12월 12일", imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "6", date: nil, imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "7", date: nil, imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "8", date: "11월 31일", imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "9", date: nil, imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "9", date: nil, imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "9", date: nil, imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "9", date: nil, imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "9", date: nil, imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "9", date: nil, imageURL: nil, hugCount: nil),
-            ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil),ArchivePhoto(id: "5", date: "12월 9일", imageURL: nil, hugCount: nil)
-        ]
-    }
+            let dummyImageURL = "https://picsum.photos/400/640?random="
+            
+            photos = [
+                SinglePhotoData(
+                    date: "2026.01.12",
+                    question: "지금까지 받은 사진 중\n가장 이쁘게 담긴 제페토의 사진은?",
+                    imageURL: dummyImageURL + "1",
+                    name: "JPG",
+                    time: "PM 02:35",
+                    kind: .combined
+                ),
+                SinglePhotoData(
+                    date: "2026.01.09",
+                    question: "오늘 가장 행복한 순간은?",
+                    imageURL: dummyImageURL + "2",
+                    name: "JPG",
+                    time: "AM 10:12",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2026.01.09",
+                    question: "",
+                    imageURL: dummyImageURL + "3",
+                    name: "JPG",
+                    time: "PM 06:45",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.12.12",
+                    question: "금주의 가장 좋은 날은?",
+                    imageURL: dummyImageURL + "4",
+                    name: "JPG",
+                    time: "PM 01:20",
+                    kind: .combined
+                ),
+                SinglePhotoData(
+                    date: "2025.12.09",
+                    question: "",
+                    imageURL: dummyImageURL + "5",
+                    name: "JPG",
+                    time: "AM 09:00",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.12.09",
+                    question: "오늘의 날씨와 같은 감정은?",
+                    imageURL: dummyImageURL + "6",
+                    name: "JPG",
+                    time: "PM 03:10",
+                    kind: .combined
+                ),
+                SinglePhotoData(
+                    date: "2025.12.01",
+                    question: "",
+                    imageURL: dummyImageURL + "7",
+                    name: "JPG",
+                    time: "PM 05:55",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.11.28",
+                    question: "이번 달 가장 소중한 기억은?",
+                    imageURL: dummyImageURL + "8",
+                    name: "JPG",
+                    time: "AM 11:30",
+                    kind: .combined
+                ),
+                SinglePhotoData(
+                    date: "2025.11.28",
+                    question: "",
+                    imageURL: dummyImageURL + "9",
+                    name: "JPG",
+                    time: "PM 04:22",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.11.20",
+                    question: "",
+                    imageURL: dummyImageURL + "10",
+                    name: "JPG",
+                    time: "AM 08:15",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.11.15",
+                    question: "주말에 가장 즐거운 활동은?",
+                    imageURL: dummyImageURL + "11",
+                    name: "JPG",
+                    time: "PM 02:00",
+                    kind: .combined
+                ),
+                SinglePhotoData(
+                    date: "2025.11.15",
+                    question: "",
+                    imageURL: dummyImageURL + "12",
+                    name: "JPG",
+                    time: "PM 07:40",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.11.10",
+                    question: "",
+                    imageURL: dummyImageURL + "13",
+                    name: "JPG",
+                    time: "AM 10:50",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.11.05",
+                    question: "가장 좋아하는 색깔의 날은?",
+                    imageURL: dummyImageURL + "14",
+                    name: "JPG",
+                    time: "PM 12:00",
+                    kind: .combined
+                ),
+                SinglePhotoData(
+                    date: "2025.11.01",
+                    question: "",
+                    imageURL: dummyImageURL + "15",
+                    name: "JPG",
+                    time: "AM 07:30",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.10.28",
+                    question: "이번 달 마지막 날의 기억은?",
+                    imageURL: dummyImageURL + "16",
+                    name: "JPG",
+                    time: "PM 09:10",
+                    kind: .combined
+                ),
+                SinglePhotoData(
+                    date: "2025.10.25",
+                    question: "",
+                    imageURL: dummyImageURL + "17",
+                    name: "JPG",
+                    time: "PM 03:45",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.10.20",
+                    question: "",
+                    imageURL: dummyImageURL + "18",
+                    name: "JPG",
+                    time: "AM 11:00",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.10.15",
+                    question: "요즘 가장 많이 웃은 날은?",
+                    imageURL: dummyImageURL + "19",
+                    name: "JPG",
+                    time: "PM 01:55",
+                    kind: .combined
+                ),
+                SinglePhotoData(
+                    date: "2025.10.10",
+                    question: "",
+                    imageURL: dummyImageURL + "20",
+                    name: "JPG",
+                    time: "AM 09:30",
+                    kind: .single
+                ),
+                SinglePhotoData(
+                    date: "2025.10.05",
+                    question: "",
+                    imageURL: dummyImageURL + "21",
+                    name: "JPG",
+                    time: "PM 06:20",
+                    kind: .single
+                )
+            ]
+        }
     
     private func loadCalendarData() {
-        let dummyImages = [
-            "https://picsum.photos/200/200?random=1",
-            "https://picsum.photos/200/200?random=2",
-            "https://picsum.photos/200/200?random=3",
-            "https://picsum.photos/200/200?random=4",
-            "https://picsum.photos/200/200?random=5"
-        ]
-        
-        let photoData: [String: PhotoData] = [
-            // 1월 테스트
-            "2026-01-01": PhotoData(thumbnailURL: dummyImages[0], photoCount: 3),
-            "2026-01-05": PhotoData(thumbnailURL: dummyImages[1], photoCount: 1),
-            "2026-01-12": PhotoData(thumbnailURL: dummyImages[2], photoCount: 2),
-            "2026-01-15": PhotoData(thumbnailURL: dummyImages[3], photoCount: 5),
-            "2026-01-20": PhotoData(thumbnailURL: dummyImages[4], photoCount: 1),
-            "2026-01-25": PhotoData(thumbnailURL: dummyImages[0], photoCount: 4),
+            let dummyImageURL = "https://picsum.photos/seed/"
             
-            // 12월 테스트
-            "2025-12-01": PhotoData(thumbnailURL: dummyImages[1], photoCount: 3),
-            "2025-12-09": PhotoData(thumbnailURL: dummyImages[2], photoCount: 1),
-            "2025-12-15": PhotoData(thumbnailURL: dummyImages[3], photoCount: 2),
-            "2025-12-25": PhotoData(thumbnailURL: dummyImages[4], photoCount: 1),
-        ]
-        
-        calendarView.updatePhotoData(photoData)
-    }
+            let photoData: [String: PhotoData] = [
+                // 1월 테스트
+                "2026-01-01": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal1/200/200",
+                    photoCount: 3,
+                    photoData: SinglePhotoData(date: "2026.01.01", question: "새해 첫날의 기억은?", imageURL: dummyImageURL + "cal1/400/640", name: "JPG", time: "AM 10:00", kind: .combined)
+                ),
+                "2026-01-05": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal2/200/200",
+                    photoCount: 1,
+                    photoData: SinglePhotoData(date: "2026.01.05", question: "", imageURL: dummyImageURL + "cal2/400/640", name: "JPG", time: "PM 03:20", kind: .single)
+                ),
+                "2026-01-12": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal3/200/200",
+                    photoCount: 2,
+                    photoData: SinglePhotoData(date: "2026.01.12", question: "지금까지 받은 사진 중\n가장 이쁘게 담긴 제페토의 사진은?", imageURL: dummyImageURL + "cal3/400/640", name: "JPG", time: "PM 02:35", kind: .combined)
+                ),
+                "2026-01-15": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal4/200/200",
+                    photoCount: 5,
+                    photoData: SinglePhotoData(date: "2026.01.15", question: "", imageURL: dummyImageURL + "cal4/400/640", name: "JPG", time: "AM 09:15", kind: .single)
+                ),
+                "2026-01-20": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal5/200/200",
+                    photoCount: 1,
+                    photoData: SinglePhotoData(date: "2026.01.20", question: "이번주 가장 좋은 날은?", imageURL: dummyImageURL + "cal5/400/640", name: "JPG", time: "PM 06:00", kind: .combined)
+                ),
+                "2026-01-25": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal6/200/200",
+                    photoCount: 4,
+                    photoData: SinglePhotoData(date: "2026.01.25", question: "", imageURL: dummyImageURL + "cal6/400/640", name: "JPG", time: "PM 01:45", kind: .single)
+                ),
+                
+                // 12월 테스트
+                "2025-12-01": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal7/200/200",
+                    photoCount: 3,
+                    photoData: SinglePhotoData(date: "2025.12.01", question: "12월의 첫날은?", imageURL: dummyImageURL + "cal7/400/640", name: "JPG", time: "AM 11:30", kind: .combined)
+                ),
+                "2025-12-09": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal8/200/200",
+                    photoCount: 1,
+                    photoData: SinglePhotoData(date: "2025.12.09", question: "", imageURL: dummyImageURL + "cal8/400/640", name: "JPG", time: "PM 04:10", kind: .single)
+                ),
+                "2025-12-15": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal9/200/200",
+                    photoCount: 2,
+                    photoData: SinglePhotoData(date: "2025.12.15", question: "크리스마스 준비 중?", imageURL: dummyImageURL + "cal9/400/640", name: "JPG", time: "PM 05:50", kind: .combined)
+                ),
+                "2025-12-25": PhotoData(
+                    thumbnailURL: dummyImageURL + "cal10/200/200",
+                    photoCount: 1,
+                    photoData: SinglePhotoData(date: "2025.12.25", question: "", imageURL: dummyImageURL + "cal10/400/640", name: "JPG", time: "AM 08:00", kind: .single)
+                ),
+            ]
+            
+            calendarView.updatePhotoData(photoData)
+        }
 }
 
 extension ArchiveViewController: CustomSegmentedControlDelegate {
@@ -270,11 +460,23 @@ extension ArchiveViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let photo = photos[indexPath.item]
         
-        return collectionView.dequeueConfiguredReusableCell(
-            using: cellRegistration,
-            for: indexPath,
-            item: photo
-        )
+        switch photo.kind {
+        case .combined:
+            let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: CombinedImageCell.reuseId,
+                for: indexPath
+            ) as! CombinedImageCell
+            cell.configure(with: photo)
+            return cell
+            
+        case .single:
+            let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: BlurredDetailCell.reuseId,
+                for: indexPath
+            ) as! BlurredDetailCell
+            cell.configure(with: photo)
+            return cell
+        }
     }
 }
 //

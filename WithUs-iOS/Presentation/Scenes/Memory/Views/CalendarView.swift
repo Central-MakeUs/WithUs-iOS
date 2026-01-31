@@ -71,10 +71,9 @@ class CalendarView: UIView {
     
     private func createLayout() -> UICollectionViewLayout {
         let layout = UICollectionViewCompositionalLayout { _, _ in
-            // 월 전체가 하나의 셀
             let itemSize = NSCollectionLayoutSize(
                 widthDimension: .fractionalWidth(1.0),
-                heightDimension: .estimated(373) // 자동 높이
+                heightDimension: .estimated(373)
             )
             let item = NSCollectionLayoutItem(layoutSize: itemSize)
             
@@ -85,7 +84,7 @@ class CalendarView: UIView {
             let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
             
             let section = NSCollectionLayoutSection(group: group)
-            section.interGroupSpacing = 18 // 월 사이 간격
+            section.interGroupSpacing = 18
             section.contentInsets = NSDirectionalEdgeInsets(
                 top: 12,
                 leading: 16,
@@ -117,7 +116,7 @@ class CalendarView: UIView {
         components.month = firstMonth
         components.day = 1
         
-        guard var currentDate = calendar.date(from: components) else { return }
+        guard let currentDate = calendar.date(from: components) else { return }
         
         var endComponents = DateComponents()
         endComponents.year = lastYear
@@ -181,22 +180,21 @@ class CalendarView: UIView {
         
         // 이전 월의 빈 칸
         for _ in 1..<firstWeekday {
-            days.append(CalendarDay(date: nil, day: 0, hasPhoto: false, thumbnailURL: nil))
+            days.append(CalendarDay(date: nil, day: 0, hasPhoto: false, photoData: nil))
         }
         
         // 현재 월의 날짜들
         for day in monthRange {
             if let date = calendar.date(byAdding: .day, value: day - 1, to: monthStart) {
                 let dateString = dateFormatter.string(from: date)
-                let photoData = photoDataDict[dateString]
-                let hasPhoto = photoData != nil
-                let thumbnailURL = photoData?.thumbnailURL
+                let photoDictData = photoDataDict[dateString]
+                let hasPhoto = photoDictData != nil
                 
                 days.append(CalendarDay(
                     date: date,
                     day: day,
                     hasPhoto: hasPhoto,
-                    thumbnailURL: thumbnailURL
+                    photoData: photoDictData?.photoData
                 ))
             }
         }
