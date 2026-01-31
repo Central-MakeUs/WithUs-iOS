@@ -3,6 +3,7 @@
 //  WithUs-iOS
 //
 //  Created by Hubriz iOS on 1/16/26.
+//  Updated by Hubriz iOS on 1/31/26.
 //
 
 import UIKit
@@ -12,7 +13,6 @@ class HomeCoordinator: Coordinator {
     var navigationController: UINavigationController
     private var inviteCoordinator: InviteCoordinator?
     weak var mainCoordinator: MainCoordinator?
-    private weak var homeReactor: HomeReactor?
     private let keywordService: KeywordEventServiceProtocol
     private var keywordSettingReactor: KeywordSettingReactor?
     
@@ -29,17 +29,15 @@ class HomeCoordinator: Coordinator {
         let coupleKeywordRepository = CoupleKeywordRepository(networkService: networkService)
         let homeContentRepository = HomeContentRepository(networkService: networkService)
         let imageRepository = ImageRepository(networkService: networkService)
+        let keywordRepository = KeywordRepository(networkService: networkService)
         
         // Use Cases
         let fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
         let fetchCoupleKeywordsUseCase = FetchCoupleKeywordsUseCase(coupleKeywordRepository: coupleKeywordRepository)
         let fetchTodayQuestionUseCase = FetchTodayQuestionUseCase(repository: homeContentRepository)
         let fetchTodayKeywordUseCase = FetchTodayKeywordUseCase(repository: homeContentRepository)
-        
-        // ✅ 기존 UploadImageUseCase 생성
         let uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
         
-        // ✅ UploadImageUseCase를 주입
         let uploadQuestionImageUseCase = UploadQuestionImageUseCase(
             repository: homeContentRepository,
             uploadImageUseCase: uploadImageUseCase
@@ -49,27 +47,39 @@ class HomeCoordinator: Coordinator {
             uploadImageUseCase: uploadImageUseCase
         )
         
-        // Reactor
-        let homeReactor = HomeReactor(
-            fetchUserStatusUseCase: fetchUserStatusUseCase,
-            fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase,
+        // Reactors
+        let todayQuestionReactor = TodayQuestionReactor(
             fetchTodayQuestionUseCase: fetchTodayQuestionUseCase,
-            uploadQuestionImageUseCase: uploadQuestionImageUseCase,
-            fetchTodayKeywordUseCase: fetchTodayKeywordUseCase,
-            uploadKeywordImageUseCase: uploadKeywordImageUseCase, keywordService: keywordService
+            uploadQuestionImageUseCase: uploadQuestionImageUseCase
         )
         
-        let keywordSettingReactor = KeywordSettingReactor(fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase, keywordService: keywordService)
+        let todayDailyReactor = TodayDailyReactor(
+            fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase,
+            fetchTodayKeywordUseCase: fetchTodayKeywordUseCase,
+            uploadKeywordImageUseCase: uploadKeywordImageUseCase,
+            keywordService: keywordService
+        )
         
-        self.homeReactor = homeReactor
+        let keywordSettingReactor = KeywordSettingReactor(
+            fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase,
+            keywordService: keywordService
+        )
         self.keywordSettingReactor = keywordSettingReactor
         
-        // ViewController
-        let homeViewController = HomeViewController()
-        homeViewController.reactor = homeReactor
-        homeViewController.coordinator = self
+        // HomePagerViewController 생성
+        let homePagerVC = HomePagerViewController()
+        homePagerVC.coordinator = self
         
-        navigationController.setViewControllers([homeViewController], animated: true)
+        // 내부 Page VCs에 Reactor 주입
+        // HomePagerViewController의 lazy page VCs가 init될 때 coordinator가 이미 설정되어야 하므로
+        // coordinator 세팅 후 reactor를 직접 주입
+        homePagerVC.injectReactors(
+            questionReactor: todayQuestionReactor,
+            dailyReactor: todayDailyReactor,
+            fetchUserStatusUseCase: fetchUserStatusUseCase
+        )
+        
+        navigationController.setViewControllers([homePagerVC], animated: true)
     }
     
     func handleNeedUserSetup() {
@@ -92,14 +102,6 @@ class HomeCoordinator: Coordinator {
         }
         
         navigationController.present(customCameraVC, animated: true)
-    }
-    
-    private func showPhotoPreview(image: UIImage, uploadType: ImageUploadType, delegate: PhotoPreviewDelegate) {
-        let photoPreviewVC = PhotoPreviewViewController(image: image)
-        photoPreviewVC.modalPresentationStyle = .fullScreen
-        photoPreviewVC.delegate = delegate // ✅ delegate 설정
-        
-        navigationController.present(photoPreviewVC, animated: true)
     }
     
     func showInviteModal() {

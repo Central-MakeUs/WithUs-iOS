@@ -39,14 +39,3 @@ struct KeywordCellView: View {
         )
     }
 }
-
-//struct KeywordCellView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        VStack(spacing: 12) {
-//            KeywordCellView(keyword: "맛집", isSelected: false, isAddButton: false, onTap: {})
-//            KeywordCellView(keyword: "여행", isSelected: true, isAddButton: false, onTap: {})
-//            KeywordCellView(keyword: "새 키워드 추가", isSelected: false, isAddButton: true, onTap: {})
-//        }
-//        .padding()
-//    }
-//}
