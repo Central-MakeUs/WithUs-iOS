@@ -12,17 +12,36 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     var navigationController: UINavigationController
     private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
     private let fetchCoupleKeyUseCase: FetchCoupleKeywordsUseCaseProtocol
+    private let updateProfileuseCase: UpdateCompleteProfileUseCase
+    private let uploadImageUseCase: UploadImageUseCaseProtocol
     private let keywordService: KeywordEventServiceProtocol
+    
+    private let profileReactor: ProfileReactor
     
     init(navigationController: UINavigationController, keywordService: KeywordEventServiceProtocol) {
         self.navigationController = navigationController
         
         let networkService = NetworkService.shared
+        
+        //repository
         let keywordRepository = KeywordRepository(networkService: networkService)
         let coupleKeywordRepository = CoupleKeywordRepository(networkService: networkService)
+        let updateRepository = UpdateUserRepository(networdService: networkService)
+        let imageRepository = ImageRepository(networkService: networkService)
+
+        //usecase
+        self.uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
         self.fetchKeywordsUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
         self.fetchCoupleKeyUseCase = FetchCoupleKeywordsUseCase(coupleKeywordRepository: coupleKeywordRepository)
+        self.updateProfileuseCase = UpdateCompleteProfileUseCase(
+            uploadImageUseCase: uploadImageUseCase,
+            updateUserRepository: updateRepository
+        )
+        //transform
         self.keywordService = keywordService
+        
+        //reactor
+        self.profileReactor = ProfileReactor(completeProfileUseCase: updateProfileuseCase)
     }
     
     func start() {
@@ -32,7 +51,8 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     }
     
     func showProfileModification() {
-        let modifyVC = ModifyProfileViewController(reactor: ProfileReactor())
+        let modifyVC = ModifyProfileViewController()
+        modifyVC.reactor = profileReactor
         modifyVC.coordinator = self
         navigationController.pushViewController(modifyVC, animated: true)
     }
@@ -127,3 +147,4 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         
     }
 }
+

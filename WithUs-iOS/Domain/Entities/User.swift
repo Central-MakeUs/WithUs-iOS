@@ -17,4 +17,10 @@ struct User {
         self.nickname = response.nickname
         self.profileImageUrl = response.profileImageUrl
     }
+    
+    init(from user: PutUpdateProfileResponse) {
+        self.userId = String(user.userId)
+        self.nickname = user.nickname
+        self.profileImageUrl = user.profileImageUrl
+    }
 }

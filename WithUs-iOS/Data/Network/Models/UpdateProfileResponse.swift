@@ -12,3 +12,10 @@ struct UpdateProfileResponse: Decodable {
     let nickname: String
     let profileImageUrl: String?
 }
+
+struct PutUpdateProfileResponse: Decodable {
+    let userId: Int64
+    let nickname: String
+    let birthday: String
+    let profileImageUrl: String?
+}

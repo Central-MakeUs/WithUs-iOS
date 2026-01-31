@@ -9,7 +9,7 @@ import UIKit
 import Then
 import SnapKit
 
-final class HomePagerViewController: BaseViewController, UIPageViewControllerDelegate, UIPageViewControllerDataSource {
+final class HomePagerViewController: BaseViewController, UIPageViewControllerDelegate {
     
     private var fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol?
     var coordinator: HomeCoordinator?
@@ -79,7 +79,6 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
         pageViewController.didMove(toParent: self)
         
         pageViewController.delegate = self
-        pageViewController.dataSource = self
         pageViewController.setViewControllers([pages[0]], direction: .forward, animated: false)
         
         view.addSubview(settingInviteCodeView)
@@ -236,16 +235,5 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
            let index = pages.firstIndex(of: current) {
             updateSegmentUI(index: index)
         }
-    }
-    
-    // MARK: - UIPageViewControllerDataSource
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerBefore viewController: UIViewController) -> UIViewController? {
-        guard let index = pages.firstIndex(of: viewController), index > 0 else { return nil }
-        return pages[index - 1]
-    }
-    
-    func pageViewController(_ pageViewController: UIPageViewController, viewControllerAfter viewController: UIViewController) -> UIViewController? {
-        guard let index = pages.firstIndex(of: viewController), index < pages.count - 1 else { return nil }
-        return pages[index + 1]
     }
 }

@@ -14,7 +14,7 @@ import ReactorKit
 import RxSwift
 import RxCocoa
 
-final class ModifyProfileViewController: BaseViewController/*, View*/ {
+final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
     
     var disposeBag = DisposeBag()
     
@@ -41,7 +41,9 @@ final class ModifyProfileViewController: BaseViewController/*, View*/ {
         $0.textAlignment = .left
         $0.borderStyle = .none
         $0.layer.cornerRadius = 8
-        $0.backgroundColor = UIColor.gray100
+        $0.backgroundColor = .white
+        $0.layer.borderWidth = 1
+        $0.layer.borderColor = UIColor.gray200.cgColor
         $0.textColor = UIColor.gray900
         $0.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
         $0.leftViewMode = .always
@@ -71,7 +73,9 @@ final class ModifyProfileViewController: BaseViewController/*, View*/ {
         $0.textAlignment = .left
         $0.borderStyle = .none
         $0.layer.cornerRadius = 8
-        $0.backgroundColor = UIColor.gray100
+        $0.backgroundColor = .white
+        $0.layer.borderWidth = 1
+        $0.layer.borderColor = UIColor.gray200.cgColor
         $0.textColor = UIColor.gray900
         $0.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 0))
         $0.leftViewMode = .always
@@ -79,7 +83,6 @@ final class ModifyProfileViewController: BaseViewController/*, View*/ {
         $0.rightViewMode = .always
         $0.returnKeyType = .done
         $0.keyboardType = .numberPad
-        $0.clearButtonMode = .never
     }
     
     private let birthDayWarningLabel = UILabel().then {
@@ -101,15 +104,6 @@ final class ModifyProfileViewController: BaseViewController/*, View*/ {
     private var selectedImage: UIImage?
     private var isNicknameValid = false
     private var isBirthDateValid = false
-    
-    init(reactor: ProfileReactor) {
-        super.init(nibName: nil, bundle: nil)
-//        self.reactor = reactor
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
     
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -145,22 +139,26 @@ final class ModifyProfileViewController: BaseViewController/*, View*/ {
             $0.attributedText = attributed
         }
         
-        let completeButton = UIBarButtonItem(
-            title: "저장",
-            style: .plain,
-            target: self,
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.pretendard16SemiBold,
+            .foregroundColor: UIColor.redWarning
+        ]
+        let attributedTitle = NSAttributedString(string: "저장", attributes: titleAttributes)
+        
+        setRightBarButton(
+            attributedTitle: attributedTitle,
             action: #selector(saveButtonTapped)
         )
-        completeButton.setTitleTextAttributes([
-            .foregroundColor: UIColor.redWarning,
-            .font: UIFont.pretendard16SemiBold
-        ], for: .normal)
-        completeButton.setTitleTextAttributes([
-            .foregroundColor: UIColor.gray300,
-            .font: UIFont.pretendard16SemiBold
-        ], for: .disabled)
-        completeButton.isEnabled = false
-        navigationItem.rightBarButtonItem = completeButton
+        
+        if let saveButton = navigationItem.rightBarButtonItem?.customView as? UIButton {
+            saveButton.isEnabled = false
+            
+            let disabledAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.pretendard16SemiBold,
+                .foregroundColor: UIColor.gray300
+            ]
+            saveButton.setAttributedTitle(NSAttributedString(string: "저장", attributes: disabledAttributes), for: .disabled)
+        }
     }
     
     override func setupUI() {
@@ -238,36 +236,36 @@ final class ModifyProfileViewController: BaseViewController/*, View*/ {
         birthDayTextField.addTarget(self, action: #selector(birthDateTextFieldDidChange), for: .editingChanged)
     }
     
-//    func bind(reactor: ProfileReactor) {
-//        reactor.state.map { $0.nickname }
-//            .distinctUntilChanged()
-//            .bind(to: nicknameTextField.rx.text)
-//            .disposed(by: disposeBag)
-//        
-//        reactor.state.map { $0.birthDate }
-//            .distinctUntilChanged()
-//            .bind(to: birthDayTextField.rx.text)
-//            .disposed(by: disposeBag)
-//        
-//        reactor.state.map { $0.profileImage }
-//            .distinctUntilChanged()
-//            .subscribe(onNext: { [weak self] imageData in
-//                if let data = imageData, let image = UIImage(data: data) {
-//                    self?.profileView.profileImageView.image = image
-//                }
-//            })
-//            .disposed(by: disposeBag)
-//    }
+    func bind(reactor: ProfileReactor) {
+        reactor.state.map { $0.nickname }
+            .distinctUntilChanged()
+            .bind(to: nicknameTextField.rx.text)
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.birthDate }
+            .distinctUntilChanged()
+            .bind(to: birthDayTextField.rx.text)
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.profileImage }
+            .distinctUntilChanged()
+            .subscribe(onNext: { [weak self] imageData in
+                if let data = imageData, let image = UIImage(data: data) {
+                    self?.profileView.profileImageView.image = image
+                }
+            })
+            .disposed(by: disposeBag)
+    }
     
     // MARK: - Actions
     @objc private func saveButtonTapped() {
         guard let nickname = nicknameTextField.text,
               let birthDate = birthDayTextField.text else { return }
-        
-        // Reactor action 호출
-        // reactor?.action.onNext(.updateProfile(nickname: nickname, birthDate: birthDate, image: selectedImage))
-        
-        navigationController?.popViewController(animated: true)
+        reactor?.action.onNext(.saveProfile(
+            nickname: nickname,
+            birthDate: birthDate,
+            image: selectedImage
+        ))
     }
     
     @objc private func nicknameTextFieldDidChange() {
