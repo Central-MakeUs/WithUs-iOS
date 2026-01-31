@@ -20,7 +20,7 @@ struct CoupleKeywordInfo: Decodable {
 extension CoupleKeywordInfo {
     func toDomain() -> Keyword {
         return Keyword(
-            id: String(keywordId),
+            id: String(coupleKeywordId),
             text: content,
             displayOrder: 0,
             isAddButton: false
