@@ -13,11 +13,19 @@ final class KeywordMyOnlyView: UIView {
     
     var onNotifyTapped: (() -> Void)?
     
+    private let topCard = UIView().then {
+        $0.layer.cornerRadius = 12
+        $0.clipsToBounds = true
+    }
+    
     private let myImageCard = ImageCardView()
     
-    private let placeholderView = UIView().then {
-        $0.backgroundColor = .gray200
-        $0.layer.cornerRadius = 15
+    private let bottomCard = UIView()
+    
+    private let bottomStackView = UIStackView().then {
+        $0.axis = .vertical
+        $0.spacing = 20
+        $0.alignment = .center
     }
     
     private let infoLabel = UILabel().then {
@@ -29,11 +37,16 @@ final class KeywordMyOnlyView: UIView {
     }
     
     private let notifyButton = UIButton().then {
-        $0.setTitle("콕 찌르기 →", for: .normal)
-        $0.setTitleColor(.white, for: .normal)
-        $0.titleLabel?.font = UIFont.pretendard14SemiBold
-        $0.backgroundColor = UIColor.gray900
-        $0.layer.cornerRadius = 8
+        var config = UIButton.Configuration.plain()
+        config.title = "콕 찌르기"
+        config.image = UIImage(named: "ic_hand_finger")
+        config.imagePlacement = .leading
+        config.imagePadding = 6
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)
+        config.baseForegroundColor = UIColor.gray50
+        config.background.backgroundColor = UIColor.gray900
+        config.background.cornerRadius = 8
+        $0.configuration = config
     }
     
     override init(frame: CGRect) {
@@ -48,34 +61,36 @@ final class KeywordMyOnlyView: UIView {
     }
     
     private func setupUI() {
-        addSubview(myImageCard)
-        addSubview(placeholderView)
-        addSubview(infoLabel)
-        addSubview(notifyButton)
+        addSubview(topCard)
+        addSubview(bottomCard)
+        topCard.addSubview(myImageCard)
+        
+        bottomCard.addSubview(bottomStackView)
+        bottomStackView.addArrangedSubview(infoLabel)
+        bottomStackView.addArrangedSubview(notifyButton)
     }
     
     private func setupConstraints() {
+        topCard.snp.makeConstraints {
+            $0.top.horizontalEdges.equalToSuperview()
+            $0.bottom.equalTo(snp.centerY)
+        }
+        
         myImageCard.snp.makeConstraints {
-            $0.top.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(26)
-            $0.height.equalTo(260)
+            $0.edges.equalToSuperview()
         }
         
-        placeholderView.snp.makeConstraints {
-            $0.top.equalTo(myImageCard.snp.bottom).offset(38)
-            $0.size.equalTo(80)
-            $0.centerX.equalToSuperview()
+        bottomCard.snp.makeConstraints {
+            $0.top.equalTo(snp.centerY)
+            $0.leading.trailing.bottom.equalToSuperview()
         }
         
-        infoLabel.snp.makeConstraints {
-            $0.top.equalTo(placeholderView.snp.bottom).offset(10)
-            $0.centerX.equalToSuperview()
+        bottomStackView.snp.makeConstraints {
+            $0.center.equalToSuperview()
         }
         
         notifyButton.snp.makeConstraints {
-            $0.top.equalTo(infoLabel.snp.bottom).offset(16)
-            $0.size.equalTo(CGSize(width: 100, height: 41))
-            $0.centerX.equalToSuperview()
+            $0.height.equalTo(48)
         }
     }
     

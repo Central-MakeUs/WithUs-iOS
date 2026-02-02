@@ -193,9 +193,9 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         hideAllContentViews()
         
 //        let myAnswered = data.myInfo?.questionImageUrl != nil
-        let myAnswered = false
+        let myAnswered = true
 //        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
-        let partnerAnswered = true
+        let partnerAnswered = false
         
         switch (myAnswered, partnerAnswered) {
         case (false, false):
@@ -220,12 +220,12 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             
         case (true, false):
             keywordMyOnlyView.isHidden = false
-            keywordMyOnlyView.configure(
-                myImageURL: data.myInfo?.questionImageUrl ?? "",
-                myName: data.myInfo?.name ?? "",
-                myTime: data.myInfo?.answeredAt ?? "",
-                myProfileURL: data.myInfo?.profileImageUrl ?? ""
-            )
+            let name = data.myInfo?.name ?? ""
+            let profile = data.myInfo?.profileImageUrl ?? ""
+            let time = data.myInfo?.answeredAt ?? ""
+            let image = data.myInfo?.questionImageUrl ?? ""
+            
+            keywordMyOnlyView.configure(myImageURL: image, myName: name, myTime: time, myProfileURL: profile)
             
         case (true, true):
             keywordBothView.isHidden = false

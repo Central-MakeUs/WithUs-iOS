@@ -14,35 +14,31 @@ final class ImageCardView: UIView {
     
     private let imageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
-        $0.layer.cornerRadius = 16
+        $0.layer.cornerRadius = 12
         $0.clipsToBounds = true
         $0.backgroundColor = .gray200
-    }
-    
-    private let overlayView = UIView().then {
-        $0.backgroundColor = .black.withAlphaComponent(0.3)
     }
     
     private let profileImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.backgroundColor = .white
-        $0.layer.cornerRadius = 12
+        $0.layer.cornerRadius = 17
         $0.clipsToBounds = true
     }
     
     private let nameLabel = UILabel().then {
         $0.font = UIFont.pretendard16SemiBold
-        $0.textColor = .white
+        $0.textColor = UIColor(hex: "#FFFFFF")
     }
     
     private let timeLabel = UILabel().then {
         $0.font = UIFont.pretendard10Regular
-        $0.textColor = .white
+        $0.textColor = UIColor(hex: "#FFFFFF")
     }
     
     private let infoStackView = UIStackView().then {
         $0.axis = .vertical
-        $0.spacing = 3
+        $0.spacing = 2
         $0.alignment = .leading
     }
     
@@ -72,7 +68,8 @@ final class ImageCardView: UIView {
         }
         
         profileImageView.snp.makeConstraints {
-            $0.top.leading.equalToSuperview().inset(16)
+            $0.top.equalToSuperview().offset(16)
+            $0.leading.equalToSuperview().offset(16)
             $0.size.equalTo(34)
         }
         
@@ -87,26 +84,25 @@ final class ImageCardView: UIView {
         imageURL: String,
         profileImageURL: String? = nil,
         name: String,
-        time: String,
+        time: String
     ) {
         nameLabel.text = name
         timeLabel.text = time
+        
         if let url = URL(string: imageURL) {
             imageView.kf.setImage(
                 with: url,
-                placeholder: UIImage(systemName: "xmark.circle.fill"),
+                placeholder: nil,
                 options: [
                     .transition(.fade(0.2)),
                     .cacheOriginalImage
                 ]
             )
-        } else {
-            imageView.image = UIImage(systemName: "xmark.circle.fill")
         }
-        // TODO: 이미지 로딩 라이브러리 사용
-        // imageView.kf.setImage(with: URL(string: imageURL))
-        // if let profileURL = profileImageURL {
-        //     profileImageView.kf.setImage(with: URL(string: profileURL))
-        // }
+        
+        if let profileImageURL, let profileURL = URL(string: profileImageURL) {
+            profileImageView.kf
+                .setImage(with: profileURL, placeholder: nil, options: [.transition(.fade(0.2)), .cacheOriginalImage])
+        }
     }
 }
