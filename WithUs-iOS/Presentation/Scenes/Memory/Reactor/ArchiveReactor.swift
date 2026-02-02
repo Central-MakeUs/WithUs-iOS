@@ -16,6 +16,7 @@ final class ArchiveReactor: Reactor {
         case selectTab(Int)
         case loadMoreRecent
         case loadCalendarMonth(year: Int, month: Int)
+        case loadMoreQuestions
     }
     
     enum Mutation {
@@ -28,6 +29,11 @@ final class ArchiveReactor: Reactor {
         case setError(String)
         case appendCalendarData(ArchiveCalendarResponse)
         case setJoinDate(Date?)
+        case setQuestions([ArchiveQuestionItem])
+        case appendQuestions([ArchiveQuestionItem])
+        case setQuestionNextCursor(String?)
+        case setQuestionHasNext(Bool)
+        case setQuestionLoading(Bool)
     }
     
     struct State {
@@ -39,6 +45,10 @@ final class ArchiveReactor: Reactor {
         var errorMessage: String?
         var calendarDataList: [ArchiveCalendarResponse] = []
         var joinDate: Date?
+        var questions: [ArchiveQuestionItem] = []
+        var questionNextCursor: String?
+        var questionHasNext: Bool = false
+        var isQuestionLoading: Bool = false
     }
     
     let initialState = State()
@@ -53,7 +63,8 @@ final class ArchiveReactor: Reactor {
         case .viewDidLoad:
             return .concat([
                 loadJoinDate(),
-                loadRecentPhotos(cursor: nil, isRefresh: true)
+                loadRecentPhotos(cursor: nil, isRefresh: true),
+                loadQuestionList(cursor: nil, isRefresh: true)
             ])
             
         case .selectTab(let index):
@@ -67,6 +78,12 @@ final class ArchiveReactor: Reactor {
             
         case .loadCalendarMonth(let year, let month):
             return loadCalendarData(year: year, month: month)
+            
+        case .loadMoreQuestions:
+            guard !currentState.isQuestionLoading, currentState.questionHasNext else {
+                return .empty()
+            }
+            return loadQuestionList(cursor: currentState.questionNextCursor, isRefresh: false)
         }
     }
     
@@ -104,6 +121,21 @@ final class ArchiveReactor: Reactor {
             
         case .setJoinDate(let date):
             newState.joinDate = date
+            
+        case .setQuestions(let questions):
+            newState.questions = questions
+            
+        case .appendQuestions(let questions):
+            newState.questions.append(contentsOf: questions)
+            
+        case .setQuestionNextCursor(let cursor):
+            newState.questionNextCursor = cursor
+            
+        case .setQuestionHasNext(let hasNext):
+            newState.questionHasNext = hasNext
+            
+        case .setQuestionLoading(let isLoading):
+            newState.isQuestionLoading = isLoading
         }
         
         return newState
@@ -176,5 +208,44 @@ final class ArchiveReactor: Reactor {
             
             return Disposables.create()
         }
+    }
+    
+    private func loadQuestionList(cursor: String?, isRefresh: Bool) -> Observable<Mutation> {
+        let startLoading: Observable<Mutation> = .just(.setQuestionLoading(true))
+        
+        let fetchQuestions: Observable<Mutation> = Observable.create { [weak self] observer in
+            guard let self = self else { return Disposables.create() }
+            
+            Task {
+                do {
+                    let data = try await self.fetchArchiveListUseCase.executeList(
+                        size: 20,
+                        cursor: cursor
+                    )
+                    
+                    await MainActor.run {
+                        if isRefresh {
+                            observer.onNext(.setQuestions(data.questionList))
+                        } else {
+                            observer.onNext(.appendQuestions(data.questionList))
+                        }
+                        observer.onNext(.setQuestionNextCursor(data.nextCursor))
+                        observer.onNext(.setQuestionHasNext(data.hasNext))
+                        observer.onNext(.setQuestionLoading(false))
+                        observer.onCompleted()
+                    }
+                } catch {
+                    await MainActor.run {
+                        observer.onNext(.setError(error.localizedDescription))
+                        observer.onNext(.setQuestionLoading(false))
+                        observer.onCompleted()
+                    }
+                }
+            }
+            
+            return Disposables.create()
+        }
+        
+        return .concat([startLoading, fetchQuestions])
     }
 }

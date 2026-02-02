@@ -71,9 +71,9 @@ class QuestionCell: UITableViewCell {
         }
     }
     
-    func configure(with question: Question) {
-        numberLabel.text = "#\(String(format: "%02d", question.number))"
-        questionLabel.text = question.text
+    func configure(with question: ArchiveQuestionItem) {
+        numberLabel.text = "#\(String(format: "%02d", question.questionNumber))"
+        questionLabel.text = question.questionContent
     }
     
     override func prepareForReuse() {

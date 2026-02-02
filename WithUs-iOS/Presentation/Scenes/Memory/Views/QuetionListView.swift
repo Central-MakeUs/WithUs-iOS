@@ -10,14 +10,15 @@ import SnapKit
 import Then
 
 protocol QuestionListViewDelegate: AnyObject {
-    func didSelectQuestion(_ question: Question)
+    func didSelectQuestion(_ question: ArchiveQuestionItem)
+    func didScrollToBottomQuestion()
 }
 
 class QuestionListView: UIView {
     
     weak var delegate: QuestionListViewDelegate?
     
-    private var questions: [Question] = []
+    private var questions: [ArchiveQuestionItem] = []
     
     private let tableView = UITableView().then {
         $0.backgroundColor = .white
@@ -29,7 +30,6 @@ class QuestionListView: UIView {
         super.init(frame: frame)
         setupUI()
         setupTableView()
-        loadMockData()
     }
     
     required init?(coder: NSCoder) {
@@ -50,22 +50,7 @@ class QuestionListView: UIView {
         tableView.register(QuestionCell.self, forCellReuseIdentifier: QuestionCell.identifier)
     }
     
-    private func loadMockData() {
-        questions = [
-            Question(id: "1", number: 1, text: "우리가 서로 알게 된지 시간은?"),
-            Question(id: "2", number: 2, text: "함께 간 여행지에서 제일 사진찍은 곳은 어디 가요 실은..."),
-            Question(id: "3", number: 3, text: "애인이 사랑스럽던적은?"),
-            Question(id: "4", number: 4, text: "기장 치울 반응 선물은?"),
-            Question(id: "5", number: 5, text: "같이 같이 귀여워?"),
-            Question(id: "6", number: 6, text: "데이트 왔소 중 머하게는 또 꿀은?"),
-            Question(id: "7", number: 7, text: "거울 내용 중 가장 호감된 직?"),
-            Question(id: "8", number: 8, text: "함께 간 여행지에서 제일 사진찍은 곳은 어디 가요 실은...")
-        ]
-        
-        tableView.reloadData()
-    }
-    
-    func updateQuestions(_ questions: [Question]) {
+    func updateQuestions(_ questions: [ArchiveQuestionItem]) {
         self.questions = questions
         tableView.reloadData()
     }
@@ -94,9 +79,19 @@ extension QuestionListView: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let question = questions[indexPath.row]
-        print("선택된 질문: \(question.text)")
+        print("선택된 질문: \(question.coupleQuestionId)")
         // TODO: 질문 상세 화면으로 이동
         delegate?.didSelectQuestion(question)
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let height = scrollView.frame.height
+        
+        if offsetY > contentHeight - height - 100 {
+            delegate?.didScrollToBottomQuestion()
+        }
     }
 }
 

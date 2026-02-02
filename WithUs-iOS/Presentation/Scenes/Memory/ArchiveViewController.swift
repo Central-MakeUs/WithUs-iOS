@@ -141,6 +141,16 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         calendarView.onMonthVisible = { [weak reactor] year, month in
             reactor?.action.onNext(.loadCalendarMonth(year: year, month: month))
         }
+        
+        reactor.state
+            .map { $0.questions }
+            .distinctUntilChanged { $0.count == $1.count }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] questions in
+                self?.questionView.updateQuestions(questions)
+            })
+            .disposed(by: disposeBag)
+        
     }
     
     private func showView(at index: Int) {
@@ -176,13 +186,13 @@ extension ArchiveViewController: CalendarViewDelegate {
         print("선택된 날짜: \(dateString)")
         
         // 테스트용 데이터
-        let testData = SinglePhotoData(
-            date: "2025.12.09",
-            question: "지금까지 받은 사진 중\n가장 이쁘게 담긴 제페토의 사진은?",
-            imageURL: "https://1x.com/quickimg/4bf2f73146695b7e313936b92dff691b.jpg",
-            name: "JPG",
-            time: "PM 02:35", kind: .combined
-        )
+//        let testData = SinglePhotoData(
+//            date: "2025.12.09",
+//            question: "지금까지 받은 사진 중\n가장 이쁘게 담긴 제페토의 사진은?",
+//            imageURL: "https://1x.com/quickimg/4bf2f73146695b7e313936b92dff691b.jpg",
+//            name: "JPG",
+//            time: "PM 02:35", kind: .combined
+//        )
         
         //        let vc = ArchiveDetailViewController(photoData: testData)
         //        navigationController?.pushViewController(vc, animated: true)
@@ -190,43 +200,28 @@ extension ArchiveViewController: CalendarViewDelegate {
 }
 
 extension ArchiveViewController: QuestionListViewDelegate {
-    func didSelectQuestion(_ question: Question) {
+    func didSelectQuestion(_ question: ArchiveQuestionItem) {
         print("선택된 question: \(question)")
         
-        // 테스트용 데이터
-        let testData = SinglePhotoData(
-            date: "2025.12.09",
-            question: question.text,
-            imageURL: "https://1x.com/quickimg/4bf2f73146695b7e313936b92dff691b.jpg",
-            name: "JPG",
-            time: "PM 02:35", kind: .single
-        )
-        
-        //        let vc = ArchiveDetailViewController(photoData: testData)
-        //        navigationController?.pushViewController(vc, animated: true)
+        // TODO: 해당 질문의 상세 데이터를 가져와서 ArchiveDetailViewController로 이동
+        // coordinator?.showArchiveDetail(for: question)
+    }
+    
+    func didScrollToBottomQuestion() {
+        // 질문 리스트 페이지네이션
+        reactor?.action.onNext(.loadMoreQuestions)
     }
 }
+
+// MARK: - ArchiveRecentViewDelegate
 
 extension ArchiveViewController: ArchiveRecentViewDelegate {
     func didSelectPhoto(_ photo: ArchivePhotoViewModel) {
-        // 내 사진이 있으면 내 사진, 없으면 상대방 사진
-        //        let imageUrl = photo.myImageUrl ?? photo.partnerImageUrl
-        //
-        //        let testData = SinglePhotoData(
-        //            date: photo.date,
-        //            question: photo.archiveType == "QUESTION" ? "질문 내용" : nil,  // TODO: 실제 질문 텍스트는 별도 API 필요
-        //            imageURL: imageUrl,
-        //            name: "",  // TODO: 이름 정보 필요시 API 추가
-        //            time: "",  // TODO: 시간 정보 필요시 API 추가
-        //            kind: photo.kind == .combined ? .combined : .single
-        //        )
-        //
-        //        let vc = ArchiveDetailViewController(photoData: testData)
-        //        navigationController?.pushViewController(vc, animated: true)
+        // TODO: 선택한 사진의 상세 페이지로 이동
+        // coordinator?.showArchiveDetail(for: photo)
     }
     
-    func didScrollToBottom() {
+    func didScrollToBottomRecent() {
         reactor?.action.onNext(.loadMoreRecent)
     }
 }
-

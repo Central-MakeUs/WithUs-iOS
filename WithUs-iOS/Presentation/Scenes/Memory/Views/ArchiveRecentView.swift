@@ -11,7 +11,7 @@ import Then
 
 protocol ArchiveRecentViewDelegate: AnyObject {
     func didSelectPhoto(_ photo: ArchivePhotoViewModel)
-    func didScrollToBottom()
+    func didScrollToBottomRecent()
 }
 
 final class ArchiveRecentView: UIView {
@@ -146,7 +146,7 @@ extension ArchiveRecentView: UICollectionViewDelegate {
         let frameHeight = scrollView.frame.height
         
         if offsetY > contentHeight - frameHeight - 100 {
-            delegate?.didScrollToBottom()
+            delegate?.didScrollToBottomRecent()
         }
     }
 }
