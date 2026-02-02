@@ -192,10 +192,8 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
     private func updateDailyUI(with data: TodayKeywordResponse) {
         hideAllContentViews()
         
-//        let myAnswered = data.myInfo?.questionImageUrl != nil
-        let myAnswered = true
-//        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
-        let partnerAnswered = false
+        let myAnswered = data.myInfo?.questionImageUrl != nil
+        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
         
         switch (myAnswered, partnerAnswered) {
         case (false, false):
