@@ -24,12 +24,14 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
     
     private let beforeTimeView = BeforeTimeView()
     private let waitingBothView = WaitingBothView()
+    private let questionMyOnlyView = KeywordMyOnlyView()
     private let questionPartnerOnlyView = QuestionPartnerOnlyView()
     private let questionBothView = QuestionBothAnsweredView()
     
     private lazy var allContentViews: [UIView] = [
         beforeTimeView,
         waitingBothView,
+        questionMyOnlyView,
         questionPartnerOnlyView
     ]
     
@@ -133,7 +135,13 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             )
             
         case (true, false):
-            break
+            questionMyOnlyView.isHidden = false
+            let name = data.myInfo?.name ?? ""
+            let profile = data.myInfo?.profileImageUrl ?? ""
+            let time = data.myInfo?.answeredAt ?? ""
+            let image = data.myInfo?.questionImageUrl ?? ""
+            
+            questionMyOnlyView.configure(myImageURL: image, myName: name, myTime: time, myProfileURL: profile)
             
         case (true, true):
             questionBothView.isHidden = false

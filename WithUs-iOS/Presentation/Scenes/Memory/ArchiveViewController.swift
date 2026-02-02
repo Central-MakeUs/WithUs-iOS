@@ -114,7 +114,6 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
                 })
                 .disposed(by: disposeBag)
             
-            // State: 에러
             reactor.state.map { $0.errorMessage }
                 .compactMap { $0 }
                 .observe(on: MainScheduler.instance)

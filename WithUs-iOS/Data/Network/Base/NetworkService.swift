@@ -29,9 +29,9 @@ public final class NetworkService {
         print("Parameters: \(endpoint.parameters ?? [:])")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         
-        
         do {
-            let dataResponse = await AF.request(
+            // ✅ 1. Raw Data 먼저 받기
+            let rawDataResponse = await AF.request(
                 endpoint.url,
                 method: endpoint.method,
                 parameters: endpoint.parameters,
@@ -39,63 +39,105 @@ public final class NetworkService {
                 headers: endpoint.headers
             )
             .cURLDescription { description in
-                print("📤 cURL: \(description)")  // ✅ 실제 요청 확인
+                print("📤 cURL: \(description)")
             }
-            .serializingDecodable(BaseResponse<T>.self)
+            .serializingData()
             .response
             
-            if let statusCode = dataResponse.response?.statusCode {
+            // ✅ 2. Raw JSON 출력
+            if let data = rawDataResponse.data {
+                print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                print("📦 Raw JSON Response:")
+                
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print(jsonString)
+                }
+                
+                // Pretty Print (더 보기 좋게)
+                if let jsonObject = try? JSONSerialization.jsonObject(with: data),
+                   let prettyData = try? JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted),
+                   let prettyString = String(data: prettyData, encoding: .utf8) {
+                    print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                    print("📝 Pretty JSON:")
+                    print(prettyString)
+                }
+                print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+            }
+            
+            // ✅ 3. Status Code 확인
+            if let statusCode = rawDataResponse.response?.statusCode {
                 print("Status Code: \(statusCode)")
                 
                 if (400...599).contains(statusCode) {
                     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                    print("⚠️ HTTP Error \(statusCode) - 서버 에러 메시지 확인 중...")
+                    print("⚠️ HTTP Error \(statusCode)")
                     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                     
                     // BaseResponse 디코딩 시도
-                    if case .success(let baseResponse) = dataResponse.result {
-                        if !baseResponse.success, let error = baseResponse.error {
-                            print("📝 서버 에러 메시지: \(error.message)")
-                            print("🔢 서버 에러 코드: \(error.code)")
-                            throw NetworkError.serverError(message: error.message, code: error.code)
+                    if let data = rawDataResponse.data {
+                        if let baseResponse = try? JSONDecoder().decode(BaseResponse<T>.self, from: data) {
+                            if !baseResponse.success, let error = baseResponse.error {
+                                print("📝 서버 에러 메시지: \(error.message)")
+                                print("🔢 서버 에러 코드: \(error.code)")
+                                throw NetworkError.serverError(message: error.message, code: error.code)
+                            }
                         }
                     }
                     
-                    // 서버 에러 파싱 실패 시 일반 HTTP 에러로 처리
-                    print("→ 서버 에러 메시지 없음, 기본 HTTP 에러 처리")
                     throw NetworkError.httpError(statusCode: statusCode)
                 }
             }
             
-            // 정상 응답 처리
-            guard case .success(let response) = dataResponse.result else {
-                if let error = dataResponse.error {
-                    throw NetworkError.unknown(error)
+            // ✅ 4. 디코딩
+            guard let data = rawDataResponse.data else {
+                throw NetworkError.invalidResponse
+            }
+            
+            do {
+                let response = try JSONDecoder().decode(BaseResponse<T>.self, from: data)
+                
+                print("✅ 응답 성공: \(response.success)")
+                
+                guard response.success else {
+                    if let error = response.error {
+                        throw NetworkError.serverError(message: error.message, code: error.code)
+                    }
+                    throw NetworkError.invalidResponse
                 }
-                throw NetworkError.invalidResponse
-            }
-            
-            print("✅ 응답 성공: \(response.success)")
-
-            guard response.success else {
-                if let error = response.error {
-                    throw NetworkError.serverError(message: error.message, code: error.code)
+                
+                guard let responseData = response.data else {
+                    throw NetworkError.invalidResponse
                 }
-                throw NetworkError.invalidResponse
+                
+                return responseData
+                
+            } catch let decodingError as DecodingError {
+                print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                print("❌ Decoding Error Details:")
+                
+                switch decodingError {
+                case .typeMismatch(let type, let context):
+                    print("Type Mismatch: \(type)")
+                    print("Context: \(context)")
+                case .valueNotFound(let type, let context):
+                    print("Value Not Found: \(type)")
+                    print("Context: \(context)")
+                case .keyNotFound(let key, let context):
+                    print("Key Not Found: \(key)")
+                    print("Context: \(context)")
+                case .dataCorrupted(let context):
+                    print("Data Corrupted")
+                    print("Context: \(context)")
+                @unknown default:
+                    print("Unknown decoding error")
+                }
+                print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+                
+                throw NetworkError.decodingError
             }
-            
-            // data 추출
-            guard let data = response.data else {
-                throw NetworkError.invalidResponse
-            }
-            
-            return data
             
         } catch let error as NetworkError {
             throw error
-        } catch let decodingError as DecodingError {
-            print("❌ Decoding Error: \(decodingError)")
-            throw NetworkError.decodingError
         } catch {
             print("❌ Network Error: \(error)")
             throw NetworkError.unknown(error)

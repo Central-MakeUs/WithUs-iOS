@@ -51,7 +51,7 @@ final class UploadQuestionImageUseCase: UploadQuestionImageUseCaseProtocol {
         print("📤 이미지 업로드 시작...")
         let uploadResult = try await uploadImageUseCase.execute(
             imageData: compressedData,
-            imageType: .memory
+            imageType: .archive
         )
         
         // 3. 서버에 imageKey 전달
@@ -114,7 +114,7 @@ final class UploadKeywordImageUseCase: UploadKeywordImageUseCaseProtocol {
         print("📤 이미지 업로드 시작...")
         let uploadResult = try await uploadImageUseCase.execute(
             imageData: compressedData,
-            imageType: .memory
+            imageType: .archive
         )
         
         // 3. 서버에 imageKey 전달

@@ -15,6 +15,7 @@ enum ImageEndpoint {
 enum ImageType: String {
     case profile = "PROFILE"
     case memory = "MEMORY"
+    case archive = "ARCHIVE"
 }
 
 extension ImageEndpoint: EndpointProtocol {
