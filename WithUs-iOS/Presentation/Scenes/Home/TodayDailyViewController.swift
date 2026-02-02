@@ -229,16 +229,17 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             
         case (true, true):
             keywordBothView.isHidden = false
-            keywordBothView.configure(
-                myImageURL: data.myInfo?.questionImageUrl ?? "",
-                myName: data.myInfo?.name ?? "",
-                myTime: data.myInfo?.answeredAt ?? "",
-                myCaption: data.question,
-                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
-                partnerName: data.partnerInfo?.name ?? "",
-                partnerTime: data.partnerInfo?.answeredAt ?? "",
-                partnerCaption: data.question
-            )
+            keywordBothView
+                .configure(
+                    myImageURL: data.myInfo?.questionImageUrl ?? "",
+                    myName: data.myInfo?.name ?? "",
+                    myTime: data.myInfo?.answeredAt ?? "",
+                    myProfile: data.myInfo?.profileImageUrl ?? "",
+                    partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+                    partnerName: data.partnerInfo?.name ?? "",
+                    partnerTime: data.partnerInfo?.answeredAt ?? "",
+                    parterProfile: data.partnerInfo?.profileImageUrl ?? ""
+                )
         }
     }
     

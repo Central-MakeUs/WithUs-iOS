@@ -30,9 +30,7 @@ final class KeywordBothAnsweredView: UIView {
     
     private func setupConstraints() {
         combinedImageView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(16)
-            $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalToSuperview().offset(-16)
+            $0.edges.equalToSuperview()
         }
     }
     
@@ -40,21 +38,22 @@ final class KeywordBothAnsweredView: UIView {
         myImageURL: String,
         myName: String,
         myTime: String,
-        myCaption: String,
+        myProfile: String,
         partnerImageURL: String,
         partnerName: String,
         partnerTime: String,
-        partnerCaption: String
+        parterProfile: String
     ) {
-//        combinedImageView.configure(
-//            topImageURL: partnerImageURL,
-//            topName: partnerName,
-//            topTime: partnerTime,
-//            topCaption: partnerCaption,
-//            bottomImageURL: myImageURL,
-//            bottomName: myName,
-//            bottomTime: myTime,
-//            bottomCaption: myCaption
-//        )
+        combinedImageView
+            .configure(
+                topImageURL: myImageURL,
+                topName: myName,
+                topTime: myTime,
+                topProfileURL: myProfile,
+                bottomImageURL: partnerImageURL,
+                bottomName: partnerName,
+                bottomTime: partnerTime,
+                bottomProfileURL: parterProfile
+            )
     }
 }

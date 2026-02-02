@@ -90,16 +90,16 @@ class DailyKeywordCell: UICollectionViewCell {
             
         case (true, true):
             show(view: keywordBothView)
-            keywordBothView.configure(
-                myImageURL: data.myInfo?.questionImageUrl ?? "",
-                myName: data.myInfo?.name ?? "",
-                myTime: data.myInfo?.answeredAt ?? "",
-                myCaption: data.question,
-                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
-                partnerName: data.partnerInfo?.name ?? "",
-                partnerTime: data.partnerInfo?.answeredAt ?? "",
-                partnerCaption: data.question
-            )
+//            keywordBothView.configure(
+//                myImageURL: data.myInfo?.questionImageUrl ?? "",
+//                myName: data.myInfo?.name ?? "",
+//                myTime: data.myInfo?.answeredAt ?? "",
+//                myCaption: data.question,
+//                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+//                partnerName: data.partnerInfo?.name ?? "",
+//                partnerTime: data.partnerInfo?.answeredAt ?? "",
+//                partnerCaption: data.question
+//            )
         }
     }
     
