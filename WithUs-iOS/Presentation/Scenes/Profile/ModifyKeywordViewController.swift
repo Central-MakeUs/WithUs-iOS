@@ -23,6 +23,13 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     private var serverKeywordIds: Set<Int> = []
     private var customKeywords: [String] = []
     
+    private let topLabelStackView = UIStackView().then {
+        $0.axis = .vertical
+        $0.alignment = .center
+        $0.distribution = .fill
+        $0.spacing = 16
+    }
+    
     private let titleLabel = UILabel().then {
         $0.font = UIFont.pretendard24Bold
         $0.textColor = UIColor.gray900
@@ -49,8 +56,14 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
         return cv
     }()
     
-    private let activityIndicator = UIActivityIndicatorView(style: .medium).then {
-        $0.hidesWhenStopped = true
+    private let setupButton = UIButton().then {
+        $0.setTitle("저장", for: .normal)
+        $0.titleLabel?.font = UIFont.pretendard16SemiBold
+        $0.setTitleColor(.white, for: .normal)
+        $0.setTitleColor(.gray300, for: .disabled)
+        $0.backgroundColor = UIColor.gray900
+        $0.layer.cornerRadius = 8
+        $0.isEnabled = false
     }
     
     private var cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, KeywordCellData> { cell, indexPath, item in
@@ -103,53 +116,39 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
         navigationItem.titleView = UILabel().then {
             $0.attributedText = attributed
         }
-        
-        let saveButton = UIBarButtonItem(
-            title: "저장",
-            style: .plain,
-            target: self,
-            action: #selector(saveButtonTapped)
-        )
-        saveButton.setTitleTextAttributes([
-            .foregroundColor: UIColor.gray300,
-            .font: UIFont.pretendard16SemiBold
-        ], for: .disabled)
-        saveButton.setTitleTextAttributes([
-            .foregroundColor: UIColor.redWarning,
-            .font: UIFont.pretendard16SemiBold
-        ], for: .normal)
-        saveButton.isEnabled = false
-        navigationItem.rightBarButtonItem = saveButton
     }
     
     override func setupUI() {
         super.setupUI()
-        view.addSubview(titleLabel)
-        view.addSubview(subTitleLabel)
+        view.addSubview(topLabelStackView)
         view.addSubview(collectionView)
-        view.addSubview(activityIndicator)
+        view.addSubview(setupButton)
+        
+        topLabelStackView.addArrangedSubview(titleLabel)
+        topLabelStackView.addArrangedSubview(subTitleLabel)
     }
     
     override func setupConstraints() {
-        titleLabel.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(40)
-            $0.leading.trailing.equalToSuperview().inset(24)
+        topLabelStackView.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(54)
+            $0.horizontalEdges.equalToSuperview().inset(54)
         }
         
-        subTitleLabel.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(12)
-            $0.leading.trailing.equalToSuperview().inset(24)
+        setupButton.snp.makeConstraints {
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-12)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(56)
         }
         
         collectionView.snp.makeConstraints {
-            $0.top.equalTo(subTitleLabel.snp.bottom).offset(32)
-            $0.leading.trailing.equalToSuperview().inset(24)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide)
+            $0.top.equalTo(topLabelStackView.snp.bottom).offset(70)
+            $0.horizontalEdges.equalToSuperview().inset(24.5)
+            $0.bottom.equalTo(setupButton.snp.top).offset(-12)
         }
-        
-        activityIndicator.snp.makeConstraints {
-            $0.center.equalToSuperview()
-        }
+    }
+    
+    override func setupActions() {
+        setupButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
     }
     
     func bind(reactor: KeywordSettingReactor) {
@@ -170,15 +169,12 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     }
     
     private func fetchKeywords() {
-        activityIndicator.startAnimating()
-        
         Task {
             do {
                 let keywords = try await fetchKeywordsUseCase.execute()
                 
                 await MainActor.run { [weak self] in
                     guard let self = self else { return }
-                    self.activityIndicator.stopAnimating()
                     self.serverKeywordIds = Set(keywords.compactMap { Int($0.id) })
                     
                     self.keywords = keywords + [Keyword(
@@ -191,7 +187,6 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
             } catch {
                 await MainActor.run { [weak self] in
                     guard let self = self else { return }
-                    self.activityIndicator.stopAnimating()
                     print("❌ 키워드 조회 실패: \(error.localizedDescription)")
                     // TODO: 에러 처리 (예: 알럿 표시)
                 }
@@ -207,7 +202,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
         print("📤 서버 전송 데이터:")
         print("defaultKeywordIds: \(defaultKeywordIds)")
         print("customKeywords: \(customKeywords)")
-         reactor?.action.onNext(.updateKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords))
+        reactor?.action.onNext(.updateKeywords(defaultKeywordIds: defaultKeywordIds, customKeywords: customKeywords))
     }
     
     private func showAddKeywordBottomSheet() {
@@ -237,7 +232,9 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     private func updateSaveButtonState() {
         let selectedCount = selectedKeywords.count
         let isValid = selectedCount == 3
-        navigationItem.rightBarButtonItem?.isEnabled = isValid
+        
+        setupButton.isEnabled = isValid
+        setupButton.backgroundColor = isValid ? UIColor.gray900 : UIColor.gray300
     }
 }
 
