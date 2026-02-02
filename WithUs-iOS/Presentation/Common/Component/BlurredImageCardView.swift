@@ -8,11 +8,12 @@
 import UIKit
 import SnapKit
 import Then
+import Kingfisher
 
 final class BlurredImageCardView: UIView {
     
     private let backgroundImageView = UIImageView().then {
-        $0.contentMode = .scaleAspectFill
+        $0.contentMode = .scaleAspectFit
         $0.clipsToBounds = true
         $0.backgroundColor = .gray200
     }
@@ -22,7 +23,7 @@ final class BlurredImageCardView: UIView {
     private let profileImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.backgroundColor = .white
-        $0.layer.cornerRadius = 10
+        $0.layer.cornerRadius = 17
         $0.clipsToBounds = true
     }
     
@@ -72,9 +73,9 @@ final class BlurredImageCardView: UIView {
         }
         
         profileImageView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(22)
-            $0.leading.equalToSuperview().offset(16)
-            $0.size.equalTo(20)
+            $0.top.equalToSuperview().offset(16)
+            $0.leading.equalToSuperview().offset(22)
+            $0.size.equalTo(34)
         }
         
         infoStackView.snp.makeConstraints {
@@ -85,18 +86,6 @@ final class BlurredImageCardView: UIView {
     }
     
     func configure(
-        backgroundImage: UIImage?,
-        profileImage: UIImage? = nil,
-        name: String,
-        time: String
-    ) {
-        backgroundImageView.image = backgroundImage
-        profileImageView.image = profileImage
-        nameLabel.text = name
-        timeLabel.text = time
-    }
-    
-    func configure(
         backgroundImageURL: String,
         profileImageURL: String? = nil,
         name: String,
@@ -104,16 +93,29 @@ final class BlurredImageCardView: UIView {
     ) {
         nameLabel.text = name
         timeLabel.text = time
+        if let url = URL(string: backgroundImageURL) {
+            
+            backgroundImageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
+        }
         
-        // TODO: Kingfisher 등으로 이미지 로드
-        // backgroundImageView.kf.setImage(with: URL(string: backgroundImageURL))
-        // if let profileURL = profileImageURL {
-        //     profileImageView.kf.setImage(with: URL(string: profileURL))
-        // }
-    }
-    
-    /// 블러 효과 스타일 변경
-    func setBlurStyle(_ style: UIBlurEffect.Style) {
-        blurEffectView.effect = UIBlurEffect(style: style)
+        if let profileImageURL,
+           let profileUrl = URL(string: profileImageURL) {
+            
+            profileImageView.kf.setImage(
+                with: profileUrl,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
+        }
     }
 }

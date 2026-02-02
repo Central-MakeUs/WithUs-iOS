@@ -102,8 +102,10 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             return
         }
         
-        let myAnswered = data.myInfo?.questionImageUrl != nil
-        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
+//        let myAnswered = data.myInfo?.questionImageUrl != nil
+        let myAnswered: Bool = true
+//        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
+        let partnerAnswered: Bool = true
         
         switch (myAnswered, partnerAnswered) {
         case (false, false):
@@ -112,16 +114,21 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             
         case (false, true):
             questionPartnerOnlyView.isHidden = false
+            let question = data.question
+            let name = data.partnerInfo?.name ?? ""
+            let profile = data.partnerInfo?.profileImageUrl ?? ""
+            let image = data.partnerInfo?.questionImageUrl ?? ""
+            let time = data.partnerInfo?.answeredAt ?? ""
+            
             questionPartnerOnlyView.configure(
-                question: data.question,
-                subTitle: "상대방이 어떤 사진을 보냈는을까요?\n내 사진을 공유하면\n상대방의 사진도 확인할 수 있어요.",
-                partnerName: data.partnerInfo?.name ?? "",
-                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
-                partmerTime: data.partnerInfo?.answeredAt ?? ""
+                question: question,
+                name: name,
+                profile: profile,
+                image: image,
+                time: time
             )
             
         case (true, false):
-            // TODO: MyOnly 처리 필요시 추가
             break
             
         case (true, true):

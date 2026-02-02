@@ -367,13 +367,13 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             
         case (false, true):
             show(view: questionPartnerOnlyView)
-            questionPartnerOnlyView.configure(
-                question: data.question,
-                subTitle: "상대방이 어떤 사진을 보냈는을까요?\n내 사진을 공유하면\n상대방의 사진도 확인할 수 있어요.",
-                partnerName: data.partnerInfo?.name ?? "",
-                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
-                partmerTime: data.partnerInfo?.answeredAt ?? ""
-            )
+//            questionPartnerOnlyView.configure(
+//                question: data.question,
+//                subTitle: "상대방이 어떤 사진을 보냈는을까요?\n내 사진을 공유하면\n상대방의 사진도 확인할 수 있어요.",
+//                partnerName: data.partnerInfo?.name ?? "",
+//                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+//                partmerTime: data.partnerInfo?.answeredAt ?? ""
+//            )
             
         case (true, false):
             // TODO: MyOnly 처리 필요시 추가

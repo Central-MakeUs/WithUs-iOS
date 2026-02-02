@@ -41,15 +41,25 @@ final class BeforeTimeView: UIView {
     }
     
     private func setupConstraints() {
+        backgroundColor = .white
+        layer.cornerRadius = 20
+        addShadow(
+            color: .black,
+            opacity: 0.08,
+            offset: CGSize(width: 4, height: 4),
+            radius: 29
+        )
+        
         titleLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(54)
-            $0.leading.trailing.equalToSuperview().inset(24)
+            $0.top.equalToSuperview().offset(56)
+            $0.horizontalEdges.equalToSuperview().inset(30)
         }
         
         clockImageView.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(42)
-            $0.size.equalTo(167)
+            $0.size.equalTo(161)
             $0.centerX.equalToSuperview()
+            $0.centerY.equalToSuperview().priority(.low)
+            $0.top.greaterThanOrEqualTo(titleLabel.snp.bottom).offset(14)
         }
     }
     
