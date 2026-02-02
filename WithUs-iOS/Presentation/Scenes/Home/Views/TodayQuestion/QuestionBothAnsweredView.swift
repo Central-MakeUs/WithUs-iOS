@@ -10,6 +10,13 @@ import SnapKit
 import Then
 
 final class QuestionBothAnsweredView: UIView {
+   
+    private let questionLabel = UILabel().then {
+        $0.font = UIFont.pretendard16SemiBold
+        $0.textColor = UIColor.gray700
+        $0.textAlignment = .center
+        $0.numberOfLines = 2
+    }
     
     private let combinedImageView = CombinedImageView()
     
@@ -25,36 +32,46 @@ final class QuestionBothAnsweredView: UIView {
     
     private func setupUI() {
         backgroundColor = .white
+        
+        addSubview(questionLabel)
         addSubview(combinedImageView)
     }
     
     private func setupConstraints() {
+        questionLabel.snp.makeConstraints {
+            $0.top.equalToSuperview()
+            $0.horizontalEdges.equalToSuperview().inset(30)
+        }
+        
         combinedImageView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(16)
-            $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalToSuperview().offset(-16)
+            $0.top.equalTo(questionLabel.snp.bottom).offset(10)
+            $0.horizontalEdges.bottom.equalToSuperview()
         }
     }
     
     func configure(
+        question: String,
         myImageURL: String,
         myName: String,
         myTime: String,
-        myCaption: String,
+        myProfile: String,
         partnerImageURL: String,
         partnerName: String,
         partnerTime: String,
-        partnerCaption: String
+        parterProfile: String
     ) {
-        combinedImageView.configure(
-            topImageURL: partnerImageURL,
-            topName: partnerName,
-            topTime: partnerTime,
-            topCaption: partnerCaption,
-            bottomImageURL: myImageURL,
-            bottomName: myName,
-            bottomTime: myTime,
-            bottomCaption: myCaption
-        )
+        questionLabel.text = question
+        
+        combinedImageView
+            .configure(
+                topImageURL: "https://picsum.photos/400/640?random=6",
+                topName: "지상률",
+                topTime: "2026.01.17",
+                topProfileURL: "https://picsum.photos/400/640?random=1",
+                bottomImageURL: "https://picsum.photos/400/640?random=3",
+                bottomName: "최성빈",
+                bottomTime: "2026.01.19",
+                bottomProfileURL: "https://picsum.photos/400/640?random=9"
+            )
     }
 }

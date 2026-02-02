@@ -8,15 +8,14 @@
 import UIKit
 import SnapKit
 import Then
+import Kingfisher
 
 //MARK: -- ImageView의 특성은 .scaleAspectFill이다 -> image가 1대1로 들어오면 가로에 맞추고 위아래가 잘린다.
-// MARK: - CombinedImageView (두 이미지를 상하로 합침)
 final class CombinedImageView: UIView {
     
-    // 상대방 카드
     private let topCard = UIView().then {
         $0.layer.cornerRadius = 12
-        $0.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner] // 위쪽만 둥글게
+        $0.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
         $0.clipsToBounds = true
     }
     
@@ -28,18 +27,18 @@ final class CombinedImageView: UIView {
     private let topProfileCircle = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.backgroundColor = .white
-        $0.layer.cornerRadius = 10
+        $0.layer.cornerRadius = 17
         $0.clipsToBounds = true
     }
     
     private let topNameLabel = UILabel().then {
-        $0.font = UIFont.pretendard(.semiBold, size: 14)
-        $0.textColor = .white
+        $0.font = UIFont.pretendard16SemiBold
+        $0.textColor = UIColor(hex: "#FFFFFF")
     }
     
     private let topTimeLabel = UILabel().then {
-        $0.font = UIFont.pretendard(.regular, size: 12)
-        $0.textColor = .white.withAlphaComponent(0.8)
+        $0.font = UIFont.pretendard10Regular
+        $0.textColor = UIColor(hex: "#FFFFFF")
     }
     
     private let topInfoStackView = UIStackView().then {
@@ -67,13 +66,13 @@ final class CombinedImageView: UIView {
     }
     
     private let bottomNameLabel = UILabel().then {
-        $0.font = UIFont.pretendard(.semiBold, size: 14)
-        $0.textColor = .white
+        $0.font = UIFont.pretendard16SemiBold
+        $0.textColor = UIColor(hex: "#FFFFFF")
     }
     
     private let bottomTimeLabel = UILabel().then {
-        $0.font = UIFont.pretendard(.regular, size: 12)
-        $0.textColor = .white.withAlphaComponent(0.8)
+        $0.font = UIFont.pretendard10Regular
+        $0.textColor = UIColor(hex: "#FFFFFF")
     }
     
     
@@ -94,7 +93,6 @@ final class CombinedImageView: UIView {
     }
     
     private func setupUI() {
-        // 상대방 카드
         addSubview(topCard)
         topCard.addSubview(topImageView)
         
@@ -104,7 +102,6 @@ final class CombinedImageView: UIView {
         topInfoStackView.addArrangedSubview(topNameLabel)
         topInfoStackView.addArrangedSubview(topTimeLabel)
         
-        // 내 카드
         addSubview(bottomCard)
         bottomCard.addSubview(bottomImageView)
         
@@ -118,7 +115,7 @@ final class CombinedImageView: UIView {
     private func setupConstraints() {
         topCard.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(snp.centerY) // 딱 붙음 (간격 없음)
+            $0.bottom.equalTo(snp.centerY)
         }
         
         topImageView.snp.makeConstraints {
@@ -126,9 +123,9 @@ final class CombinedImageView: UIView {
         }
         
         topProfileCircle.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(22)
+            $0.top.equalToSuperview().offset(16)
             $0.leading.equalToSuperview().offset(16)
-            $0.size.equalTo(20)
+            $0.size.equalTo(34)
         }
         
         topInfoStackView.snp.makeConstraints {
@@ -137,9 +134,8 @@ final class CombinedImageView: UIView {
             $0.trailing.lessThanOrEqualToSuperview().inset(16)
         }
         
-        // 내 카드 (아래쪽 절반)
         bottomCard.snp.makeConstraints {
-            $0.top.equalTo(snp.centerY) // 딱 붙음 (간격 없음)
+            $0.top.equalTo(snp.centerY)
             $0.leading.trailing.bottom.equalToSuperview()
         }
         
@@ -148,9 +144,9 @@ final class CombinedImageView: UIView {
         }
 
         bottomProfileCircle.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(22)
+            $0.top.equalToSuperview().offset(16)
             $0.leading.equalToSuperview().offset(16)
-            $0.size.equalTo(20)
+            $0.size.equalTo(34)
         }
         
         bottomInfoStackView.snp.makeConstraints {
@@ -160,36 +156,15 @@ final class CombinedImageView: UIView {
         }
     }
     
-    // MARK: - Public Methods
-    func configure(
-        topImage: UIImage?,
-        topName: String,
-        topTime: String,
-        topCaption: String,
-        bottomImage: UIImage?,
-        bottomName: String,
-        bottomTime: String,
-        bottomCaption: String
-    ) {
-        topImageView.image = topImage
-        topNameLabel.text = topName
-        topTimeLabel.text = topTime
-        
-        bottomImageView.image = bottomImage
-        bottomNameLabel.text = bottomName
-        bottomTimeLabel.text = bottomTime
-    }
-    
-    // URL로 이미지 로드 (옵션)
     func configure(
         topImageURL: String,
         topName: String,
         topTime: String,
-        topCaption: String,
+        topProfileURL: String,
         bottomImageURL: String,
         bottomName: String,
         bottomTime: String,
-        bottomCaption: String
+        bottomProfileURL: String
     ) {
         topNameLabel.text = topName
         topTimeLabel.text = topTime
@@ -197,35 +172,30 @@ final class CombinedImageView: UIView {
         bottomNameLabel.text = bottomName
         bottomTimeLabel.text = bottomTime
         
-        // TODO: URLSession으로 이미지 로드
-        print("🔵 [CombinedImageView] 이미지 로드")
-        print("  - Top: \(topImageURL)")
-        print("  - Bottom: \(bottomImageURL)")
-        
         if let topUrl = URL(string: topImageURL),
            let bottomUrl = URL(string: bottomImageURL) {
-            loadImage(from: topUrl, completion: { [weak self] image in
-                self?.topImageView.image = image
-            })
+            topImageView.kf.setImage(with: topUrl, placeholder: nil, options: [
+                .transition(.fade(0.2)),
+                .cacheOriginalImage
+            ])
             
-            loadImage(from: bottomUrl, completion: { [weak self] image in
-                self?.bottomImageView.image = image
-            })
+            bottomImageView.kf.setImage(with: bottomUrl, placeholder: nil, options: [
+                .transition(.fade(0.2)),
+                .cacheOriginalImage
+            ])
         }
-    }
-    
-    private func loadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
-        DispatchQueue.global().async {
-            if let data = try? Data(contentsOf: url),
-               let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    completion(image)
-                }
-            } else {
-                DispatchQueue.main.async {
-                    completion(nil)
-                }
-            }
+        
+        if let topProfileUrl = URL(string: topProfileURL),
+           let bottomProfileUrl = URL(string: bottomProfileURL) {
+            topProfileCircle.kf.setImage(with: topProfileUrl, placeholder: nil, options: [
+                .transition(.fade(0.2)),
+                .cacheOriginalImage
+            ])
+            
+            bottomProfileCircle.kf.setImage(with: bottomProfileUrl, placeholder: nil, options: [
+                .transition(.fade(0.2)),
+                .cacheOriginalImage
+            ])
         }
     }
 }

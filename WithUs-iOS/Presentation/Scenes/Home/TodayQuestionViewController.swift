@@ -30,14 +30,14 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
     private lazy var allContentViews: [UIView] = [
         beforeTimeView,
         waitingBothView,
-        questionPartnerOnlyView,
-        questionBothView
+        questionPartnerOnlyView
     ]
     
     override func setupUI() {
         super.setupUI()
         view.addSubview(contentContainerView)
         allContentViews.forEach { contentContainerView.addSubview($0) }
+        contentContainerView.addSubview(questionBothView)
         hideAllContentViews()
     }
     
@@ -52,6 +52,12 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
                 $0.top.equalToSuperview().offset(38)
                 $0.bottom.equalToSuperview().offset(-27)
             }
+        }
+        
+        questionBothView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(10)
+            $0.horizontalEdges.equalToSuperview().inset(26)
+            $0.bottom.equalToSuperview().offset(-10)
         }
     }
     
@@ -133,16 +139,19 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             
         case (true, true):
             questionBothView.isHidden = false
-            questionBothView.configure(
-                myImageURL: data.myInfo?.questionImageUrl ?? "",
-                myName: data.myInfo?.name ?? "",
-                myTime: data.myInfo?.answeredAt ?? "",
-                myCaption: data.question,
-                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
-                partnerName: data.partnerInfo?.name ?? "",
-                partnerTime: data.partnerInfo?.answeredAt ?? "",
-                partnerCaption: data.question
-            )
+            
+            questionBothView
+                .configure(
+                    question: data.question,
+                    myImageURL: data.myInfo?.questionImageUrl ?? "",
+                    myName: data.myInfo?.name ?? "",
+                    myTime: data.myInfo?.answeredAt ?? "",
+                    myProfile: data.myInfo?.profileImageUrl ?? "",
+                    partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+                    partnerName: data.partnerInfo?.name ?? "",
+                    partnerTime: data.partnerInfo?.answeredAt ?? "",
+                    parterProfile: data.partnerInfo?.profileImageUrl ?? ""
+                )
         }
     }
     

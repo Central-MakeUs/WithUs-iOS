@@ -46,15 +46,15 @@ final class KeywordBothAnsweredView: UIView {
         partnerTime: String,
         partnerCaption: String
     ) {
-        combinedImageView.configure(
-            topImageURL: partnerImageURL,
-            topName: partnerName,
-            topTime: partnerTime,
-            topCaption: partnerCaption,
-            bottomImageURL: myImageURL,
-            bottomName: myName,
-            bottomTime: myTime,
-            bottomCaption: myCaption
-        )
+//        combinedImageView.configure(
+//            topImageURL: partnerImageURL,
+//            topName: partnerName,
+//            topTime: partnerTime,
+//            topCaption: partnerCaption,
+//            bottomImageURL: myImageURL,
+//            bottomName: myName,
+//            bottomTime: myTime,
+//            bottomCaption: myCaption
+//        )
     }
 }

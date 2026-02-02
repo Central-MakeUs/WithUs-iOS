@@ -381,16 +381,16 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
             
         case (true, true):
             show(view: questionBothView)
-            questionBothView.configure(
-                myImageURL: data.myInfo?.questionImageUrl ?? "",
-                myName: data.myInfo?.name ?? "",
-                myTime: data.myInfo?.answeredAt ?? "",
-                myCaption: data.question,
-                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
-                partnerName: data.partnerInfo?.name ?? "",
-                partnerTime: data.partnerInfo?.answeredAt ?? "",
-                partnerCaption: data.question
-            )
+//            questionBothView.configure(
+//                myImageURL: data.myInfo?.questionImageUrl ?? "",
+//                myName: data.myInfo?.name ?? "",
+//                myTime: data.myInfo?.answeredAt ?? "",
+//                myCaption: data.question,
+//                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+//                partnerName: data.partnerInfo?.name ?? "",
+//                partnerTime: data.partnerInfo?.answeredAt ?? "",
+//                partnerCaption: data.question
+//            )
         }
     }
     

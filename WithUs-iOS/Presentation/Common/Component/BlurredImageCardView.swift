@@ -34,13 +34,13 @@ final class BlurredImageCardView: UIView {
     }
     
     private let nameLabel = UILabel().then {
-        $0.font = UIFont.pretendard(.semiBold, size: 12)
-        $0.textColor = .white
+        $0.font = UIFont.pretendard16SemiBold
+        $0.textColor = UIColor(hex: "#FFFFFF")
     }
     
     private let timeLabel = UILabel().then {
         $0.font = UIFont.pretendard10Regular
-        $0.textColor = .white
+        $0.textColor = UIColor(hex: "#FFFFFF")
     }
     
     override init(frame: CGRect) {

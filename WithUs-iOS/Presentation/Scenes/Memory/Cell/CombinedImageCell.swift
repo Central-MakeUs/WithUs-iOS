@@ -29,16 +29,16 @@ final class CombinedImageCell: UICollectionViewCell {
     
     func configure(with data: SinglePhotoData) {
         // TODO: Adjust configure parameters if different from below
-        combinedView
-            .configure(
-                topImageURL: data.imageURL,
-                topName: data.name,
-                topTime: data.date,
-                topCaption: "",
-                bottomImageURL: data.imageURL,
-                bottomName: data.name,
-                bottomTime: data.date,
-                bottomCaption: ""
-            )
+//        combinedView
+//            .configure(
+//                topImageURL: data.imageURL,
+//                topName: data.name,
+//                topTime: data.date,
+//                topProfileURL: "",
+//                bottomImageURL: data.imageURL,
+//                bottomName: data.name,
+//                bottomTime: data.date,
+//                bottomProfileURL: ""
+//            )
     }
 }
