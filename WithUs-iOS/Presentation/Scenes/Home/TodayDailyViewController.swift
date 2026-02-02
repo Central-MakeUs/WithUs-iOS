@@ -94,7 +94,9 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         
         allContentViews.forEach { view in
             view.snp.makeConstraints {
-                $0.edges.equalToSuperview()
+                $0.horizontalEdges.equalToSuperview().inset(26)
+                $0.top.equalToSuperview()
+                $0.bottom.equalToSuperview().offset(-10)
             }
         }
     }
@@ -118,9 +120,7 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             .subscribe(onNext: { [weak self] keywords in
                 self?.keywords = keywords
                 self?.keywordCollectionView.reloadData()
-                
-//                self?.updateViewVisibility(hasKeywords: !keywords.isEmpty)
-                self?.updateViewVisibility(hasKeywords: false)
+                self?.updateViewVisibility(hasKeywords: !keywords.isEmpty)
             })
             .disposed(by: disposeBag)
         
@@ -192,8 +192,10 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
     private func updateDailyUI(with data: TodayKeywordResponse) {
         hideAllContentViews()
         
-        let myAnswered = data.myInfo?.questionImageUrl != nil
-        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
+//        let myAnswered = data.myInfo?.questionImageUrl != nil
+        let myAnswered = false
+//        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
+        let partnerAnswered = true
         
         switch (myAnswered, partnerAnswered) {
         case (false, false):
@@ -202,12 +204,18 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             
         case (false, true):
             keywordPartnerOnlyView.isHidden = false
+            let question = data.question
+            let name = data.partnerInfo?.name ?? ""
+            let profile = data.partnerInfo?.profileImageUrl ?? ""
+            let image = data.partnerInfo?.questionImageUrl ?? ""
+            let time = data.partnerInfo?.answeredAt ?? ""
+            
             keywordPartnerOnlyView.configure(
-                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
-                partnerName: data.partnerInfo?.name ?? "",
-                partnerTime: data.partnerInfo?.answeredAt ?? "",
-                partnerCaption: data.question,
-                myName: data.myInfo?.name ?? ""
+                question: question,
+                name: name,
+                profile: profile,
+                image: image,
+                time: time
             )
             
         case (true, false):

@@ -10,7 +10,6 @@ import Foundation
 enum OnboardingStatus: String, Decodable {
     case needUserSetup = "NEED_USER_INITIAL_SETUP"
     case needCoupleConnect = "NEED_COUPLE_CONNECT"
-    case needCoupleSetup = "NEED_COUPLE_INITIAL_SETUP"
     case completed = "COMPLETED"
     
     init(from decoder: Decoder) throws {

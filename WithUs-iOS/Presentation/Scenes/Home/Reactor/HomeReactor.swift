@@ -67,14 +67,14 @@ final class HomeReactor: Reactor {
         fetchTodayKeywordUseCase: FetchTodayKeywordUseCaseProtocol,
         uploadKeywordImageUseCase: UploadKeywordImageUseCaseProtocol,
         keywordService: KeywordEventServiceProtocol) {
-        self.fetchUserStatusUseCase = fetchUserStatusUseCase
-        self.fetchCoupleKeywordsUseCase = fetchCoupleKeywordsUseCase
-        self.fetchTodayQuestionUseCase = fetchTodayQuestionUseCase
-        self.uploadQuestionImageUseCase = uploadQuestionImageUseCase
-        self.fetchTodayKeywordUseCase = fetchTodayKeywordUseCase
-        self.uploadKeywordImageUseCase = uploadKeywordImageUseCase
+            self.fetchUserStatusUseCase = fetchUserStatusUseCase
+            self.fetchCoupleKeywordsUseCase = fetchCoupleKeywordsUseCase
+            self.fetchTodayQuestionUseCase = fetchTodayQuestionUseCase
+            self.uploadQuestionImageUseCase = uploadQuestionImageUseCase
+            self.fetchTodayKeywordUseCase = fetchTodayKeywordUseCase
+            self.uploadKeywordImageUseCase = uploadKeywordImageUseCase
             self.keywordService = keywordService
-    }
+        }
     
     func transform(mutation: Observable<Mutation>) -> Observable<Mutation> {
         let keywordResetMutation = keywordService.event
@@ -102,42 +102,30 @@ final class HomeReactor: Reactor {
             
             // ✅ "오늘의 일상" 선택 (index 1)
             else {
-                // needCoupleSetup 상태라면 커플 설정 UI 표시
-                if status == .needCoupleSetup {
+                // ✅ 이미 키워드를 로드한 적이 있으면 현재 보던 키워드 데이터 가져오기
+                if currentState.hasLoadedKeywords {
+                    let currentIndex = currentState.currentDailyPageIndex
+                    guard currentIndex < currentState.keywords.count,
+                          let coupleKeywordId = Int(currentState.keywords[currentIndex].id) else {
+                        return Observable.concat([
+                            .just(.clearCurrentData),
+                            .just(.setSelectedKeywordIndex(index))
+                        ])
+                    }
+                    
                     return Observable.concat([
                         .just(.clearCurrentData),
                         .just(.setSelectedKeywordIndex(index)),
-                        .just(.showDailyCoupleSetup)
+                        fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
                     ])
                 }
-                
-                // completed 상태
-                else if status == .completed {
-                    // ✅ 이미 키워드를 로드한 적이 있으면 현재 보던 키워드 데이터 가져오기
-                    if currentState.hasLoadedKeywords {
-                        let currentIndex = currentState.currentDailyPageIndex
-                        guard currentIndex < currentState.keywords.count,
-                              let coupleKeywordId = Int(currentState.keywords[currentIndex].id) else {
-                            return Observable.concat([
-                                .just(.clearCurrentData),
-                                .just(.setSelectedKeywordIndex(index))
-                            ])
-                        }
-                        
-                        return Observable.concat([
-                            .just(.clearCurrentData),
-                            .just(.setSelectedKeywordIndex(index)),
-                            fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
-                        ])
-                    }
-                    // ✅ 최초 진입이면 키워드 리스트 + 첫번째 데이터 모두 가져오기
-                    else {
-                        return Observable.concat([
-                            .just(.clearCurrentData),
-                            .just(.setSelectedKeywordIndex(index)),
-                            fetchCoupleKeywordsAndFirstKeywordData()
-                        ])
-                    }
+                // ✅ 최초 진입이면 키워드 리스트 + 첫번째 데이터 모두 가져오기
+                else {
+                    return Observable.concat([
+                        .just(.clearCurrentData),
+                        .just(.setSelectedKeywordIndex(index)),
+                        fetchCoupleKeywordsAndFirstKeywordData()
+                    ])
                 }
                 
                 return .just(.setSelectedKeywordIndex(index))

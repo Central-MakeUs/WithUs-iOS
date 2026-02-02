@@ -108,10 +108,8 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             return
         }
         
-//        let myAnswered = data.myInfo?.questionImageUrl != nil
-        let myAnswered: Bool = true
-//        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
-        let partnerAnswered: Bool = true
+        let myAnswered = data.myInfo?.questionImageUrl != nil
+        let partnerAnswered = data.partnerInfo?.questionImageUrl != nil
         
         switch (myAnswered, partnerAnswered) {
         case (false, false):
@@ -157,6 +155,7 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
     
     private func hideAllContentViews() {
         allContentViews.forEach { $0.isHidden = true }
+        questionBothView.isHidden = true
     }
     
     // MARK: - Camera

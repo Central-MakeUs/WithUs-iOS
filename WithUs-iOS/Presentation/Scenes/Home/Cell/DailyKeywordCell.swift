@@ -71,13 +71,13 @@ class DailyKeywordCell: UICollectionViewCell {
             
         case (false, true):
             show(view: keywordPartnerOnlyView)
-            keywordPartnerOnlyView.configure(
-                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
-                partnerName: data.partnerInfo?.name ?? "",
-                partnerTime: data.partnerInfo?.answeredAt ?? "",
-                partnerCaption: data.question,
-                myName: data.myInfo?.name ?? ""
-            )
+//            keywordPartnerOnlyView.configure(
+//                partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
+//                partnerName: data.partnerInfo?.name ?? "",
+//                partnerTime: data.partnerInfo?.answeredAt ?? "",
+//                partnerCaption: data.question,
+//                myName: data.myInfo?.name ?? ""
+//            )
             
         case (true, false):
             show(view: keywordMyOnlyView)

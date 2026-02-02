@@ -305,7 +305,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
                 self?.coordinator?.showInviteModal()
             }
             
-        case .needCoupleSetup, .completed:
+        case .completed:
             beforeSettingContainerView.isHidden = true
             afterSettingContainerView.isHidden = false
             reactor?.action.onNext(.selectDefaultKeyword)

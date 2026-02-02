@@ -171,7 +171,7 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
                 self?.coordinator?.showInviteModal()
             }
             
-        case .needCoupleSetup, .completed:
+        case .completed:
             showPagerView()
         }
     }

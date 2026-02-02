@@ -13,28 +13,53 @@ final class KeywordPartnerOnlyView: UIView {
     
     var onSendPhotoTapped: (() -> Void)?
     
-    private let topPlaceholder = UIView().then {
-        $0.backgroundColor = .gray200
-        $0.layer.cornerRadius = 12
+    private let topLabelStackView = UIStackView().then {
+        $0.axis = .vertical
+        $0.alignment = .center
+        $0.distribution = .fill
+        $0.spacing = 12
     }
     
-    private let infoLabel = UILabel().then {
-        $0.text = "jpg님이 쏘피님의 사진을\n기다리고 있어요!"
-        $0.numberOfLines = 2
-        $0.textAlignment = .center
+    private let questionNumberLabel = UILabel().then {
         $0.font = UIFont.pretendard16Regular
-        $0.textColor = UIColor.gray700
+        $0.textColor = UIColor.gray300
+        $0.textAlignment = .center
+        $0.numberOfLines = 1
+        $0.text = "#3."
     }
     
-    private let sendButton = UIButton().then {
-        $0.setTitle("전송하러 가기 →", for: .normal)
-        $0.setTitleColor(.white, for: .normal)
-        $0.titleLabel?.font = UIFont.pretendard14SemiBold
-        $0.backgroundColor = UIColor.gray900
-        $0.layer.cornerRadius = 8
+    private let questionLabel = UILabel().then {
+        $0.numberOfLines = 0
+        $0.textAlignment = .center
+        $0.font = UIFont.pretendard20SemiBold
+        $0.textColor = UIColor.gray50
     }
     
-    private let partnerImageCard = ImageCardView()
+    private let partnerImageView = BlurredImageCardView().then {
+        $0.layer.cornerRadius = 20
+        $0.clipsToBounds = true
+        $0.backgroundColor = .gray200
+    }
+    
+    private let answerButton = UIButton().then {
+        var config = UIButton.Configuration.plain()
+        config.title = "사진 전송하기"
+        config.image = UIImage(named: "ic_home_camera")
+        config.imagePlacement = .leading
+        config.imagePadding = 6
+        config.baseForegroundColor = UIColor.gray50
+        config.background.backgroundColor = UIColor.gray900
+        config.background.cornerRadius = 8
+        $0.configuration = config
+    }
+    
+    private let subTitleLabel = UILabel().then {
+        $0.font = UIFont.pretendard12Regular
+        $0.textColor = UIColor.gray300
+        $0.textAlignment = .center
+        $0.numberOfLines = 0
+        $0.text = "먼저 오늘의 일상 사진을 보내보세요."
+    }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -47,61 +72,63 @@ final class KeywordPartnerOnlyView: UIView {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Setup
     private func setupUI() {
-        backgroundColor = .white
+        layer.cornerRadius = 20
+        addSubview(partnerImageView)
+        partnerImageView.addSubview(topLabelStackView)
+        partnerImageView.addSubview(answerButton)
+        partnerImageView.addSubview(subTitleLabel)
         
-        addSubview(topPlaceholder)
-        addSubview(infoLabel)
-        addSubview(sendButton)
-        addSubview(partnerImageCard)
+        topLabelStackView.addArrangedSubview(questionNumberLabel)
+        topLabelStackView.addArrangedSubview(questionLabel)
     }
     
     private func setupConstraints() {
-        topPlaceholder.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(54)
-            $0.centerX.equalToSuperview()
-            $0.size.equalTo(80)
+        partnerImageView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
         
-        infoLabel.snp.makeConstraints {
-            $0.top.equalTo(topPlaceholder.snp.bottom).offset(10)
+        topLabelStackView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(136)
+            $0.horizontalEdges.equalToSuperview().inset(30)
+        }
+        
+        subTitleLabel.snp.makeConstraints {
+            $0.bottom.equalToSuperview().offset(-27)
             $0.centerX.equalToSuperview()
         }
         
-        sendButton.snp.makeConstraints {
-            $0.top.equalTo(infoLabel.snp.bottom).offset(16)
-            $0.centerX.equalToSuperview()
-            $0.size.equalTo(CGSize(width: 125, height: 41))
-        }
-        
-        partnerImageCard.snp.makeConstraints {
-            $0.bottom.equalToSuperview().inset(24)
-            $0.leading.trailing.equalToSuperview().inset(26)
-            $0.height.equalTo(260)
+        answerButton.snp.makeConstraints {
+            $0.bottom.equalTo(subTitleLabel.snp.top).offset(-16)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(52)
         }
     }
+    
     
     private func setupActions() {
-        sendButton.addTarget(self, action: #selector(sendButtonTapped), for: .touchUpInside)
+        answerButton.addTarget(self, action: #selector(answerButtonTapped), for: .touchUpInside)
     }
     
-    @objc private func sendButtonTapped() {
+    @objc private func answerButtonTapped() {
         onSendPhotoTapped?()
     }
     
     func configure(
-        partnerImageURL: String,
-        partnerName: String,
-        partnerTime: String,
-        partnerCaption: String,
-        myName: String
+        question: String,
+        name: String,
+        profile: String,
+        image: String,
+        time: String
     ) {
-        partnerImageCard.configure(
-            imageURL: partnerImageURL,
-            name: partnerName,
-            time: partnerTime
-        )
-        
-        infoLabel.text = "\(partnerName)님이 \(myName)님의 사진을\n기다리고 있어요!"
+        questionLabel.text = question
+        partnerImageView
+            .configure(
+                backgroundImageURL: image,
+                profileImageURL: profile,
+                name: name,
+                time: time
+            )
     }
 }

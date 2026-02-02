@@ -64,14 +64,14 @@ final class QuestionBothAnsweredView: UIView {
         
         combinedImageView
             .configure(
-                topImageURL: "https://picsum.photos/400/640?random=6",
-                topName: "지상률",
-                topTime: "2026.01.17",
-                topProfileURL: "https://picsum.photos/400/640?random=1",
-                bottomImageURL: "https://picsum.photos/400/640?random=3",
-                bottomName: "최성빈",
-                bottomTime: "2026.01.19",
-                bottomProfileURL: "https://picsum.photos/400/640?random=9"
+                topImageURL: myImageURL,
+                topName: myName,
+                topTime: myTime,
+                topProfileURL: myProfile,
+                bottomImageURL: partnerImageURL,
+                bottomName: partnerName,
+                bottomTime: partnerTime,
+                bottomProfileURL: parterProfile
             )
     }
 }
