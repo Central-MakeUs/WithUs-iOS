@@ -60,13 +60,11 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
     }
     
     func bind(reactor: TodayQuestionReactor) {
-        // Action: viewWillAppear마다 질문 데이터 로드
         rx.viewWillAppear
             .map { _ in Reactor.Action.viewWillAppear }
             .bind(to: reactor.action)
             .disposed(by: disposeBag)
         
-        // State: 오늘의 질문 데이터
         reactor.state.map { $0.currentQuestionData }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
@@ -75,7 +73,6 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 이미지 업로드 성공
         reactor.state.map { $0.uploadedImageUrl }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
@@ -85,7 +82,6 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 에러
         reactor.state.map { $0.errorMessage }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)

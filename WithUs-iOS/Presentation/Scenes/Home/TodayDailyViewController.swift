@@ -69,8 +69,9 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         super.setupUI()
         view.addSubview(keywordCollectionView)
         view.addSubview(contentContainerView)
+        view.addSubview(settingCoupleView)
         allContentViews.forEach { contentContainerView.addSubview($0) }
-        hideAllContentViews()
+        hideAllViews()
     }
     
     override func setupConstraints() {
@@ -83,6 +84,12 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         contentContainerView.snp.makeConstraints {
             $0.top.equalTo(keywordCollectionView.snp.bottom)
             $0.leading.trailing.bottom.equalToSuperview()
+        }
+        
+        settingCoupleView.snp.makeConstraints {
+            $0.horizontalEdges.equalToSuperview().inset(26)
+            $0.top.equalToSuperview().offset(38)
+            $0.bottom.equalToSuperview().offset(-27)
         }
         
         allContentViews.forEach { view in
@@ -103,7 +110,6 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             .bind(to: reactor.action)
             .disposed(by: disposeBag)
         
-        // State: 키워드 리스트
         reactor.state.map { $0.keywords }
             .distinctUntilChanged { lhs, rhs in
                 lhs.map { $0.id } == rhs.map { $0.id }
@@ -112,10 +118,12 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             .subscribe(onNext: { [weak self] keywords in
                 self?.keywords = keywords
                 self?.keywordCollectionView.reloadData()
+                
+//                self?.updateViewVisibility(hasKeywords: !keywords.isEmpty)
+                self?.updateViewVisibility(hasKeywords: false)
             })
             .disposed(by: disposeBag)
         
-        // State: 선택된 키워드 인덱스
         reactor.state.map { $0.selectedKeywordIndex }
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
@@ -125,7 +133,6 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 오늘의 일상 키워드 데이터
         reactor.state.map { $0.currentKeywordData }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
@@ -134,7 +141,6 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 이미지 업로드 성공
         reactor.state.map { $0.uploadedImageUrl }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
@@ -144,7 +150,6 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        // State: 에러
         reactor.state.map { $0.errorMessage }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
@@ -153,6 +158,34 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
                 self?.currentPhotoPreview?.showUploadFail()
             })
             .disposed(by: disposeBag)
+    }
+    
+    // MARK: - View Visibility
+    private func updateViewVisibility(hasKeywords: Bool) {
+        if hasKeywords {
+            showKeywordViews()
+        } else {
+            showSettingCoupleView()
+        }
+    }
+    
+    private func showKeywordViews() {
+        keywordCollectionView.isHidden = false
+        contentContainerView.isHidden = false
+        settingCoupleView.isHidden = true
+    }
+    
+    private func showSettingCoupleView() {
+        keywordCollectionView.isHidden = true
+        contentContainerView.isHidden = true
+        settingCoupleView.isHidden = false
+    }
+    
+    private func hideAllViews() {
+        keywordCollectionView.isHidden = true
+        contentContainerView.isHidden = true
+        settingCoupleView.isHidden = true
+        hideAllContentViews()
     }
     
     // MARK: - UI Update
@@ -235,6 +268,10 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
                 message: "상대방의 사진이 도착하면\n알림을 보내드릴게요.",
                 confirmTitle: "확인"
             ) {}
+        }
+        
+        settingCoupleView.onTap = { [weak self] in
+            self?.coordinator?.showKeywordModification()
         }
     }
 }

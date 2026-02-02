@@ -13,20 +13,27 @@ final class SettingCoupleView: UIView {
     
     var onTap: (() -> Void)?
     
+    private let topLabelStackView = UIStackView().then {
+        $0.axis = .vertical
+        $0.alignment = .center
+        $0.distribution = .fill
+        $0.spacing = 12
+    }
+    
     private let titleLabel = UILabel().then {
-        $0.font = UIFont.pretendard24Bold
-        $0.textColor = UIColor.gray900
+        $0.numberOfLines = 0
         $0.textAlignment = .center
-        $0.numberOfLines = 2
-        $0.text = "기록을 남기기 위한\n마지막 설정이 남아있어요"
+        $0.font = UIFont.pretendard20SemiBold
+        $0.textColor = UIColor.gray900
+        $0.text = "사진을 공유할 키워드를 등록하고\n일상을 특별하게 기록해보세요"
     }
 
     private let subTitleLabel = UILabel().then {
         $0.font = UIFont.pretendard16Regular
         $0.textColor = UIColor.gray500
         $0.textAlignment = .center
-        $0.numberOfLines = 2
-        $0.text = "랜덤 질문 알림 시간과\n키워드 설정을 완료해주세요."
+        $0.numberOfLines = 1
+        $0.text = "키워드 설정"
     }
 
     private let imageView = UIImageView().then {
@@ -36,7 +43,7 @@ final class SettingCoupleView: UIView {
     }
 
     private let setupButton = UIButton().then {
-        $0.setTitle("설정하러 가기 →", for: .normal)
+        $0.setTitle("키워드 등록하기", for: .normal)
         $0.setTitleColor(.white, for: .normal)
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
@@ -54,35 +61,41 @@ final class SettingCoupleView: UIView {
     }
 
     private func setupUI() {
-        addSubview(titleLabel)
-        addSubview(subTitleLabel)
+        backgroundColor = .white
+        layer.cornerRadius = 20
+        addShadow(
+             color: .black,
+             opacity: 0.08,
+             offset: CGSize(width: 4, height: 4),
+             radius: 29
+        )
+        
+        addSubview(topLabelStackView)
         addSubview(imageView)
         addSubview(setupButton)
+        
+        topLabelStackView.addArrangedSubview(subTitleLabel)
+        topLabelStackView.addArrangedSubview(titleLabel)
     }
 
     private func setupConstraints() {
-        titleLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(51)
-            $0.centerX.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(24)
+        topLabelStackView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(56)
+            $0.horizontalEdges.equalToSuperview().inset(30)
         }
         
         imageView.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(42)
-            $0.size.equalTo(167)
+            $0.size.equalTo(161)
             $0.centerX.equalToSuperview()
-        }
-        
-        subTitleLabel.snp.makeConstraints {
-            $0.top.equalTo(imageView.snp.bottom).offset(32)
-            $0.centerX.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(24)
+            $0.centerY.equalToSuperview().priority(.low)
+            $0.top.greaterThanOrEqualTo(topLabelStackView.snp.bottom).offset(14)
+            $0.bottom.lessThanOrEqualTo(setupButton.snp.top).offset(-50)
         }
         
         setupButton.snp.makeConstraints {
-            $0.top.equalTo(subTitleLabel.snp.bottom).offset(32)
-            $0.centerX.equalToSuperview()
-            $0.size.equalTo(CGSize(width: 165, height: 48))
+            $0.bottom.equalToSuperview().offset(-27)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(52)
         }
     }
     
