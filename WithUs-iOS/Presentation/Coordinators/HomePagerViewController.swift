@@ -108,7 +108,7 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
         
         pageViewController.view.snp.makeConstraints {
             $0.top.equalTo(segmentStackView.snp.bottom)
-            $0.leading.trailing.bottom.equalToSuperview()
+            $0.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide)
         }
         
         settingInviteCodeView.snp.makeConstraints {

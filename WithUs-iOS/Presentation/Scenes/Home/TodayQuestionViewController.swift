@@ -48,7 +48,9 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
         
         allContentViews.forEach { view in
             view.snp.makeConstraints {
-                $0.edges.equalToSuperview()
+                $0.horizontalEdges.equalToSuperview().inset(26)
+                $0.top.equalToSuperview().offset(38)
+                $0.bottom.equalToSuperview().offset(-27)
             }
         }
     }

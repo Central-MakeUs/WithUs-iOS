@@ -13,10 +13,25 @@ final class WaitingBothView: UIView {
     
     var onSendPhotoTapped: (() -> Void)?
     
+    private let topLabelStackView = UIStackView().then {
+        $0.axis = .vertical
+        $0.alignment = .center
+        $0.distribution = .fill
+        $0.spacing = 12
+    }
+    
+    private let questionNumberLabel = UILabel().then {
+        $0.font = UIFont.pretendard16Regular
+        $0.textColor = UIColor.gray500
+        $0.textAlignment = .center
+        $0.numberOfLines = 1
+        $0.text = "#3."
+    }
+    
     private let questionLabel = UILabel().then {
         $0.numberOfLines = 0
         $0.textAlignment = .center
-        $0.font = UIFont.pretendard24Regular
+        $0.font = UIFont.pretendard20SemiBold
         $0.textColor = UIColor.gray900
     }
     
@@ -32,7 +47,7 @@ final class WaitingBothView: UIView {
         $0.textColor = UIColor.gray500
         $0.textAlignment = .center
         $0.numberOfLines = 2
-        $0.text = "질문에 대한 나의 마음을\n사진으로 표현해주세요"
+        $0.text = "먼저 오늘의 질문에 답해보세요."
     }
     
     private let sendButton = UIButton().then {
@@ -59,34 +74,48 @@ final class WaitingBothView: UIView {
     }
     
     private func setupUI() {
-        addSubview(questionLabel)
+        backgroundColor = .white
+        layer.cornerRadius = 20
+        addShadow(
+             color: .black,
+             opacity: 0.08,
+             offset: CGSize(width: 4, height: 4),
+             radius: 29
+         )
+        
+        addSubview(topLabelStackView)
         addSubview(heartImageView)
         addSubview(subTitleLabel)
         addSubview(sendButton)
+        
+        topLabelStackView.addArrangedSubview(questionNumberLabel)
+        topLabelStackView.addArrangedSubview(questionLabel)
     }
     
     private func setupConstraints() {
-        questionLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(38)
-            $0.leading.trailing.equalToSuperview()
-            $0.centerX.equalToSuperview()
+        topLabelStackView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(56)
+            $0.horizontalEdges.equalToSuperview().inset(30)
         }
         
         heartImageView.snp.makeConstraints {
-            $0.top.equalTo(questionLabel.snp.bottom).offset(42)
-            $0.size.equalTo(167)
+            $0.size.equalTo(161)
             $0.centerX.equalToSuperview()
+            $0.centerY.equalToSuperview().priority(.low)
+            $0.top.greaterThanOrEqualTo(topLabelStackView.snp.bottom).offset(14)
+            $0.bottom.lessThanOrEqualTo(subTitleLabel.snp.top).offset(-50)
         }
         
+        
         subTitleLabel.snp.makeConstraints {
-            $0.top.equalTo(heartImageView.snp.bottom).offset(32)
             $0.centerX.equalToSuperview()
+            $0.bottom.equalToSuperview().offset(-27)
         }
         
         sendButton.snp.makeConstraints {
-            $0.top.equalTo(subTitleLabel.snp.bottom).offset(32)
-            $0.centerX.equalToSuperview()
-            $0.size.equalTo(CGSize(width: 165, height: 48))
+            $0.bottom.equalTo(subTitleLabel.snp.top).offset(-16)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(52)
         }
     }
     
@@ -99,6 +128,6 @@ final class WaitingBothView: UIView {
     }
     
     func configure(question: String) {
-        questionLabel.text = "Q.\n\(question)"
+        questionLabel.text = question
     }
 }

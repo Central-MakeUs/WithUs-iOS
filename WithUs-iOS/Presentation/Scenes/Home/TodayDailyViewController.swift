@@ -56,6 +56,7 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
     private let keywordMyOnlyView = KeywordMyOnlyView()
     private let keywordPartnerOnlyView = KeywordPartnerOnlyView()
     private let keywordBothView = KeywordBothAnsweredView()
+    private let settingCoupleView = SettingCoupleView()
     
     private lazy var allContentViews: [UIView] = [
         waitingBothView,
