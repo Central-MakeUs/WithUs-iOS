@@ -15,11 +15,16 @@ protocol CalendarViewDelegate: AnyObject {
 }
 
 class CalendarView: UIView {
-    
     weak var delegate: CalendarViewDelegate?
     
-    private var monthsData: [MonthData] = []
-    private var photoDataDict: [String: PhotoData] = [:]
+    // 데이터 요청 콜백 - Reactor와 연결
+    var onMonthVisible: ((Int, Int) -> Void)?
+    
+    // 로딩된 월 추적
+    private var loadedMonths: Set<String> = []
+    
+    // 월별 데이터
+    private var monthsData: [ArchiveCalendarResponse] = []
     
     private let dateFormatter = DateFormatter().then {
         $0.dateFormat = "yyyy-MM-dd"
@@ -35,13 +40,12 @@ class CalendarView: UIView {
         return cv
     }()
     
-    private var monthCellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, MonthData>!
+    private var monthCellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, ArchiveCalendarResponse>!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupCellRegistration()
         setupUI()
-        generateMonths()
     }
     
     required init?(coder: NSCoder) {
@@ -49,8 +53,9 @@ class CalendarView: UIView {
     }
     
     private func setupCellRegistration() {
-        monthCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, MonthData> { [weak self] cell, indexPath, item in
-            guard let self = self else { return }
+        monthCellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, ArchiveCalendarResponse> {
+            [weak self] cell, _, item in
+            guard let self else { return }
             
             cell.contentConfiguration = UIHostingConfiguration {
                 CalendarMonthCellView(monthData: item) { date in
@@ -98,70 +103,85 @@ class CalendarView: UIView {
         return layout
     }
     
-    /// 서버에서 첫 사진 날짜 ~ 마지막 사진 날짜를 받아서 그 사이의 모든 월 생성
-    func generateMonthsFromRange(firstPhotoDate: Date, lastPhotoDate: Date) {
+    func setupInitialMonths(from joinDate: Date?) {
         let calendar = Calendar.current
-        monthsData = []
+        let endDate = Date()
         
-        let firstComponents = calendar.dateComponents([.year, .month], from: firstPhotoDate)
-        guard let firstYear = firstComponents.year,
-              let firstMonth = firstComponents.month else { return }
+        let startDate: Date = {
+            if let joinDate = joinDate {
+                return joinDate
+            } else {
+                return calendar.date(from: DateComponents(year: 2025, month: 12, day: 1))!
+            }
+        }()
         
-        let lastComponents = calendar.dateComponents([.year, .month], from: lastPhotoDate)
-        guard let lastYear = lastComponents.year,
-              let lastMonth = lastComponents.month else { return }
+        var months: [ArchiveCalendarResponse] = []
+        var currentDate = endDate
         
-        var components = DateComponents()
-        components.year = firstYear
-        components.month = firstMonth
-        components.day = 1
+        let startComponents = calendar.dateComponents([.year, .month], from: startDate)
+        let startLimit = calendar.date(from: startComponents)!
         
-        guard let currentDate = calendar.date(from: components) else { return }
-        
-        var endComponents = DateComponents()
-        endComponents.year = lastYear
-        endComponents.month = lastMonth
-        endComponents.day = 1
-        guard let endDate = calendar.date(from: endComponents) else { return }
-        
-        var tempMonths: [MonthData] = []
-        var iterDate = endDate
-        
-        while iterDate >= currentDate {
-            let year = calendar.component(.year, from: iterDate)
-            let month = calendar.component(.month, from: iterDate)
-            let days = generateDaysForMonth(year: year, month: month)
+        while currentDate >= startLimit {
+            let year = calendar.component(.year, from: currentDate)
+            let month = calendar.component(.month, from: currentDate)
             
-            tempMonths.append(MonthData(year: year, month: month, days: days))
+            months.append(
+                ArchiveCalendarResponse(
+                    year: year,
+                    month: month,
+                    days: generateEmptyDays(year: year, month: month)
+                )
+            )
             
-            guard let prevMonth = calendar.date(byAdding: .month, value: -1, to: iterDate) else { break }
-            iterDate = prevMonth
+            guard let prevMonth = calendar.date(byAdding: .month, value: -1, to: currentDate) else {
+                break
+            }
+            currentDate = prevMonth
         }
         
-        monthsData = tempMonths
+        monthsData = months
         collectionView.reloadData()
     }
     
-    /// 임시: 현재부터 과거 12개월 생성
-    private func generateMonths() {
-        let calendar = Calendar.current
-        let currentDate = Date()
-        monthsData = []
+    func applyCalendarResponse(_ response: ArchiveCalendarResponse) {
+        guard let index = monthsData.firstIndex(
+            where: { $0.year == response.year && $0.month == response.month }
+        ) else {
+            return
+        }
         
-        for i in 0..<12 {
-            if let monthDate = calendar.date(byAdding: .month, value: -i, to: currentDate) {
-                let year = calendar.component(.year, from: monthDate)
-                let month = calendar.component(.month, from: monthDate)
-                let days = generateDaysForMonth(year: year, month: month)
-                monthsData.append(MonthData(year: year, month: month, days: days))
+        let dayMap = Dictionary(
+            uniqueKeysWithValues: response.days.map { ($0.date, $0) }
+        )
+        let updatedDays = monthsData[index].days.map { day -> ArchiveDay in
+            guard !day.date.isEmpty else {
+                return day
+            }
+            
+            if let serverDay = dayMap[day.date] {
+                return serverDay
+            } else {
+                return day
             }
         }
         
-        collectionView.reloadData()
+        let photoDaysCount = updatedDays.filter { $0.hasPhoto }.count
+        
+        monthsData[index] = ArchiveCalendarResponse(
+            year: response.year,
+            month: response.month,
+            days: updatedDays
+        )
+        
+        loadedMonths.insert("\(response.year)-\(response.month)")
+        
+        UIView.performWithoutAnimation {
+            collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
+        }
     }
     
-    /// 특정 년/월의 날짜들 생성 (빈 칸 포함)
-    private func generateDaysForMonth(year: Int, month: Int) -> [CalendarDay] {
+    
+    private func generateEmptyDays(year: Int, month: Int) -> [ArchiveDay] {
         let calendar = Calendar.current
         
         var components = DateComponents()
@@ -169,49 +189,36 @@ class CalendarView: UIView {
         components.month = month
         components.day = 1
         
-        guard let monthStart = calendar.date(from: components),
-              let monthRange = calendar.range(of: .day, in: .month, for: monthStart) else {
+        guard let startDate = calendar.date(from: components),
+              let range = calendar.range(of: .day, in: .month, for: startDate)
+        else {
             return []
         }
         
-        let firstWeekday = calendar.component(.weekday, from: monthStart)
+        let firstWeekday = calendar.component(.weekday, from: startDate)
+        var days: [ArchiveDay] = []
         
-        var days: [CalendarDay] = []
-        
-        // 이전 월의 빈 칸
         for _ in 1..<firstWeekday {
-            days.append(CalendarDay(date: nil, day: 0, hasPhoto: false, photoData: nil))
+            days.append(
+                ArchiveDay(date: "", meImageThumbnailUrl: nil, partnerImageThumbnailUrl: nil)
+            )
         }
         
-        // 현재 월의 날짜들
-        for day in monthRange {
-            if let date = calendar.date(byAdding: .day, value: day - 1, to: monthStart) {
-                let dateString = dateFormatter.string(from: date)
-                let photoDictData = photoDataDict[dateString]
-                let hasPhoto = photoDictData != nil
-                
-                days.append(CalendarDay(
-                    date: date,
-                    day: day,
-                    hasPhoto: hasPhoto,
-                    photoData: photoDictData?.photoData
-                ))
+        // 실제 날짜들
+        for day in range {
+            guard let date = calendar.date(byAdding: .day, value: day - 1, to: startDate) else {
+                continue
             }
+            days.append(
+                ArchiveDay(
+                    date: dateFormatter.string(from: date),
+                    meImageThumbnailUrl: nil,
+                    partnerImageThumbnailUrl: nil
+                )
+            )
         }
         
         return days
-    }
-    
-    func updatePhotoData(_ data: [String: PhotoData]) {
-        self.photoDataDict = data
-        
-        for i in 0..<monthsData.count {
-            let year = monthsData[i].year
-            let month = monthsData[i].month
-            monthsData[i].days = generateDaysForMonth(year: year, month: month)
-        }
-        
-        collectionView.reloadData()
     }
 }
 
@@ -231,4 +238,17 @@ extension CalendarView: UICollectionViewDataSource {
     }
 }
 
-extension CalendarView: UICollectionViewDelegate {}
+extension CalendarView: UICollectionViewDelegate {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        willDisplay cell: UICollectionViewCell,
+        forItemAt indexPath: IndexPath
+    ) {
+        let month = monthsData[indexPath.item]
+        let key = "\(month.year)-\(month.month)"
+        
+        guard !loadedMonths.contains(key) else { return }
+        
+        onMonthVisible?(month.year, month.month)
+    }
+}

@@ -9,6 +9,7 @@ import Foundation
 
 protocol FetchArchiveListRepositoryProtocol {
     func fetchArchiveList(size: Int, cursor: String?) async throws -> ArchiveListResponse
+    func fetchArchiveCalendar(year: Int, month: Int) async throws -> ArchiveCalendarResponse
 }
 
 
@@ -24,6 +25,13 @@ final class FetchArchiveListRepository: FetchArchiveListRepositoryProtocol {
 
         let response = try await networkService.request(endpoint: endpoint, responseType: ArchiveListResponse.self)
         
+        return response
+    }
+    
+    func fetchArchiveCalendar(year: Int, month: Int) async throws -> ArchiveCalendarResponse {
+        let endpoint = FetchArchiveListEndPoint.fetchArchiveCalendar(year: year, month: month)
+        
+        let response = try await networkService.request(endpoint: endpoint, responseType: ArchiveCalendarResponse.self)
         
         return response
     }

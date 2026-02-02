@@ -10,25 +10,34 @@ import Alamofire
 
 enum FetchArchiveListEndPoint: EndpointProtocol {
     case fetchArchiveList(size: Int, cursor: String?)
+    case fetchArchiveCalendar(year: Int, month: Int)
     
     var path: String {
-        "/api/me/couple/archives"
+        switch self {
+        case .fetchArchiveList:
+            return "/api/me/couple/archives"
+        case .fetchArchiveCalendar:
+            return "/api/me/couple/archives/calendar"
+        }
     }
     
     var method: HTTPMethod {
         switch self {
-        case .fetchArchiveList:
+        case .fetchArchiveList, .fetchArchiveCalendar:
                 .get
         }
     }
     
-    var prarameters: Parameters? {
+    var parameters: Parameters? {
         switch self {
         case .fetchArchiveList(size: let size, cursor: let cursor):
             var queryParams: [String: String] = ["size": "\(size)"]
             if let cursor = cursor {
                 queryParams["cursor"] = cursor
             }
+            return queryParams
+        case .fetchArchiveCalendar(year: let year, month: let month):
+            let queryParams: [String: String] = ["year": "\(year)", "month": "\(month)"]
             return queryParams
         }
     }

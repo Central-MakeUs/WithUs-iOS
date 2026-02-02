@@ -9,6 +9,7 @@ import Foundation
 
 protocol FetchArchiveListUseCaseProtocol {
     func execute(size: Int, cursor: String?) async throws -> ArchiveListResponse
+    func execute(year: Int, month: Int) async throws -> ArchiveCalendarResponse
 }
 
 final class FetchArchiveListUseCase: FetchArchiveListUseCaseProtocol {
@@ -20,5 +21,9 @@ final class FetchArchiveListUseCase: FetchArchiveListUseCaseProtocol {
     
     func execute(size: Int, cursor: String?) async throws -> ArchiveListResponse {
         return try await archiveService.fetchArchiveList(size: size, cursor: cursor)
+    }
+    
+    func execute(year: Int, month: Int) async throws -> ArchiveCalendarResponse {
+        return try await archiveService.fetchArchiveCalendar(year: year, month: month)
     }
 }

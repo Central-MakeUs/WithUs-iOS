@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CalendarMonthCellView: View {
-    let monthData: MonthData
+    let monthData: ArchiveCalendarResponse
     let onDateTap: (Date) -> Void
     
     private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
@@ -42,7 +42,7 @@ struct CalendarMonthCellView: View {
                     CalendarDayCellView(day: day)
                         .frame(height: 42)
                         .onTapGesture {
-                            if day.hasPhoto, let date = day.date {
+                            if day.hasPhoto, let date = day.dateObject {
                                 onDateTap(date)
                             }
                         }
@@ -57,25 +57,24 @@ struct CalendarMonthCellView: View {
 }
 
 struct CalendarDayCellView: View {
-    let day: CalendarDay
+    let day: ArchiveDay
     
     var body: some View {
         ZStack {
-            if day.day == 0 {
-                // 빈 칸
+            if day.date.isEmpty {
                 Color.clear
-                
-            } else if day.hasPhoto, let photoData = day.photoData {
-                // 사진 있는 날짜
+            } else if day.hasPhoto {
                 ZStack(alignment: .center) {
-                    switch photoData.kind {
-                    case .combined:
-                        CombinedThumbnailView(imageURL: photoData.imageURL)
-                    case .single:
-                        SingleThumbnailView(imageURL: photoData.imageURL)
+                    if day.kind == .combined {
+                        CombinedThumbnailView(
+                            meUrl: day.meImageThumbnailUrl,
+                            partnerUrl: day.partnerImageThumbnailUrl
+                        )
+                    } else {
+                        // 둘 중 하나 있는 거 표시
+                        SingleThumbnailView(imageURL: day.meImageThumbnailUrl ?? day.partnerImageThumbnailUrl)
                     }
                     
-                    // 날짜 텍스트
                     Text(String(format: "%02d", day.day))
                         .font(Font(UIFont.pretendard12Regular))
                         .fontWeight(.semibold)
@@ -85,9 +84,7 @@ struct CalendarDayCellView: View {
                 .frame(width: 42, height: 42)
                 .cornerRadius(8)
                 .clipped()
-                
             } else {
-                // 사진 없는 날짜
                 Text(String(format: "%02d", day.day))
                     .font(Font(UIFont.pretendard12Regular))
                     .foregroundColor(Color(uiColor: .gray500))
@@ -100,18 +97,19 @@ struct CalendarDayCellView: View {
 // MARK: - Combined: 내 사진(위) + 상대방 사진(아래)
 
 private struct CombinedThumbnailView: View {
-    let imageURL: String?
+    let meUrl: String?
+    let partnerUrl: String?
     
     var body: some View {
         VStack(spacing: 0) {
             // 위: 내 사진
-            ThumbnailImageView(imageURL: imageURL)
+            ThumbnailImageView(imageURL: meUrl)
                 .frame(maxWidth: .infinity)
                 .frame(height: 21) // 42의 절반
                 .clipped(antialiased: false)
             
             // 아래: 상대방 사진
-            ThumbnailImageView(imageURL: imageURL)
+            ThumbnailImageView(imageURL: partnerUrl)
                 .frame(maxWidth: .infinity)
                 .frame(height: 21)
                 .clipped(antialiased: false)
@@ -119,7 +117,6 @@ private struct CombinedThumbnailView: View {
     }
 }
 
-// MARK: - Single: 이미지 하나만
 
 private struct SingleThumbnailView: View {
     let imageURL: String?
@@ -131,7 +128,6 @@ private struct SingleThumbnailView: View {
     }
 }
 
-// MARK: - 공통 이미지 뷰
 
 private struct ThumbnailImageView: View {
     let imageURL: String?

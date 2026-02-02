@@ -10,6 +10,8 @@ import SnapKit
 import Then
 import SwiftUI
 import ReactorKit
+import RxSwift
+import RxCocoa
 
 class ArchiveViewController: BaseViewController, ReactorKit.View {
     weak var coordinator: ArchiveCoordinator?
@@ -36,11 +38,6 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
     private var photos: [SinglePhotoData] = []
     
     private var cellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, ArchivePhoto>!
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        loadCalendarData()
-    }
     
     override func setupUI() {
         super.setupUI()
@@ -93,35 +90,58 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
     }
     
     func bind(reactor: ArchiveReactor) {
-            rx.viewDidLoad
-                .map { Reactor.Action.viewDidLoad }
-                .bind(to: reactor.action)
-                .disposed(by: disposeBag)
-            
-            reactor.state.map { $0.selectedTab }
-                .distinctUntilChanged()
-                .observe(on: MainScheduler.instance)
-                .subscribe(onNext: { [weak self] index in
-                    self?.showView(at: index)
-                })
-                .disposed(by: disposeBag)
-            
-            reactor.state.map { $0.recentPhotos }
-                .distinctUntilChanged { $0.count == $1.count }
-                .observe(on: MainScheduler.instance)
-                .subscribe(onNext: { [weak self] photos in
-                    self?.recentView.updatePhotos(photos)
-                })
-                .disposed(by: disposeBag)
-            
-            reactor.state.map { $0.errorMessage }
-                .compactMap { $0 }
-                .observe(on: MainScheduler.instance)
-                .subscribe(onNext: { error in
-                    print("❌ Archive 에러: \(error)")
-                })
-                .disposed(by: disposeBag)
+        rx.viewDidLoad
+            .map { Reactor.Action.viewDidLoad }
+            .bind(to: reactor.action)
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.selectedTab }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] index in
+                self?.showView(at: index)
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.recentPhotos }
+            .distinctUntilChanged { $0.count == $1.count }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] photos in
+                self?.recentView.updatePhotos(photos)
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.errorMessage }
+            .compactMap { $0 }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { (error: String) in
+                print("❌ Archive 에러: \(error)")
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.calendarDataList }
+            .distinctUntilChanged { $0.count == $1.count }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] dataList in
+                if let lastData = dataList.last {
+                    self?.calendarView.applyCalendarResponse(lastData)
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.joinDate }
+            .take(1)
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] (joinDate: Date?) in
+                self?.calendarView.setupInitialMonths(from: joinDate)
+            })
+            .disposed(by: disposeBag)
+        
+        calendarView.onMonthVisible = { [weak reactor] year, month in
+            reactor?.action.onNext(.loadCalendarMonth(year: year, month: month))
         }
+    }
     
     private func showView(at index: Int) {
         recentView.isHidden = true
@@ -138,68 +158,6 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         default:
             break
         }
-    }
-    
-    private func loadCalendarData() {
-        let dummyImageURL = "https://picsum.photos/seed/"
-        
-        let photoData: [String: PhotoData] = [
-            // 1월 테스트
-            "2026-01-01": PhotoData(
-                thumbnailURL: dummyImageURL + "cal1/200/200",
-                photoCount: 3,
-                photoData: SinglePhotoData(date: "2026.01.01", question: "새해 첫날의 기억은?", imageURL: dummyImageURL + "cal1/400/640", name: "JPG", time: "AM 10:00", kind: .combined)
-            ),
-            "2026-01-05": PhotoData(
-                thumbnailURL: dummyImageURL + "cal2/200/200",
-                photoCount: 1,
-                photoData: SinglePhotoData(date: "2026.01.05", question: "", imageURL: dummyImageURL + "cal2/400/640", name: "JPG", time: "PM 03:20", kind: .single)
-            ),
-            "2026-01-12": PhotoData(
-                thumbnailURL: dummyImageURL + "cal3/200/200",
-                photoCount: 2,
-                photoData: SinglePhotoData(date: "2026.01.12", question: "지금까지 받은 사진 중\n가장 이쁘게 담긴 제페토의 사진은?", imageURL: dummyImageURL + "cal3/400/640", name: "JPG", time: "PM 02:35", kind: .combined)
-            ),
-            "2026-01-15": PhotoData(
-                thumbnailURL: dummyImageURL + "cal4/200/200",
-                photoCount: 5,
-                photoData: SinglePhotoData(date: "2026.01.15", question: "", imageURL: dummyImageURL + "cal4/400/640", name: "JPG", time: "AM 09:15", kind: .single)
-            ),
-            "2026-01-20": PhotoData(
-                thumbnailURL: dummyImageURL + "cal5/200/200",
-                photoCount: 1,
-                photoData: SinglePhotoData(date: "2026.01.20", question: "이번주 가장 좋은 날은?", imageURL: dummyImageURL + "cal5/400/640", name: "JPG", time: "PM 06:00", kind: .combined)
-            ),
-            "2026-01-25": PhotoData(
-                thumbnailURL: dummyImageURL + "cal6/200/200",
-                photoCount: 4,
-                photoData: SinglePhotoData(date: "2026.01.25", question: "", imageURL: dummyImageURL + "cal6/400/640", name: "JPG", time: "PM 01:45", kind: .single)
-            ),
-            
-            // 12월 테스트
-            "2025-12-01": PhotoData(
-                thumbnailURL: dummyImageURL + "cal7/200/200",
-                photoCount: 3,
-                photoData: SinglePhotoData(date: "2025.12.01", question: "12월의 첫날은?", imageURL: dummyImageURL + "cal7/400/640", name: "JPG", time: "AM 11:30", kind: .combined)
-            ),
-            "2025-12-09": PhotoData(
-                thumbnailURL: dummyImageURL + "cal8/200/200",
-                photoCount: 1,
-                photoData: SinglePhotoData(date: "2025.12.09", question: "", imageURL: dummyImageURL + "cal8/400/640", name: "JPG", time: "PM 04:10", kind: .single)
-            ),
-            "2025-12-15": PhotoData(
-                thumbnailURL: dummyImageURL + "cal9/200/200",
-                photoCount: 2,
-                photoData: SinglePhotoData(date: "2025.12.15", question: "크리스마스 준비 중?", imageURL: dummyImageURL + "cal9/400/640", name: "JPG", time: "PM 05:50", kind: .combined)
-            ),
-            "2025-12-25": PhotoData(
-                thumbnailURL: dummyImageURL + "cal10/200/200",
-                photoCount: 1,
-                photoData: SinglePhotoData(date: "2025.12.25", question: "", imageURL: dummyImageURL + "cal10/400/640", name: "JPG", time: "AM 08:00", kind: .single)
-            ),
-        ]
-        
-        calendarView.updatePhotoData(photoData)
     }
 }
 
@@ -226,8 +184,8 @@ extension ArchiveViewController: CalendarViewDelegate {
             time: "PM 02:35", kind: .combined
         )
         
-//        let vc = ArchiveDetailViewController(photoData: testData)
-//        navigationController?.pushViewController(vc, animated: true)
+        //        let vc = ArchiveDetailViewController(photoData: testData)
+        //        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
@@ -244,30 +202,31 @@ extension ArchiveViewController: QuestionListViewDelegate {
             time: "PM 02:35", kind: .single
         )
         
-//        let vc = ArchiveDetailViewController(photoData: testData)
-//        navigationController?.pushViewController(vc, animated: true)
+        //        let vc = ArchiveDetailViewController(photoData: testData)
+        //        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
 extension ArchiveViewController: ArchiveRecentViewDelegate {
     func didSelectPhoto(_ photo: ArchivePhotoViewModel) {
         // 내 사진이 있으면 내 사진, 없으면 상대방 사진
-//        let imageUrl = photo.myImageUrl ?? photo.partnerImageUrl
-//        
-//        let testData = SinglePhotoData(
-//            date: photo.date,
-//            question: photo.archiveType == "QUESTION" ? "질문 내용" : nil,  // TODO: 실제 질문 텍스트는 별도 API 필요
-//            imageURL: imageUrl,
-//            name: "",  // TODO: 이름 정보 필요시 API 추가
-//            time: "",  // TODO: 시간 정보 필요시 API 추가
-//            kind: photo.kind == .combined ? .combined : .single
-//        )
-//        
-//        let vc = ArchiveDetailViewController(photoData: testData)
-//        navigationController?.pushViewController(vc, animated: true)
+        //        let imageUrl = photo.myImageUrl ?? photo.partnerImageUrl
+        //
+        //        let testData = SinglePhotoData(
+        //            date: photo.date,
+        //            question: photo.archiveType == "QUESTION" ? "질문 내용" : nil,  // TODO: 실제 질문 텍스트는 별도 API 필요
+        //            imageURL: imageUrl,
+        //            name: "",  // TODO: 이름 정보 필요시 API 추가
+        //            time: "",  // TODO: 시간 정보 필요시 API 추가
+        //            kind: photo.kind == .combined ? .combined : .single
+        //        )
+        //
+        //        let vc = ArchiveDetailViewController(photoData: testData)
+        //        navigationController?.pushViewController(vc, animated: true)
     }
     
     func didScrollToBottom() {
         reactor?.action.onNext(.loadMoreRecent)
     }
 }
+

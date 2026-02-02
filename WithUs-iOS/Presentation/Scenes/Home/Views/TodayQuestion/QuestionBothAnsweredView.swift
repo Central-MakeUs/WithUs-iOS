@@ -32,6 +32,13 @@ final class QuestionBothAnsweredView: UIView {
     
     private func setupUI() {
         backgroundColor = .white
+        layer.cornerRadius = 20
+        addShadow(
+            color: .black,
+            opacity: 0.08,
+            offset: CGSize(width: 4, height: 4),
+            radius: 29
+        )
         
         addSubview(questionLabel)
         addSubview(combinedImageView)
