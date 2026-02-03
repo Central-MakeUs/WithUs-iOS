@@ -151,6 +151,13 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
+        reactor.state
+            .compactMap { $0.questionDetail }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] detail in
+                self?.coordinator?.showQuestionDetail(detail)
+            })
+            .disposed(by: disposeBag)
     }
     
     private func showView(at index: Int) {
@@ -203,8 +210,7 @@ extension ArchiveViewController: QuestionListViewDelegate {
     func didSelectQuestion(_ question: ArchiveQuestionItem) {
         print("선택된 question: \(question)")
         
-        // TODO: 해당 질문의 상세 데이터를 가져와서 ArchiveDetailViewController로 이동
-        // coordinator?.showArchiveDetail(for: question)
+        reactor?.action.onNext(.fetchQuestionDetail(coupleQuestionId: question.coupleQuestionId))
     }
     
     func didScrollToBottomQuestion() {

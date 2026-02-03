@@ -14,7 +14,7 @@ import SnapKit
 final class BlurredDetailCell: UICollectionViewCell {
     static let reuseId = "BlurredDetailCell"
     
-    private let blurredView = ArchiveBlurredImageView()
+    private let blurredView = BlurredDetailImageView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -28,7 +28,11 @@ final class BlurredDetailCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(imageURL: String) {
-        blurredView.configure(backgroundImageURL: imageURL)
+    func configure(with data: DetailCellData) {
+        blurredView.configure(
+            imageURL: data.imageUrl ?? "",
+            name: data.name ?? "",
+            time: data.time ?? ""
+        )
     }
 }

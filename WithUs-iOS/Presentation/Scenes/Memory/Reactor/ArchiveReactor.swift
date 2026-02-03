@@ -17,6 +17,7 @@ final class ArchiveReactor: Reactor {
         case loadMoreRecent
         case loadCalendarMonth(year: Int, month: Int)
         case loadMoreQuestions
+        case fetchQuestionDetail(coupleQuestionId: Int)
     }
     
     enum Mutation {
@@ -34,6 +35,7 @@ final class ArchiveReactor: Reactor {
         case setQuestionNextCursor(String?)
         case setQuestionHasNext(Bool)
         case setQuestionLoading(Bool)
+        case setQuestionDetail(ArchiveQuestionDetailResponse?)
     }
     
     struct State {
@@ -49,6 +51,7 @@ final class ArchiveReactor: Reactor {
         var questionNextCursor: String?
         var questionHasNext: Bool = false
         var isQuestionLoading: Bool = false
+        var questionDetail: ArchiveQuestionDetailResponse?
     }
     
     let initialState = State()
@@ -84,6 +87,8 @@ final class ArchiveReactor: Reactor {
                 return .empty()
             }
             return loadQuestionList(cursor: currentState.questionNextCursor, isRefresh: false)
+        case .fetchQuestionDetail(let coupleQuestionId):
+            return fetchQuestionDetail(coupleQuestionId: coupleQuestionId)
         }
     }
     
@@ -136,11 +141,29 @@ final class ArchiveReactor: Reactor {
             
         case .setQuestionLoading(let isLoading):
             newState.isQuestionLoading = isLoading
+        
+        case .setQuestionDetail(let response):
+            newState.questionDetail = response
         }
         
         return newState
     }
     
+    func transform(mutation: Observable<Mutation>) -> Observable<Mutation> {
+        let clearQuestionDetail = mutation
+            .flatMap { mutation -> Observable<Mutation> in
+                if case .setQuestionDetail(let detail) = mutation, detail != nil {
+                    // questionDetail이 설정되면, 즉시 nil로 만드는 mutation을 추가
+                    return .concat(
+                        .just(mutation),
+                        .just(.setQuestionDetail(nil))
+                    )
+                }
+                return .just(mutation)
+            }
+        
+        return clearQuestionDetail
+    }
     
     private func loadRecentPhotos(cursor: String?, isRefresh: Bool) -> Observable<Mutation> {
         let startLoading: Observable<Mutation> = .just(.setLoading(true))
@@ -247,5 +270,35 @@ final class ArchiveReactor: Reactor {
         }
         
         return .concat([startLoading, fetchQuestions])
+    }
+    
+    private func fetchQuestionDetail(coupleQuestionId: Int) -> Observable<Mutation> {
+        let startLoading: Observable<Mutation> = .just(.setQuestionLoading(true))
+        
+        let fetchQuestionDetail: Observable<Mutation> = Observable.create { [weak self] observer in
+            guard let self = self else { return Disposables.create() }
+            
+            Task {
+                do {
+                    let data = try await self.fetchArchiveListUseCase.executeQuestionDetail(coupleQuestionId: coupleQuestionId)
+                    
+                    await MainActor.run {
+                        observer.onNext(.setQuestionDetail(data))
+                        observer.onNext(.setQuestionLoading(false))
+                        observer.onCompleted()
+                    }
+                } catch {
+                    await MainActor.run {
+                        observer.onNext(.setError(error.localizedDescription))
+                        observer.onNext(.setQuestionLoading(false))
+                        observer.onCompleted()
+                    }
+                }
+            }
+            
+            return Disposables.create()
+        }
+        
+        return .concat([startLoading, fetchQuestionDetail])
     }
 }

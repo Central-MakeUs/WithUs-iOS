@@ -11,6 +11,7 @@ protocol FetchArchiveListRepositoryProtocol {
     func fetchArchiveList(size: Int, cursor: String?) async throws -> ArchiveListResponse
     func fetchArchiveCalendar(year: Int, month: Int) async throws -> ArchiveCalendarResponse
     func fetchArchiveQuestionList(size: Int, cursor: String?) async throws -> ArchiveQuestionListResponse
+    func fetchArchiveQuestionDetail(coupleQuestionId: Int) async throws -> ArchiveQuestionDetailResponse
 }
 
 
@@ -41,6 +42,17 @@ final class FetchArchiveListRepository: FetchArchiveListRepositoryProtocol {
         let endpoint = FetchArchiveListEndPoint.fetchArchiveQuestionList(size: size, cursor: cursor)
         
         let response = try await networkService.request(endpoint: endpoint, responseType: ArchiveQuestionListResponse.self)
+        
+        return response
+    }
+    
+    func fetchArchiveQuestionDetail(coupleQuestionId: Int) async throws -> ArchiveQuestionDetailResponse {
+        let endpoint = FetchArchiveListEndPoint.fetchQuestionDetail(coupleQuestionId: coupleQuestionId)
+        
+        let response = try await networkService.request(
+            endpoint: endpoint,
+            responseType: ArchiveQuestionDetailResponse.self
+        )
         
         return response
     }

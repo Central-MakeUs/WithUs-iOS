@@ -13,7 +13,7 @@ import SnapKit
 final class CombinedImageCell: UICollectionViewCell {
     static let reuseId = "CombinedImageCell"
     
-    private let combinedView = ArchiveRecentImageView()
+    private let combinedView = CombinedImageView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -27,7 +27,17 @@ final class CombinedImageCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure(topImageURL: String, bottomImageURL: String) {
-        combinedView.configure(topImageURL: topImageURL, bottomImageURL: bottomImageURL)
+    func configure(with data: DetailCellData) {
+        combinedView
+            .configure(
+                topImageURL: data.myImageUrl ?? "",
+                topName: data.myName ?? "",
+                topTime: data.myTime ?? "",
+                topProfileURL: data.myProfileUrl ?? "",
+                bottomImageURL: data.partnerImageUrl ?? "",
+                bottomName: data.partnerName ?? "",
+                bottomTime: data.partnerTime ?? "",
+                bottomProfileURL: data.partnerProfileUrl ?? ""
+            )
     }
 }
