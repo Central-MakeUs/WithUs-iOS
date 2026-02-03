@@ -11,6 +11,8 @@ import UIKit
 
 class FrameSelectionViewController: BaseViewController {
     
+    weak var coordinator: FourCutCoordinator?
+    
     private let titleLabel = UILabel().then {
         $0.text = "프레임을 선택해 주세요"
         $0.font = .systemFont(ofSize: 20, weight: .semibold)

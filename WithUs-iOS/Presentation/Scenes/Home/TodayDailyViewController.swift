@@ -143,6 +143,7 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         
         reactor.state.map { $0.uploadedImageUrl }
             .compactMap { $0 }
+            .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] imageKey in
                 print("✅ 일상 이미지 업로드 완료: \(imageKey)")
@@ -158,6 +159,14 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
                 self?.currentPhotoPreview?.showUploadFail()
             })
             .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.pokeSuccess }
+            .filter({ $0 })
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] _ in
+                self?.showPokeAlert()
+            })
+            .disposed(by: disposeBag)
     }
     
     // MARK: - View Visibility
@@ -167,6 +176,15 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         } else {
             showSettingCoupleView()
         }
+    }
+    
+    private func showPokeAlert() {
+        CustomAlertViewController.show(
+            on: self,
+            title: "콕 찌르기 완료!",
+            message: "상대방의 사진이 도착하면\n알림을 보내드릴게요.",
+            confirmTitle: "확인"
+        ) {}
     }
     
     private func showKeywordViews() {
@@ -266,15 +284,7 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         
         keywordMyOnlyView.onNotifyTapped = { [weak self] in
             guard let self = self else { return }
-            let partnerUserId = self.reactor?.currentState.currentKeywordData?.partnerInfo?.userId ?? 0
-            print("콕 찌르기 - Partner ID: \(partnerUserId)")
-            
-            CustomAlertViewController.show(
-                on: self,
-                title: "콕 찌르기 완료!",
-                message: "상대방의 사진이 도착하면\n알림을 보내드릴게요.",
-                confirmTitle: "확인"
-            ) {}
+            self.reactor?.action.onNext(.poke)
         }
         
         settingCoupleView.onTap = { [weak self] in

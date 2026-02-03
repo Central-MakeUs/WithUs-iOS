@@ -21,6 +21,12 @@ class FourCutCoordinator: Coordinator {
         navigationController.setViewControllers([fourCutViewController], animated: false)
     }
     
+    func showFrameSelection() {
+        let vc = FrameSelectionViewController()
+        vc.coordinator = self
+        self.navigationController.pushViewController(vc, animated: true)
+    }
+    
     func finish() {
         
     }

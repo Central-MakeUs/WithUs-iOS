@@ -39,6 +39,6 @@ class FourCutViewController: BaseViewController {
     }
     
     @objc private func didAddButtonTapped() {
-        self.navigationController?.pushViewController(FrameSelectionViewController(), animated: true)
+        coordinator?.showFrameSelection()
     }
 }

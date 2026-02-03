@@ -83,6 +83,7 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
         
         reactor.state.map { $0.uploadedImageUrl }
             .compactMap { $0 }
+            .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] imageKey in
                 print("✅ 질문 이미지 업로드 완료: \(imageKey)")
@@ -96,6 +97,14 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             .subscribe(onNext: { [weak self] error in
                 print("❌ 질문 에러: \(error)")
                 self?.currentPhotoPreview?.showUploadFail()
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.pokeSuccess }
+            .filter({ $0 })
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] _ in
+                self?.showPokeAlert()
             })
             .disposed(by: disposeBag)
     }
@@ -166,6 +175,15 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
         questionBothView.isHidden = true
     }
     
+    private func showPokeAlert() {
+        CustomAlertViewController.show(
+            on: self,
+            title: "콕 찌르기 완료!",
+            message: "상대방의 사진이 도착하면\n알림을 보내드릴게요.",
+            confirmTitle: "확인"
+        ) {}
+    }
+    
     // MARK: - Camera
     private func openCameraForQuestion() {
         guard let coupleQuestionId = reactor?.currentState.currentQuestionData?.coupleQuestionId else {
@@ -183,6 +201,12 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
         
         questionPartnerOnlyView.onAnswerTapped = { [weak self] in
             self?.openCameraForQuestion()
+        }
+        
+        questionMyOnlyView.onNotifyTapped = { [weak self] in
+            guard let self = self else { return }
+        
+            self.reactor?.action.onNext(.poke)
         }
     }
 }

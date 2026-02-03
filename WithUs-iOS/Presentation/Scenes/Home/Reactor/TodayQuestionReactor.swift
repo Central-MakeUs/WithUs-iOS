@@ -14,6 +14,7 @@ final class TodayQuestionReactor: Reactor {
     enum Action {
         case viewWillAppear
         case uploadQuestionImage(coupleQuestionId: Int, image: UIImage)
+        case poke
     }
     
     enum Mutation {
@@ -21,6 +22,7 @@ final class TodayQuestionReactor: Reactor {
         case setTodayQuestion(TodayQuestionResponse)
         case setImageUploadSuccess(String)
         case setError(String)
+        case pokeSuccess(Bool)
     }
     
     struct State {
@@ -28,19 +30,24 @@ final class TodayQuestionReactor: Reactor {
         var currentQuestionData: TodayQuestionResponse?
         var uploadedImageUrl: String?
         var errorMessage: String?
+        var partnerUserId: Int?
+        var pokeSuccess: Bool = false
     }
     
     let initialState: State = .init()
     
     private let fetchTodayQuestionUseCase: FetchTodayQuestionUseCaseProtocol
     private let uploadQuestionImageUseCase: UploadQuestionImageUseCaseProtocol
+    private let pokePartnerUseCase: PokePartnerUseCaseProtocol
     
     init(
         fetchTodayQuestionUseCase: FetchTodayQuestionUseCaseProtocol,
-        uploadQuestionImageUseCase: UploadQuestionImageUseCaseProtocol
+        uploadQuestionImageUseCase: UploadQuestionImageUseCaseProtocol,
+        pokePartnerUseCase: PokePartnerUseCaseProtocol
     ) {
         self.fetchTodayQuestionUseCase = fetchTodayQuestionUseCase
         self.uploadQuestionImageUseCase = uploadQuestionImageUseCase
+        self.pokePartnerUseCase = pokePartnerUseCase
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
@@ -50,6 +57,8 @@ final class TodayQuestionReactor: Reactor {
             
         case .uploadQuestionImage(let coupleQuestionId, let image):
             return uploadQuestionImageAsync(coupleQuestionId: coupleQuestionId, image: image)
+        case .poke:
+            return pokePartner()
         }
     }
     
@@ -65,7 +74,9 @@ final class TodayQuestionReactor: Reactor {
             newState.isLoading = false
             newState.currentQuestionData = data
             newState.errorMessage = nil
-            
+            if let partnerInfo = data.partnerInfo {
+                newState.partnerUserId = partnerInfo.userId
+            }
         case .setImageUploadSuccess(let imageKey):
             newState.uploadedImageUrl = imageKey
             newState.isLoading = false
@@ -73,6 +84,9 @@ final class TodayQuestionReactor: Reactor {
         case .setError(let message):
             newState.isLoading = false
             newState.errorMessage = message
+            
+        case .pokeSuccess(let result):
+            newState.pokeSuccess = result
         }
         
         return newState
@@ -122,6 +136,33 @@ final class TodayQuestionReactor: Reactor {
                         // 업로드 후 새로고침
                         let data = try await self.fetchTodayQuestionUseCase.execute()
                         observer.onNext(.setTodayQuestion(data))
+                        observer.onCompleted()
+                    } catch {
+                        observer.onNext(.setError(error.localizedDescription))
+                        observer.onCompleted()
+                    }
+                }
+                return Disposables.create()
+            }
+        ])
+    }
+    
+    private func pokePartner() -> Observable<Mutation> {
+        return Observable.concat([
+            .just(.setLoading(true)),
+            Observable.create { [weak self] observer in
+                guard let self else {
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                
+                Task {
+                    do {
+                        if let partnerUserId = self.currentState.partnerUserId {
+                            try await self.pokePartnerUseCase.execute(id: partnerUserId)
+                            observer.onNext(.pokeSuccess(true))
+                        }
+                        observer.onNext(.pokeSuccess(false))
                         observer.onCompleted()
                     } catch {
                         observer.onNext(.setError(error.localizedDescription))

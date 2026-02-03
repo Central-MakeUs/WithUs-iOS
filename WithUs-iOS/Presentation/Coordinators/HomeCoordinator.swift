@@ -30,6 +30,7 @@ class HomeCoordinator: Coordinator {
         let homeContentRepository = HomeContentRepository(networkService: networkService)
         let imageRepository = ImageRepository(networkService: networkService)
         let keywordRepository = KeywordRepository(networkService: networkService)
+        let pokeRepository = PokePartnerRepository(networkService: networkService)
         
         // Use Cases
         let fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
@@ -47,17 +48,19 @@ class HomeCoordinator: Coordinator {
             uploadImageUseCase: uploadImageUseCase
         )
         
+        let pokePartnerUseCase = PokePartnerUseCase(pokeRepository: pokeRepository)
+        
         // Reactors
         let todayQuestionReactor = TodayQuestionReactor(
             fetchTodayQuestionUseCase: fetchTodayQuestionUseCase,
-            uploadQuestionImageUseCase: uploadQuestionImageUseCase
+            uploadQuestionImageUseCase: uploadQuestionImageUseCase, pokePartnerUseCase: pokePartnerUseCase
         )
         
         let todayDailyReactor = TodayDailyReactor(
             fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase,
             fetchTodayKeywordUseCase: fetchTodayKeywordUseCase,
             uploadKeywordImageUseCase: uploadKeywordImageUseCase,
-            keywordService: keywordService
+            keywordService: keywordService, pokePartnerUseCase: pokePartnerUseCase
         )
         
         let keywordSettingReactor = KeywordSettingReactor(
