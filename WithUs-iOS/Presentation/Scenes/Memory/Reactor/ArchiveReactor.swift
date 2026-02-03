@@ -18,6 +18,7 @@ final class ArchiveReactor: Reactor {
         case loadCalendarMonth(year: Int, month: Int)
         case loadMoreQuestions
         case fetchQuestionDetail(coupleQuestionId: Int)
+        case fetchPhotoDetail(date: String, targetId: Int?, targetType: String?)
     }
     
     enum Mutation {
@@ -36,6 +37,7 @@ final class ArchiveReactor: Reactor {
         case setQuestionHasNext(Bool)
         case setQuestionLoading(Bool)
         case setQuestionDetail(ArchiveQuestionDetailResponse?)
+        case setPhotoDetail(ArchivePhotoDetailResponse?)
     }
     
     struct State {
@@ -52,6 +54,7 @@ final class ArchiveReactor: Reactor {
         var questionHasNext: Bool = false
         var isQuestionLoading: Bool = false
         var questionDetail: ArchiveQuestionDetailResponse?
+        var photoDetail: ArchivePhotoDetailResponse?
     }
     
     let initialState = State()
@@ -89,6 +92,8 @@ final class ArchiveReactor: Reactor {
             return loadQuestionList(cursor: currentState.questionNextCursor, isRefresh: false)
         case .fetchQuestionDetail(let coupleQuestionId):
             return fetchQuestionDetail(coupleQuestionId: coupleQuestionId)
+        case .fetchPhotoDetail(date: let date, targetId: let targetId, targetType: let targetType):
+            return fetchPhotoDetail(date: date, targetId: targetId, targetType: targetType)
         }
     }
     
@@ -144,25 +149,41 @@ final class ArchiveReactor: Reactor {
         
         case .setQuestionDetail(let response):
             newState.questionDetail = response
+            
+        case .setPhotoDetail(let response):
+            newState.photoDetail = response
         }
         
         return newState
     }
     
     func transform(mutation: Observable<Mutation>) -> Observable<Mutation> {
-        let clearQuestionDetail = mutation
+        let clearDetailMutations = mutation
             .flatMap { mutation -> Observable<Mutation> in
-                if case .setQuestionDetail(let detail) = mutation, detail != nil {
-                    // questionDetail이 설정되면, 즉시 nil로 만드는 mutation을 추가
-                    return .concat(
-                        .just(mutation),
-                        .just(.setQuestionDetail(nil))
-                    )
+                switch mutation {
+                case .setQuestionDetail(let detail):
+                    // questionDetail이 설정되면 즉시 nil로 초기화
+                    if detail != nil {
+                        return .concat(
+                            .just(mutation),
+                            .just(.setQuestionDetail(nil))
+                        )
+                    }
+                case .setPhotoDetail(let detail):
+                    // photoDetail이 설정되면 즉시 nil로 초기화
+                    if detail != nil {
+                        return .concat(
+                            .just(mutation),
+                            .just(.setPhotoDetail(nil))
+                        )
+                    }
+                default:
+                    break
                 }
                 return .just(mutation)
             }
         
-        return clearQuestionDetail
+        return clearDetailMutations
     }
     
     private func loadRecentPhotos(cursor: String?, isRefresh: Bool) -> Observable<Mutation> {
@@ -300,5 +321,39 @@ final class ArchiveReactor: Reactor {
         }
         
         return .concat([startLoading, fetchQuestionDetail])
+    }
+    
+    private func fetchPhotoDetail(date: String, targetId: Int?, targetType: String?) -> Observable<Mutation> {
+        let startLoading: Observable<Mutation> = .just(.setQuestionLoading(true))
+        
+        let fetchPhotoDetail: Observable<Mutation> = Observable.create { [weak self] observer in
+            guard let self = self else { return Disposables.create() }
+            
+            Task {
+                do {
+                    let data = try await self.fetchArchiveListUseCase.executePhotoDetail(
+                        date: date,
+                        targetId: targetId,
+                        targetType: targetType
+                    )
+                    
+                    await MainActor.run {
+                        observer.onNext(.setPhotoDetail(data))
+                        observer.onNext(.setQuestionLoading(false))
+                        observer.onCompleted()
+                    }
+                } catch {
+                    await MainActor.run {
+                        observer.onNext(.setError(error.localizedDescription))
+                        observer.onNext(.setQuestionLoading(false))
+                        observer.onCompleted()
+                    }
+                }
+            }
+            
+            return Disposables.create()
+        }
+        
+        return .concat([startLoading, fetchPhotoDetail])
     }
 }

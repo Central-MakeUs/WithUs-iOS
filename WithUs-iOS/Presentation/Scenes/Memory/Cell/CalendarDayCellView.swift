@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CalendarMonthCellView: View {
     let monthData: ArchiveCalendarResponse
-    let onDateTap: (Date) -> Void
+    let onDateTap: (String) -> Void
     
     private let weekdays = ["일", "월", "화", "수", "목", "금", "토"]
     
@@ -42,8 +42,8 @@ struct CalendarMonthCellView: View {
                     CalendarDayCellView(day: day)
                         .frame(height: 42)
                         .onTapGesture {
-                            if day.hasPhoto, let date = day.dateObject {
-                                onDateTap(date)
+                            if day.hasPhoto {
+                                onDateTap(day.date)
                             }
                         }
                 }

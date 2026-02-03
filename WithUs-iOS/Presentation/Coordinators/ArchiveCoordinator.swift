@@ -31,8 +31,8 @@ class ArchiveCoordinator: Coordinator {
         navigationController.setViewControllers([archiveViewController], animated: false)
     }
     
-    func showQuestionDetail(_ questionDetail: ArchiveQuestionDetailResponse) {
-        let vc = ArchiveDetailViewController(questionDetail: questionDetail)
+    func showQuestionDetail(_ type: ArchiveDetailType) {
+        let vc = ArchiveDetailViewController(detailType: type)
         vc.coordinator = self
         navigationController.pushViewController(vc, animated: true)
     }

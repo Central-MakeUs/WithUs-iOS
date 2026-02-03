@@ -13,6 +13,7 @@ enum FetchArchiveListEndPoint: EndpointProtocol {
     case fetchArchiveQuestionList(size: Int, cursor: String?)
     case fetchArchiveCalendar(year: Int, month: Int)
     case fetchQuestionDetail(coupleQuestionId: Int)
+    case fetchPhotoDetail(date: String, targetId: Int?, targetType: String?)
     
     var path: String {
         switch self {
@@ -24,12 +25,14 @@ enum FetchArchiveListEndPoint: EndpointProtocol {
             return "/api/me/couple/archives/questions"
         case .fetchQuestionDetail(let coupleQuestionId):
             return "/api/me/couple/archives/questions/\(coupleQuestionId)"
+        case .fetchPhotoDetail:
+            return "/api/me/couple/archives/date"
         }
     }
     
     var method: HTTPMethod {
         switch self {
-        case .fetchArchiveList, .fetchArchiveCalendar, .fetchArchiveQuestionList, .fetchQuestionDetail:
+        case .fetchArchiveList, .fetchArchiveCalendar, .fetchArchiveQuestionList, .fetchQuestionDetail, .fetchPhotoDetail:
                 .get
         }
     }
@@ -53,6 +56,16 @@ enum FetchArchiveListEndPoint: EndpointProtocol {
             return queryParams
         case .fetchQuestionDetail:
             return nil
+        case .fetchPhotoDetail(date: let date, targetId: let targetId, targetType: let targetType):
+            var queryParams: [String: String] = [
+                "date": "\(date)"
+            ]
+            
+            if let targetId, let targetType {
+                queryParams["targetId"] = "\(targetId)"
+                queryParams["targetType"] = "\(targetType)"
+            }
+            return queryParams
         }
     }
 }

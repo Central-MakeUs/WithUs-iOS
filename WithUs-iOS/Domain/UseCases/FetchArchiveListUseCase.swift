@@ -12,6 +12,7 @@ protocol FetchArchiveListUseCaseProtocol {
     func execute(year: Int, month: Int) async throws -> ArchiveCalendarResponse
     func executeList(size: Int, cursor: String?) async throws -> ArchiveQuestionListResponse
     func executeQuestionDetail(coupleQuestionId: Int) async throws -> ArchiveQuestionDetailResponse
+    func executePhotoDetail(date: String, targetId: Int?, targetType: String?) async throws -> ArchivePhotoDetailResponse
 }
 
 final class FetchArchiveListUseCase: FetchArchiveListUseCaseProtocol {
@@ -35,5 +36,9 @@ final class FetchArchiveListUseCase: FetchArchiveListUseCaseProtocol {
     
     func executeQuestionDetail(coupleQuestionId: Int) async throws -> ArchiveQuestionDetailResponse {
         return try await archiveService.fetchArchiveQuestionDetail(coupleQuestionId: coupleQuestionId)
+    }
+    
+    func executePhotoDetail(date: String, targetId: Int?, targetType: String?) async throws -> ArchivePhotoDetailResponse {
+        return try await archiveService.fetchArchivePhotoDetail(date: date, targetId: targetId, targetType: targetType)
     }
 }

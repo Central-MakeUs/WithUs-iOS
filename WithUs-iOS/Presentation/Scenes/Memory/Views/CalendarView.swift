@@ -11,7 +11,7 @@ import Then
 import SwiftUI
 
 protocol CalendarViewDelegate: AnyObject {
-    func calendarView(_ view: CalendarView, didSelectDate date: Date)
+    func calendarView(_ view: CalendarView, didSelectDate date: String)
 }
 
 class CalendarView: UIView {

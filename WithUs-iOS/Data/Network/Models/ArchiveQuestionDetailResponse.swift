@@ -15,6 +15,20 @@ struct ArchiveQuestionDetailResponse: Decodable {
     let partnerInfo: UserArchiveInfo
 }
 
+struct ArchivePhotoDetailResponse: Decodable {
+    let date: String
+    let archiveInfoList: [ArchiveInfo]
+}
+
+struct ArchiveInfo: Decodable {
+    let archiveType: String
+    let id: Int
+    let question: String
+    let myInfo: UserArchiveInfo
+    let partnerInfo: UserArchiveInfo
+    let selected: Bool
+}
+
 struct UserArchiveInfo: Decodable {
     let userId: Int
     let name: String
