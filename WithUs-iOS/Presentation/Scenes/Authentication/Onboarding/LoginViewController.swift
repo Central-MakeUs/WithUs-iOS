@@ -11,6 +11,7 @@ import Then
 import ReactorKit
 import RxSwift
 import RxCocoa
+import AuthenticationServices
 
 final class LoginViewController: BaseViewController, View {
     
@@ -38,12 +39,19 @@ final class LoginViewController: BaseViewController, View {
         $0.isEnabled = true
     }
     
-    private let appleButton = UIButton().then {
-        $0.setTitle("Apple로 시작하기", for: .normal)
-        $0.backgroundColor = UIColor.gray900
-        $0.layer.cornerRadius = 8
-        $0.isEnabled = true
-    }
+//    private let appleButton = UIButton().then {
+//        authorizationButtonType: .signIn,
+//        authorizationButtonStyle: .black
+//        $0.setTitle("Apple로 시작하기", for: .normal)
+//        $0.backgroundColor = UIColor.gray900
+//        $0.layer.cornerRadius = 8
+//        $0.isEnabled = true
+//    }
+    
+    let appleButton = ASAuthorizationAppleIDButton(
+        authorizationButtonType: .signIn,
+        authorizationButtonStyle: .black
+    )
     
     private let buttonStackView = UIStackView().then {
         $0.axis = .vertical
@@ -131,7 +139,7 @@ final class LoginViewController: BaseViewController, View {
     }
     
     @objc private func appleButtonTapped() {
-        performLogin()
+        startAppleLogin()
     }
     
     private func performLogin() {
@@ -147,4 +155,68 @@ final class LoginViewController: BaseViewController, View {
         alert.addAction(UIAlertAction(title: "확인", style: .default))
         present(alert, animated: true)
     }
+    
+    private func startAppleLogin() {
+        let provider = ASAuthorizationAppleIDProvider()
+        let request = provider.createRequest()
+        request.requestedScopes = [.fullName, .email]
+
+        let controller = ASAuthorizationController(authorizationRequests: [request])
+        controller.delegate = self
+        controller.presentationContextProvider = self
+        controller.performRequests()
+    }
+
 }
+
+extension LoginViewController: ASAuthorizationControllerDelegate {
+    func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithAuthorization authorization: ASAuthorization
+    ) {
+        guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+            return
+        }
+        
+        guard
+            let identityToken = credential.identityToken,
+            let identityTokenString = String(data: identityToken, encoding: .utf8)
+        else {
+            reactor?.action.onNext(.appleLogin(identityToken: ""))
+            return
+        }
+        let appleUserIdentifier = credential.user
+        let fullName = credential.fullName
+        let email = credential.email
+
+        UserManager.shared.appleUserIdentifier = appleUserIdentifier
+
+        if let email = email {
+            UserManager.shared.email = email
+        }
+
+        if let givenName = fullName?.givenName {
+            UserManager.shared.nickName = givenName
+        }
+        reactor?.action.onNext(.appleLogin(identityToken: identityTokenString))
+    }
+
+    func authorizationController(
+        controller: ASAuthorizationController,
+        didCompleteWithError error: Error
+    ) {
+        reactor?.action.onNext(
+            .appleLogin(identityToken: "")
+        )
+    }
+}
+
+extension LoginViewController: ASAuthorizationControllerPresentationContextProviding {
+    func presentationAnchor(
+        for controller: ASAuthorizationController
+    ) -> ASPresentationAnchor {
+        view.window!
+    }
+}
+
+

@@ -14,7 +14,7 @@ final class LoginReactor: Reactor {
         
     enum Action {
         case kakaoLogin
-        case appleLogin
+        case appleLogin(identityToken: String)
     }
     
     enum Mutation {
@@ -45,7 +45,8 @@ final class LoginReactor: Reactor {
         case .kakaoLogin:
             return kakaoLoginFlow()
             
-        case .appleLogin:
+        case .appleLogin(let token):
+            print(token)
             return .just(.setError("Apple 로그인은 준비 중입니다."))
         }
     }

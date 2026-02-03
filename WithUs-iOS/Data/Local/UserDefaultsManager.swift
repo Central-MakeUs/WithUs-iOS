@@ -22,8 +22,11 @@ final class UserDefaultsManager {
         static let nickname = "nickname"
         static let userId = "userId"
         static let profileImageUrl = "profileImageUrl"
-    
+
+        static let appleUserIdentifier = "appleUserIdentifier"
+        static let email = "email"
     }
+
     
     var nickname: String? {
         get {
@@ -102,6 +105,33 @@ final class UserDefaultsManager {
             }
         }
     }
+    
+    var appleUserIdentifier: String? {
+        get {
+            userDefaults.string(forKey: Keys.appleUserIdentifier)
+        }
+        set {
+            if let value = newValue {
+                userDefaults.set(value, forKey: Keys.appleUserIdentifier)
+            } else {
+                userDefaults.removeObject(forKey: Keys.appleUserIdentifier)
+            }
+        }
+    }
+
+    var email: String? {
+        get {
+            userDefaults.string(forKey: Keys.email)
+        }
+        set {
+            if let value = newValue {
+                userDefaults.set(value, forKey: Keys.email)
+            } else {
+                userDefaults.removeObject(forKey: Keys.email)
+            }
+        }
+    }
+
     
     func clearTokens() {
         accessToken = nil

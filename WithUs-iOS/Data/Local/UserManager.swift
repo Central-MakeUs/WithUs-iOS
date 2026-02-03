@@ -9,35 +9,33 @@ import Foundation
 
 final class UserManager {
     static let shared = UserManager()
-    
     private let storage = UserDefaultsManager.shared
-    
     private init() {}
-    
+
     var nickName: String? {
-        get {
-            return storage.nickname
-        }
-        set {
-            storage.nickname = newValue
-        }
+        get { storage.nickname }
+        set { storage.nickname = newValue }
     }
-    
+
     var userId: String? {
-        get {
-            return storage.userId
-        }
-        set {
-            storage.userId = newValue
-        }
+        get { storage.userId }
+        set { storage.userId = newValue }
     }
-    
+
     var profileImageUrl: String? {
-        get {
-            return storage.profileImageUrl
-        }
-        set {
-            storage.profileImageUrl = newValue
-        }
+        get { storage.profileImageUrl }
+        set { storage.profileImageUrl = newValue }
+    }
+
+    // Apple
+    var appleUserIdentifier: String? {
+        get { storage.appleUserIdentifier }
+        set { storage.appleUserIdentifier = newValue }
+    }
+
+    var email: String? {
+        get { storage.email }
+        set { storage.email = newValue }
     }
 }
+
