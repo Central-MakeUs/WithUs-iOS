@@ -242,8 +242,8 @@ final class TodayDailyReactor: Reactor {
                             try await self.pokePartnerUseCase.execute(id: partnerUserId)
                             observer.onNext(.pokeSuccess(true))
                         }
-                        observer.onCompleted()
                         observer.onNext(.pokeSuccess(false))
+                        observer.onCompleted()
                     } catch {
                         observer.onNext(.setError(error.localizedDescription))
                         observer.onCompleted()
