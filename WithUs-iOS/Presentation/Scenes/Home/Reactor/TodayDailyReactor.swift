@@ -13,7 +13,7 @@ import UIKit
 final class TodayDailyReactor: Reactor {
     enum Action {
         case viewWillAppear
-        case selectKeyword(coupleKeywordId: Int, index: Int)  // 키워드 탭 클릭
+        case selectKeyword(coupleKeywordId: Int, index: Int)
         case uploadKeywordImage(coupleKeywordId: Int, image: UIImage)
         case poke
     }
@@ -25,7 +25,6 @@ final class TodayDailyReactor: Reactor {
         case setTodayKeyword(TodayKeywordResponse)
         case setImageUploadSuccess(String)
         case setError(String)
-        case resetKeywordLoadState  // keywordService 이벤트 시 키워드 리스트 리셋
         case pokeSuccess(Bool)
     }
     
@@ -37,7 +36,6 @@ final class TodayDailyReactor: Reactor {
         var partnerUserId: Int?
         var uploadedImageUrl: String?
         var errorMessage: String?
-        var hasLoadedKeywords: Bool = false
         var pokeSuccess: Bool = false
     }
     
@@ -63,27 +61,10 @@ final class TodayDailyReactor: Reactor {
         self.pokePartnerUseCase = pokePartnerUseCase
     }
     
-    // keywordService 이벤트 발생 시 키워드 리스트 리셋 + 다시 로드
-    func transform(mutation: Observable<Mutation>) -> Observable<Mutation> {
-        let keywordResetMutation = keywordService.event
-            .map { _ in Mutation.resetKeywordLoadState }
-        
-        return Observable.merge(mutation, keywordResetMutation)
-    }
-    
     func mutate(action: Action) -> Observable<Mutation> {
         switch action {
         case .viewWillAppear:
-            if currentState.hasLoadedKeywords {
-                let currentIndex = currentState.selectedKeywordIndex
-                guard currentIndex < currentState.keywords.count,
-                      let coupleKeywordId = Int(currentState.keywords[currentIndex].id) else {
-                    return .empty()
-                }
-                return fetchTodayKeywordAsync(coupleKeywordId: coupleKeywordId)
-            } else {
-                return fetchCoupleKeywordsAndFirstKeywordData()
-            }
+            return refreshKeywordsAndData()
             
         case .selectKeyword(let coupleKeywordId, let index):
             return Observable.concat([
@@ -109,7 +90,6 @@ final class TodayDailyReactor: Reactor {
             
         case .setCoupleKeywords(let keywords):
             newState.keywords = keywords
-            newState.hasLoadedKeywords = true
             
         case .setSelectedKeywordIndex(let index):
             newState.selectedKeywordIndex = index
@@ -121,6 +101,7 @@ final class TodayDailyReactor: Reactor {
             if let partnerInfo = data.partnerInfo {
                 newState.partnerUserId = partnerInfo.userId
             }
+            
         case .setImageUploadSuccess(let imageKey):
             newState.uploadedImageUrl = imageKey
             newState.isLoading = false
@@ -129,11 +110,6 @@ final class TodayDailyReactor: Reactor {
             newState.isLoading = false
             newState.errorMessage = message
             
-        case .resetKeywordLoadState:
-            newState.hasLoadedKeywords = false
-            newState.keywords = []
-            newState.currentKeywordData = nil
-            newState.selectedKeywordIndex = 0
         case .pokeSuccess(let result):
             newState.pokeSuccess = result
         }
@@ -141,7 +117,7 @@ final class TodayDailyReactor: Reactor {
         return newState
     }
     
-    private func fetchCoupleKeywordsAndFirstKeywordData() -> Observable<Mutation> {
+    private func refreshKeywordsAndData() -> Observable<Mutation> {
         return Observable.concat([
             .just(.setLoading(true)),
             Observable.create { [weak self] observer in
@@ -152,13 +128,27 @@ final class TodayDailyReactor: Reactor {
                 
                 Task {
                     do {
-                        let keywords = try await self.fetchCoupleKeywordsUseCase.execute()
-                        observer.onNext(.setCoupleKeywords(keywords))
+                        let newKeywords = try await self.fetchCoupleKeywordsUseCase.execute()
+                        let oldKeywords = self.currentState.keywords
                         
-                        if let firstKeyword = keywords.first,
-                           let coupleKeywordId = Int(firstKeyword.id) {
-                            let data = try await self.fetchTodayKeywordUseCase.execute(coupleKeywordId: coupleKeywordId)
-                            observer.onNext(.setTodayKeyword(data))
+                        let isKeywordsChanged = !self.isKeywordsEqual(oldKeywords, newKeywords)
+                        
+                        observer.onNext(.setCoupleKeywords(newKeywords))
+                        
+                        if isKeywordsChanged {
+                            if let firstKeyword = newKeywords.first,
+                               let coupleKeywordId = Int(firstKeyword.id) {
+                                observer.onNext(.setSelectedKeywordIndex(0))
+                                let data = try await self.fetchTodayKeywordUseCase.execute(coupleKeywordId: coupleKeywordId)
+                                observer.onNext(.setTodayKeyword(data))
+                            }
+                        } else {
+                            let currentIndex = self.currentState.selectedKeywordIndex
+                            if currentIndex < newKeywords.count,
+                               let coupleKeywordId = Int(newKeywords[currentIndex].id) {
+                                let data = try await self.fetchTodayKeywordUseCase.execute(coupleKeywordId: coupleKeywordId)
+                                observer.onNext(.setTodayKeyword(data))
+                            }
                         }
                         
                         observer.onCompleted()
@@ -170,6 +160,12 @@ final class TodayDailyReactor: Reactor {
                 return Disposables.create()
             }
         ])
+    }
+    
+    private func isKeywordsEqual(_ old: [Keyword], _ new: [Keyword]) -> Bool {
+        guard old.count == new.count else { return false }
+        
+        return zip(old, new).allSatisfy { $0.id == $1.id }
     }
     
     private func fetchTodayKeywordAsync(coupleKeywordId: Int) -> Observable<Mutation> {
@@ -241,8 +237,8 @@ final class TodayDailyReactor: Reactor {
                         if let partnerUserId = self.currentState.partnerUserId {
                             try await self.pokePartnerUseCase.execute(id: partnerUserId)
                             observer.onNext(.pokeSuccess(true))
+                            observer.onNext(.pokeSuccess(false))
                         }
-                        observer.onNext(.pokeSuccess(false))
                         observer.onCompleted()
                     } catch {
                         observer.onNext(.setError(error.localizedDescription))

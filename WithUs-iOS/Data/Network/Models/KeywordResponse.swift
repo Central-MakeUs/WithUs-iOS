@@ -26,3 +26,23 @@ extension KeywordInfo {
         )
     }
 }
+
+struct SelectedKeywordResponse: Decodable {
+    let keywords: [SelectedKeywordInfo]
+}
+
+struct SelectedKeywordInfo: Decodable {
+    let keywordId: Int
+    let content: String
+    let isSelected: Bool
+}
+
+extension SelectedKeywordInfo {
+    func toDomain() -> Keyword {
+        return Keyword(
+            id: String(keywordId),
+            text: content,
+            displayOrder: 0
+        )
+    }
+}

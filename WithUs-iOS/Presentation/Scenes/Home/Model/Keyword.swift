@@ -12,12 +12,14 @@ struct Keyword: Hashable {
     let text: String
     let displayOrder: Int
     let isAddButton: Bool
+    let isSelected: Bool
     
-    init(id: String, text: String, displayOrder: Int = 0, isAddButton: Bool = false) {
+    init(id: String, text: String, displayOrder: Int = 0, isAddButton: Bool = false, isSelected: Bool = false) {
         self.id = id
         self.text = text
         self.displayOrder = displayOrder
         self.isAddButton = isAddButton
+        self.isSelected = isSelected
     }
     
     static func == (lhs: Keyword, rhs: Keyword) -> Bool {

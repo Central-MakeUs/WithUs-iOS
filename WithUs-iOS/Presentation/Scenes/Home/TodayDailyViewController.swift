@@ -113,9 +113,6 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
             .disposed(by: disposeBag)
         
         reactor.state.map { $0.keywords }
-            .distinctUntilChanged { lhs, rhs in
-                lhs.map { $0.id } == rhs.map { $0.id }
-            }
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] keywords in
                 self?.keywords = keywords

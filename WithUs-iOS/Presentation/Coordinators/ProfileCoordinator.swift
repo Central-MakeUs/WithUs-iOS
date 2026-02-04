@@ -17,6 +17,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     private let keywordService: KeywordEventServiceProtocol
     private let userStateUseCase: FetchUserStatusUseCaseProtocol
     private let cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
+    private let selectedKeywordUseCase: FetchSelectedKeywordUseCaseProtocol
     
     private let profileReactor: ProfileReactor
     
@@ -43,6 +44,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         )
         self.userStateUseCase = FetchUserStatusUseCase(repository: userStateRepository)
         self.cancleConnectUseCase = CoupleCancleConnectUseCase(repository: cancleRepositoyr)
+        self.selectedKeywordUseCase = FetchSelectedKeywordUseCase(keywordRepository: keywordRepository)
         
         //transform
         self.keywordService = keywordService
@@ -142,7 +144,11 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     
     
     func showKeywordModification() {
-        let keywordVC = ModifyKeywordViewController(fetchKeywordsUseCase: fetchKeywordsUseCase)
+        let keywordVC = ModifyKeywordViewController(
+            fetchKeywordsUseCase: fetchKeywordsUseCase,
+            fetchSelectedKeywordsUseCase: selectedKeywordUseCase,
+            entryPoint: .profile
+        )
         keywordVC.coordinator = self
         let reactor = KeywordSettingReactor(
             fetchCoupleKeywordsUseCase: fetchCoupleKeyUseCase,

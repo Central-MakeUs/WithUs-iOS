@@ -180,6 +180,7 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
         
         guard
             let identityToken = credential.identityToken,
+            let authorizationCode = credential.authorizationCode,
             let identityTokenString = String(data: identityToken, encoding: .utf8)
         else {
             reactor?.action.onNext(.appleLogin(identityToken: ""))
@@ -190,7 +191,6 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
         let email = credential.email
 
         UserManager.shared.appleUserIdentifier = appleUserIdentifier
-
         if let email = email {
             UserManager.shared.email = email
         }
@@ -200,6 +200,7 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
             
             UserManager.shared.fullName = familyName + givenName
         }
+        print(String(data: authorizationCode, encoding: .utf8))
         reactor?.action.onNext(.appleLogin(identityToken: identityTokenString))
     }
 

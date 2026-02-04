@@ -9,6 +9,7 @@ import Foundation
 
 protocol KeywordRepositoryProtocol {
     func fetchKeywords() async throws -> [Keyword]
+    func fetchSelectedKeywords() async throws -> [SelectedKeywordInfo]
 }
 
 final class KeywordRepository: KeywordRepositoryProtocol {
@@ -23,4 +24,11 @@ final class KeywordRepository: KeywordRepositoryProtocol {
         
         return try await networkService.request(endpoint: endpoint, responseType: KeywordResponse.self).keywordInfoList.sorted { $0.displayOrder < $1.displayOrder }.map { $0.toDomain() }
     }
+    
+    func fetchSelectedKeywords() async throws -> [SelectedKeywordInfo] {
+         let endpoint = KeywordEndpoint.selectedFetchKeyword
+         
+         return try await networkService.request(endpoint: endpoint, responseType: SelectedKeywordResponse.self)
+             .keywords
+     }
 }

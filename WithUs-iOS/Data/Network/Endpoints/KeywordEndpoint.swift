@@ -9,11 +9,17 @@ import Alamofire
 
 enum KeywordEndpoint {
     case fetchKeyword
+    case selectedFetchKeyword
 }
 
 extension KeywordEndpoint: EndpointProtocol {
     var path: String {
-        return "/api/keywords"
+        switch self {
+        case .fetchKeyword:
+            return "/api/keywords/default"
+        case .selectedFetchKeyword:
+            return "/api/me/couple/keywords/edit"
+        }
     }
     
     var method: Alamofire.HTTPMethod {

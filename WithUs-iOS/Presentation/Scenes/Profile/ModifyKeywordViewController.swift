@@ -16,12 +16,19 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     weak var coordinator: ProfileCoordinator?
     weak var homeCoordinator: HomeCoordinator?
     private let fetchKeywordsUseCase: FetchKeywordUseCaseProtocol
+    private let fetchSelectedKeywordsUseCase: FetchSelectedKeywordUseCaseProtocol
     var disposeBag: DisposeBag = DisposeBag()
     
     private var keywords: [Keyword] = []
     private var selectedKeywords: Set<String> = []
     private var serverKeywordIds: Set<Int> = []
     private var customKeywords: [String] = []
+    private let entryPoint: EntryPoint
+    
+    enum EntryPoint {
+        case home
+        case profile
+    }
     
     private let topLabelStackView = UIStackView().then {
         $0.axis = .vertical
@@ -59,9 +66,6 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     private let setupButton = UIButton().then {
         $0.setTitle("저장", for: .normal)
         $0.titleLabel?.font = UIFont.pretendard16SemiBold
-        $0.setTitleColor(.white, for: .normal)
-        $0.setTitleColor(.gray300, for: .disabled)
-        $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
         $0.isEnabled = false
     }
@@ -78,8 +82,14 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
         .background(Color.clear)
     }
     
-    init(fetchKeywordsUseCase: FetchKeywordUseCaseProtocol) {
+    init(
+        fetchKeywordsUseCase: FetchKeywordUseCaseProtocol,
+        fetchSelectedKeywordsUseCase: FetchSelectedKeywordUseCaseProtocol,
+        entryPoint: EntryPoint
+    ) {
         self.fetchKeywordsUseCase = fetchKeywordsUseCase
+        self.fetchSelectedKeywordsUseCase = fetchSelectedKeywordsUseCase
+        self.entryPoint = entryPoint
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -155,6 +165,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
         reactor.state.map { $0.isCompleted }
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] isCompleted in
+                
             })
             .disposed(by: disposeBag)
     }
@@ -171,24 +182,53 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     private func fetchKeywords() {
         Task {
             do {
-                let keywords = try await fetchKeywordsUseCase.execute()
-                
-                await MainActor.run { [weak self] in
-                    guard let self = self else { return }
-                    self.serverKeywordIds = Set(keywords.compactMap { Int($0.id) })
+                switch entryPoint {
+                case .home:
+                    let keywords = try await fetchKeywordsUseCase.execute()
                     
-                    self.keywords = keywords + [Keyword(
-                        id: "add_button",
-                        text: "새 키워드 추가",
-                        isAddButton: true
-                    )]
-                    self.collectionView.reloadData()
+                    await MainActor.run { [weak self] in
+                        guard let self = self else { return }
+                        self.serverKeywordIds = Set(keywords.compactMap { Int($0.id) })
+                        
+                        self.keywords = keywords + [Keyword(
+                            id: "add_button",
+                            text: "새 키워드 추가",
+                            isAddButton: true
+                        )]
+                        self.selectedKeywords = []
+                        self.collectionView.reloadData()
+                        self.updateSaveButtonState()
+                    }
+                    
+                case .profile:
+                    let selectedCellData = try await fetchSelectedKeywordsUseCase.execute()
+                    
+                    await MainActor.run { [weak self] in
+                        guard let self = self else { return }
+                        
+                        let keywords = selectedCellData.map { $0.keyword }
+                        self.serverKeywordIds = Set(keywords.compactMap { Int($0.id) })
+                        
+                        self.selectedKeywords = Set(
+                            selectedCellData
+                                .filter { $0.isSelected }
+                                .map { $0.keyword.id }
+                        )
+                        
+                        self.keywords = keywords + [Keyword(
+                            id: "add_button",
+                            text: "새 키워드 추가",
+                            isAddButton: true
+                        )]
+                        
+                        self.collectionView.reloadData()
+                        self.updateSaveButtonState()
+                    }
                 }
             } catch {
                 await MainActor.run { [weak self] in
                     guard let self = self else { return }
                     print("❌ 키워드 조회 실패: \(error.localizedDescription)")
-                    // TODO: 에러 처리 (예: 알럿 표시)
                 }
             }
         }
@@ -235,6 +275,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
         
         setupButton.isEnabled = isValid
         setupButton.backgroundColor = isValid ? UIColor.gray900 : UIColor.gray300
+        setupButton.setTitleColor(isValid ? UIColor.white : UIColor.gray500, for: .normal)
     }
 }
 

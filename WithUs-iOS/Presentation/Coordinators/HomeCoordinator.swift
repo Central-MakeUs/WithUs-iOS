@@ -14,68 +14,83 @@ class HomeCoordinator: Coordinator {
     private var inviteCoordinator: InviteCoordinator?
     weak var mainCoordinator: MainCoordinator?
     private let keywordService: KeywordEventServiceProtocol
-    private var keywordSettingReactor: KeywordSettingReactor?
     
-    init(navigationController: UINavigationController, keywordService: KeywordEventServiceProtocol) {
+    // Repositories
+    private let homeRepository: HomeRepositoryProtocol
+    private let coupleKeywordRepository: CoupleKeywordRepositoryProtocol
+    private let homeContentRepository: HomeContentRepositoryProtocol
+    private let imageRepository: ImageRepositoryProtocol
+    private let keywordRepository: KeywordRepositoryProtocol
+    private let pokeRepository: PokePartnerRepositoryProtocol
+    
+    // Use Cases
+    private let fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol
+    private let fetchCoupleKeywordsUseCase: FetchCoupleKeywordsUseCaseProtocol
+    private let fetchTodayQuestionUseCase: FetchTodayQuestionUseCaseProtocol
+    private let fetchTodayKeywordUseCase: FetchTodayKeywordUseCaseProtocol
+    private let uploadImageUseCase: UploadImageUseCaseProtocol
+    private let uploadQuestionImageUseCase: UploadQuestionImageUseCaseProtocol
+    private let uploadKeywordImageUseCase: UploadKeywordImageUseCaseProtocol
+    private let pokePartnerUseCase: PokePartnerUseCaseProtocol
+    private let fetchKeywordUseCase: FetchKeywordUseCaseProtocol
+    private let selectedKeywordUseCase: FetchSelectedKeywordUseCaseProtocol
+    
+    init(
+        navigationController: UINavigationController,
+        keywordService: KeywordEventServiceProtocol,
+        networkService: NetworkService = .shared
+    ) {
         self.navigationController = navigationController
         self.keywordService = keywordService
+        
+        // Repositories 초기화
+        self.homeRepository = HomeRepository(networkService: networkService)
+        self.coupleKeywordRepository = CoupleKeywordRepository(networkService: networkService)
+        self.homeContentRepository = HomeContentRepository(networkService: networkService)
+        self.imageRepository = ImageRepository(networkService: networkService)
+        self.keywordRepository = KeywordRepository(networkService: networkService)
+        self.pokeRepository = PokePartnerRepository(networkService: networkService)
+        
+        // Use Cases 초기화
+        self.fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
+        self.fetchCoupleKeywordsUseCase = FetchCoupleKeywordsUseCase(coupleKeywordRepository: coupleKeywordRepository)
+        self.fetchTodayQuestionUseCase = FetchTodayQuestionUseCase(repository: homeContentRepository)
+        self.fetchTodayKeywordUseCase = FetchTodayKeywordUseCase(repository: homeContentRepository)
+        
+        self.uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
+        self.uploadQuestionImageUseCase = UploadQuestionImageUseCase(
+            repository: homeContentRepository,
+            uploadImageUseCase: uploadImageUseCase
+        )
+        self.uploadKeywordImageUseCase = UploadKeywordImageUseCase(
+            repository: homeContentRepository,
+            uploadImageUseCase: uploadImageUseCase
+        )
+        self.pokePartnerUseCase = PokePartnerUseCase(pokeRepository: pokeRepository)
+        self.fetchKeywordUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
+        self.selectedKeywordUseCase = FetchSelectedKeywordUseCase(keywordRepository: keywordRepository)
     }
     
     func start() {
-        let networkService = NetworkService.shared
-        
-        // Repositories
-        let homeRepository = HomeRepository(networkService: networkService)
-        let coupleKeywordRepository = CoupleKeywordRepository(networkService: networkService)
-        let homeContentRepository = HomeContentRepository(networkService: networkService)
-        let imageRepository = ImageRepository(networkService: networkService)
-        let keywordRepository = KeywordRepository(networkService: networkService)
-        let pokeRepository = PokePartnerRepository(networkService: networkService)
-        
-        // Use Cases
-        let fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
-        let fetchCoupleKeywordsUseCase = FetchCoupleKeywordsUseCase(coupleKeywordRepository: coupleKeywordRepository)
-        let fetchTodayQuestionUseCase = FetchTodayQuestionUseCase(repository: homeContentRepository)
-        let fetchTodayKeywordUseCase = FetchTodayKeywordUseCase(repository: homeContentRepository)
-        let uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
-        
-        let uploadQuestionImageUseCase = UploadQuestionImageUseCase(
-            repository: homeContentRepository,
-            uploadImageUseCase: uploadImageUseCase
-        )
-        let uploadKeywordImageUseCase = UploadKeywordImageUseCase(
-            repository: homeContentRepository,
-            uploadImageUseCase: uploadImageUseCase
-        )
-        
-        let pokePartnerUseCase = PokePartnerUseCase(pokeRepository: pokeRepository)
-        
         // Reactors
         let todayQuestionReactor = TodayQuestionReactor(
             fetchTodayQuestionUseCase: fetchTodayQuestionUseCase,
-            uploadQuestionImageUseCase: uploadQuestionImageUseCase, pokePartnerUseCase: pokePartnerUseCase
+            uploadQuestionImageUseCase: uploadQuestionImageUseCase,
+            pokePartnerUseCase: pokePartnerUseCase
         )
         
         let todayDailyReactor = TodayDailyReactor(
             fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase,
             fetchTodayKeywordUseCase: fetchTodayKeywordUseCase,
             uploadKeywordImageUseCase: uploadKeywordImageUseCase,
-            keywordService: keywordService, pokePartnerUseCase: pokePartnerUseCase
+            keywordService: keywordService,
+            pokePartnerUseCase: pokePartnerUseCase
         )
-        
-        let keywordSettingReactor = KeywordSettingReactor(
-            fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase,
-            keywordService: keywordService
-        )
-        self.keywordSettingReactor = keywordSettingReactor
-        
         // HomePagerViewController 생성
         let homePagerVC = HomePagerViewController()
         homePagerVC.coordinator = self
         
         // 내부 Page VCs에 Reactor 주입
-        // HomePagerViewController의 lazy page VCs가 init될 때 coordinator가 이미 설정되어야 하므로
-        // coordinator 세팅 후 reactor를 직접 주입
         homePagerVC.injectReactors(
             questionReactor: todayQuestionReactor,
             dailyReactor: todayDailyReactor,
@@ -116,23 +131,27 @@ class HomeCoordinator: Coordinator {
     }
 
     func startInviteFlow(_ type: CodeType) {
-         let inviteCoord = InviteCoordinator(navigationController: navigationController, type: type)
-         inviteCoord.delegate = self
-         self.inviteCoordinator = inviteCoord
-         childCoordinators.append(inviteCoord)
-         inviteCoord.start()
-     }
+        let inviteCoord = InviteCoordinator(navigationController: navigationController, type: type)
+        inviteCoord.delegate = self
+        self.inviteCoordinator = inviteCoord
+        childCoordinators.append(inviteCoord)
+        inviteCoord.start()
+    }
     
     func showKeywordModification() {
-        guard let keywordSettingReactor = keywordSettingReactor else { return }
+        let reactor = KeywordSettingReactor(
+            fetchCoupleKeywordsUseCase: fetchCoupleKeywordsUseCase,
+            keywordService: keywordService
+        )
         
-        let networkService = NetworkService.shared
-        let keywordRepository = KeywordRepository(networkService: networkService)
-        let fetchKeywordsUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
-        let keywordVC = ModifyKeywordViewController(fetchKeywordsUseCase: fetchKeywordsUseCase)
+        let keywordVC = ModifyKeywordViewController(
+            fetchKeywordsUseCase: fetchKeywordUseCase,
+            fetchSelectedKeywordsUseCase: selectedKeywordUseCase,
+            entryPoint: .home
+        )
         
         keywordVC.homeCoordinator = self
-        keywordVC.reactor = keywordSettingReactor
+        keywordVC.reactor = reactor
         navigationController.pushViewController(keywordVC, animated: true)
     }
      
