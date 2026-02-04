@@ -12,7 +12,7 @@ import UIKit
 enum PhotoFilterType {
     case original
     case blackAndWhite
-
+    
     func apply(to image: UIImage) -> UIImage {
         switch self {
         case .original:
@@ -25,12 +25,9 @@ enum PhotoFilterType {
 
 class FilterSelectionViewController: BaseViewController {
     
-    // MARK: - Properties
-    
-    var selectedPhotos: [UIImage] = [] // PhotoSelectionViewController에서 받아옴
+    weak var coordinator: FourCutCoordinator?
+    var selectedPhotos: [UIImage] = []
     private var selectedFilter: PhotoFilterType = .original
-    
-    // MARK: - UI Components
     
     private let titleLabel = UILabel().then {
         $0.text = "필터를 선택해 주세요"
@@ -70,7 +67,7 @@ class FilterSelectionViewController: BaseViewController {
     
     private let originalButton = UIButton().then {
         $0.setTitle("원본", for: .normal)
-        $0.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        $0.titleLabel?.font = UIFont.pretendard18SemiBold
         $0.setTitleColor(.white, for: .normal)
         $0.backgroundColor = .black
         $0.layer.cornerRadius = 8
@@ -78,17 +75,13 @@ class FilterSelectionViewController: BaseViewController {
     
     private let blackWhiteButton = UIButton().then {
         $0.setTitle("흑백", for: .normal)
-        $0.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        $0.setTitleColor(.gray, for: .normal)
-        $0.backgroundColor = .white
+        $0.titleLabel?.font = UIFont.pretendard18SemiBold
+        $0.setTitleColor(UIColor.gray900, for: .normal)
+        $0.backgroundColor = UIColor.gray200
         $0.layer.cornerRadius = 8
-        $0.layer.borderWidth = 1
-        $0.layer.borderColor = UIColor.systemGray.withAlphaComponent(0.3).cgColor
     }
     
     private var photoImageViews: [UIImageView] = []
-    
-    // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -139,15 +132,23 @@ class FilterSelectionViewController: BaseViewController {
         }
         
         buttonStackView.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(40)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-40)
-            $0.height.equalTo(50)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-12)
+            $0.height.equalTo(56)
+        }
+        
+        originalButton.snp.makeConstraints {
+            $0.height.equalTo(56)
+        }
+        
+        blackWhiteButton.snp.makeConstraints {
+            $0.height.equalTo(56)
         }
         
         frameContainerView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(15)
             $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalTo(buttonStackView.snp.top).offset(-40)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-119)
         }
         
         topBar.snp.makeConstraints {
@@ -193,8 +194,6 @@ class FilterSelectionViewController: BaseViewController {
                     $0.backgroundColor = .white
                     $0.contentMode = .scaleAspectFill
                     $0.clipsToBounds = true
-                    $0.layer.borderWidth = 1
-                    $0.layer.borderColor = UIColor.black.cgColor
                 }
                 
                 photoImageViews.append(imageView)
@@ -204,8 +203,6 @@ class FilterSelectionViewController: BaseViewController {
             gridStackView.addArrangedSubview(rowStack)
         }
     }
-    
-    // MARK: - Display Photos
     
     private func displayPhotos() {
         for (index, imageView) in photoImageViews.enumerated() {
@@ -251,11 +248,7 @@ class FilterSelectionViewController: BaseViewController {
     }
     
     @objc private func checkButtonTapped() {
-        // 텍스트 입력 화면으로 이동
-        let textInputVC = TextInputViewController()
-        textInputVC.selectedPhotos = selectedPhotos
-        textInputVC.selectedFilter = selectedFilter
-        navigationController?.pushViewController(textInputVC, animated: true)
+        coordinator?.showTextInputSelection(selectedPhotos, selectedFilter: selectedFilter)
     }
     
     @objc private func originalButtonTapped() {

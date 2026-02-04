@@ -12,14 +12,14 @@ import UIKit
 class TextInputViewController: BaseViewController {
     
     // MARK: - Properties
-    
+    weak var coordinator: FourCutCoordinator?
     var selectedPhotos: [UIImage] = []
     var selectedFilter: PhotoFilterType = .original
     
     // MARK: - UI Components
     
     private let titleLabel = UILabel().then {
-        $0.text = "문구를 입력해 주세요"
+        $0.text = "원하는 문구를 작성할 수 있어요"
         $0.font = .systemFont(ofSize: 20, weight: .semibold)
         $0.textAlignment = .center
     }
@@ -53,15 +53,7 @@ class TextInputViewController: BaseViewController {
         $0.backgroundColor = .black
     }
     
-    private let dateLabel = UILabel().then {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy.MM.dd"
-        $0.text = formatter.string(from: Date())
-        $0.font = UIFont.pretendard10Regular
-        $0.textColor = .white
-    }
-    
-    private let withusLabel = UILabel().then {
+   private let withusLabel = UILabel().then {
         $0.text = "WITHUS"
         $0.font = UIFont.pretendard10Regular
         $0.textColor = .white
@@ -117,7 +109,6 @@ class TextInputViewController: BaseViewController {
         frameContainerView.addSubview(gridStackView)
         frameContainerView.addSubview(bottomBar)
         
-        bottomBar.addSubview(dateLabel)
         bottomBar.addSubview(withusLabel)
     }
     
@@ -128,15 +119,15 @@ class TextInputViewController: BaseViewController {
         }
         
         saveButton.snp.makeConstraints {
-            $0.leading.trailing.equalToSuperview().inset(40)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-40)
-            $0.height.equalTo(50)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-12)
+            $0.height.equalTo(56)
         }
         
         frameContainerView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(15)
             $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalTo(saveButton.snp.top).offset(-40)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-119)
         }
         
         topBar.snp.makeConstraints {
@@ -159,12 +150,7 @@ class TextInputViewController: BaseViewController {
             $0.leading.trailing.equalToSuperview().inset(8)
             $0.bottom.equalTo(bottomBar.snp.top)
         }
-        
-        dateLabel.snp.makeConstraints {
-            $0.leading.equalToSuperview().inset(8)
-            $0.bottom.equalToSuperview().inset(8)
-        }
-        
+
         withusLabel.snp.makeConstraints {
             $0.trailing.equalToSuperview().inset(8)
             $0.bottom.equalToSuperview().inset(8)
@@ -218,48 +204,9 @@ class TextInputViewController: BaseViewController {
     // MARK: - Keyboard Handling
     
     private func setupKeyboardNotifications() {
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(keyboardWillShow),
-            name: UIResponder.keyboardWillShowNotification,
-            object: nil
-        )
-        
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(keyboardWillHide),
-            name: UIResponder.keyboardWillHideNotification,
-            object: nil
-        )
-        
-        // 빈 화면 탭하면 키보드 내리기
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tapGesture.cancelsTouchesInView = false
         view.addGestureRecognizer(tapGesture)
-    }
-    
-    @objc private func keyboardWillShow(_ notification: Notification) {
-        guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
-        
-        let keyboardHeight = keyboardFrame.height
-        
-        saveButton.snp.updateConstraints {
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-keyboardHeight - 10)
-        }
-        
-        UIView.animate(withDuration: 0.3) {
-            self.view.layoutIfNeeded()
-        }
-    }
-    
-    @objc private func keyboardWillHide(_ notification: Notification) {
-        saveButton.snp.updateConstraints {
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-40)
-        }
-        
-        UIView.animate(withDuration: 0.3) {
-            self.view.layoutIfNeeded()
-        }
     }
     
     @objc private func dismissKeyboard() {
@@ -269,9 +216,20 @@ class TextInputViewController: BaseViewController {
     // MARK: - Actions
     
     @objc private func saveButtonTapped() {
-        // 최종 이미지 생성 및 저장
         let finalImage = captureFrameAsImage()
-        saveImageToPhotoLibrary(finalImage)
+//        saveImageToPhotoLibrary(finalImage)
+        
+        CustomAlertViewController
+            .showWithCancel(
+                on: self,
+                title: "수정을 종료하시겠어요?",
+                message: "나가면 변경 내용이 사라질 수 있어요.\n저장이 되었는지 꼭 확인해 주세요.",
+                confirmTitle: "종료하기",
+                cancelTitle: "취소",
+                confirmAction: { [weak self] in
+                    self?.coordinator?.showFourcutConfirm(finalImage)
+                }
+            )
     }
     
     @objc private func textFieldDidChange() {

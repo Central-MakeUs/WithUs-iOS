@@ -19,12 +19,10 @@ class FrameSelectionViewController: BaseViewController {
         $0.textAlignment = .center
     }
     
-    // 프레임 컨테이너 (검은 배경)
     private let frameContainerView = UIView().then {
         $0.backgroundColor = .black
     }
     
-    // 상단 바
     private let topBar = UIView().then {
         $0.backgroundColor = .black
     }
@@ -35,7 +33,6 @@ class FrameSelectionViewController: BaseViewController {
         $0.spacing = 6
     }
     
-    // 하단 바
     private let bottomBar = UIView().then {
         $0.backgroundColor = .black
     }
@@ -48,7 +45,7 @@ class FrameSelectionViewController: BaseViewController {
     
     private let buttonStackView = UIStackView().then {
         $0.axis = .horizontal
-        $0.distribution = .fillEqually
+        $0.distribution = .fill
         $0.spacing = 18
     }
     
@@ -120,8 +117,8 @@ class FrameSelectionViewController: BaseViewController {
         }
         
         buttonStackView.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
             $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-12)
+            $0.centerX.equalToSuperview()
             $0.height.equalTo(54)
         }
         
@@ -136,9 +133,8 @@ class FrameSelectionViewController: BaseViewController {
         frameContainerView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(15)
             $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalTo(buttonStackView.snp.top).offset(-53)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-119)
         }
-        
         
         topBar.snp.makeConstraints {
             $0.top.leading.trailing.equalToSuperview()
@@ -171,27 +167,18 @@ class FrameSelectionViewController: BaseViewController {
             rowStack.spacing = 6
             
             for col in 0..<2 {
-                let index = row * 2 + col
-                
                 let imageView = UIImageView().then {
-                    $0.backgroundColor = .lightGray   // 테스트용
+                    $0.backgroundColor = .white
                     $0.contentMode = .scaleAspectFill
                     $0.clipsToBounds = true
-                    $0.layer.borderWidth = index == 0 ? 2 : 1
-                    $0.layer.borderColor = index == 0
-                    ? UIColor.systemBlue.cgColor
-                    : UIColor.black.cgColor
                 }
-                
                 rowStack.addArrangedSubview(imageView)
             }
-            
             gridStackView.addArrangedSubview(rowStack)
         }
     }
     
     @objc private func checkButtonTapped() {
-        let photoSelectionVC = PhotoSelectionViewController()
-        navigationController?.pushViewController(photoSelectionVC, animated: true)
+        coordinator?.showPhotoSelection()
     }
 }

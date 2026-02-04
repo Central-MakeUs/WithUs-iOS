@@ -27,6 +27,34 @@ class FourCutCoordinator: Coordinator {
         self.navigationController.pushViewController(vc, animated: true)
     }
     
+    func showPhotoSelection() {
+        let vc = PhotoSelectionViewController()
+        vc.coordinator = self
+        self.navigationController.pushViewController(vc, animated: true)
+    }
+    
+    func showFilterSelection(_ photos: [UIImage]) {
+        let filterVC = FilterSelectionViewController()
+        filterVC.selectedPhotos = photos
+        filterVC.coordinator = self
+        navigationController.pushViewController(filterVC, animated: true)
+    }
+    
+    func showTextInputSelection(_ selectedPhotos: [UIImage], selectedFilter: PhotoFilterType) {
+        let textInputVC = TextInputViewController()
+        textInputVC.selectedPhotos = selectedPhotos
+        textInputVC.selectedFilter = selectedFilter
+        textInputVC.coordinator = self
+        navigationController.pushViewController(textInputVC, animated: true)
+    }
+    
+    func showFourcutConfirm(_ image: UIImage) {
+        let vc = FourCutConfirmViewController()
+        vc.coordinator = self
+        vc.fourcut = image
+        navigationController.pushViewController(vc, animated: true)
+    }
+    
     func finish() {
         
     }

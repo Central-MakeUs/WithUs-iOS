@@ -13,13 +13,10 @@ import AVFoundation
 
 class PhotoSelectionViewController: BaseViewController {
     
-    // MARK: - Properties
-    
-    private var selectedPhotos: [Int: UIImage] = [:] // index: image
+    weak var coordinator: FourCutCoordinator?
+    private var selectedPhotos: [Int: UIImage] = [:]
     private var selectedImageViewIndex: Int?
     private var photoImageViews: [UIImageView] = []
-    
-    // MARK: - UI Components
     
     private let titleLabel = UILabel().then {
         $0.text = "사진을 선택해주세요"
@@ -143,10 +140,8 @@ class PhotoSelectionViewController: BaseViewController {
                 
                 let imageView = UIImageView().then {
                     $0.backgroundColor = .white
-                    $0.contentMode = .scaleAspectFill  // ✅ 이게 맞음! (짧은 쪽 기준 맞춤)
+                    $0.contentMode = .scaleAspectFill
                     $0.clipsToBounds = true
-                    $0.layer.borderWidth = 1
-                    $0.layer.borderColor = UIColor.black.cgColor
                     $0.isUserInteractionEnabled = true
                     $0.tag = index
                 }
@@ -162,29 +157,21 @@ class PhotoSelectionViewController: BaseViewController {
         }
     }
     
-    // MARK: - Actions
-    
     @objc private func closeButtonTapped() {
         navigationController?.popViewController(animated: true)
     }
     
     @objc private func checkButtonTapped() {
         let photos: [UIImage] = (0..<4).compactMap { selectedPhotos[$0] }
-        
-        let filterVC = FilterSelectionViewController()
-        filterVC.selectedPhotos = photos
-        navigationController?.pushViewController(filterVC, animated: true)
+        coordinator?.showFilterSelection(photos)
     }
     
     @objc private func imageViewTapped(_ gesture: UITapGestureRecognizer) {
         guard let imageView = gesture.view as? UIImageView else { return }
         selectedImageViewIndex = imageView.tag
         
-        updateImageViewBorders()
         showPhotoSelectionOptions()
     }
-    
-    // MARK: - Photo Selection
     
     private func showPhotoSelectionOptions() {
         let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
@@ -253,7 +240,7 @@ class PhotoSelectionViewController: BaseViewController {
         
         let picker = UIImagePickerController()
         picker.sourceType = sourceType
-        picker.allowsEditing = false  // edit 기능 제거
+        picker.allowsEditing = false
         picker.delegate = self
         present(picker, animated: true)
     }
@@ -275,27 +262,23 @@ class PhotoSelectionViewController: BaseViewController {
         present(alert, animated: true)
     }
     
-    // MARK: - UI Updates
-    
-    private func updateImageViewBorders() {
-        for (index, imageView) in photoImageViews.enumerated() {
-            if index == selectedImageViewIndex {
-                imageView.layer.borderWidth = 2
-                imageView.layer.borderColor = UIColor.systemBlue.cgColor
-            } else {
-                imageView.layer.borderWidth = 1
-                imageView.layer.borderColor = UIColor.black.cgColor
-            }
-        }
-    }
+//    private func updateImageViewBorders() {
+//        for (index, imageView) in photoImageViews.enumerated() {
+//            if index == selectedImageViewIndex {
+//                imageView.layer.borderWidth = 2
+//                imageView.layer.borderColor = UIColor.systemBlue.cgColor
+//            } else {
+//                imageView.layer.borderWidth = 1
+//                imageView.layer.borderColor = UIColor.black.cgColor
+//            }
+//        }
+//    }
     
     private func updateCheckButton() {
         let allPhotosFilled = selectedPhotos.count == 4
         navigationItem.rightBarButtonItem?.isEnabled = allPhotosFilled
     }
 }
-
-// MARK: - UIImagePickerControllerDelegate
 
 extension PhotoSelectionViewController: UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
@@ -310,17 +293,12 @@ extension PhotoSelectionViewController: UIImagePickerControllerDelegate, UINavig
             return
         }
         
-        // ✅ 크롭 없이 원본 이미지 그대로 사용
-        // scaleAspectFill + clipsToBounds가 알아서 처리함
         selectedPhotos[selectedIndex] = originalImage
         photoImageViews[selectedIndex].image = originalImage
         
-        // 다음 빈 칸으로 자동 이동
-        if let nextEmptyIndex = (0..<4).first(where: { selectedPhotos[$0] == nil }) {
-            selectedImageViewIndex = nextEmptyIndex
-            updateImageViewBorders()
-        }
-        
+//        if let nextEmptyIndex = (0..<4).first(where: { selectedPhotos[$0] == nil }) {
+//            selectedImageViewIndex = nextEmptyIndex
+//        }
         updateCheckButton()
     }
     
