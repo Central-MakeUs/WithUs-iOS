@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		931830DF2F330CC1007044E4 /* CoupleCancleConnectRepository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931830DE2F330CC1007044E4 /* CoupleCancleConnectRepository.swift */; };
 		937F78902F220506003AF107 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 937F788F2F220506003AF107 /* Kingfisher */; };
 		93B4F71A2F1F989F006706EC /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 93B4F7192F1F989F006706EC /* FirebaseAnalytics */; };
 		93B4F71C2F1F989F006706EC /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 93B4F71B2F1F989F006706EC /* FirebaseMessaging */; };
@@ -41,6 +42,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		931830DE2F330CC1007044E4 /* CoupleCancleConnectRepository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoupleCancleConnectRepository.swift; sourceTree = "<group>"; };
 		999F3E1F2F04E5D1002119DE /* WithUs-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "WithUs-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		999F3E352F04E5D4002119DE /* WithUs-iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WithUs-iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		999F3E3F2F04E5D4002119DE /* WithUs-iOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "WithUs-iOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -119,6 +121,7 @@
 		999F3E162F04E5D1002119DE = {
 			isa = PBXGroup;
 			children = (
+				931830DE2F330CC1007044E4 /* CoupleCancleConnectRepository.swift */,
 				999F3E212F04E5D1002119DE /* WithUs-iOS */,
 				999F3E382F04E5D4002119DE /* WithUs-iOSTests */,
 				999F3E422F04E5D4002119DE /* WithUs-iOSUITests */,
@@ -327,6 +330,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				931830DF2F330CC1007044E4 /* CoupleCancleConnectRepository.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

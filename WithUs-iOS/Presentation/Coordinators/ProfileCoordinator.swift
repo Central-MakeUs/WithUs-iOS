@@ -15,6 +15,8 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     private let updateProfileuseCase: UpdateCompleteProfileUseCase
     private let uploadImageUseCase: UploadImageUseCaseProtocol
     private let keywordService: KeywordEventServiceProtocol
+    private let userStateUseCase: FetchUserStatusUseCaseProtocol
+    private let cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
     
     private let profileReactor: ProfileReactor
     
@@ -28,6 +30,8 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         let coupleKeywordRepository = CoupleKeywordRepository(networkService: networkService)
         let updateRepository = UpdateUserRepository(networdService: networkService)
         let imageRepository = ImageRepository(networkService: networkService)
+        let userStateRepository = HomeRepository(networkService: networkService)
+        let cancleRepositoyr = CoupleCancleConnectRepository(networkService: networkService)
 
         //usecase
         self.uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
@@ -37,15 +41,23 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
             uploadImageUseCase: uploadImageUseCase,
             updateUserRepository: updateRepository
         )
+        self.userStateUseCase = FetchUserStatusUseCase(repository: userStateRepository)
+        self.cancleConnectUseCase = CoupleCancleConnectUseCase(repository: cancleRepositoyr)
+        
         //transform
         self.keywordService = keywordService
         
         //reactor
-        self.profileReactor = ProfileReactor(completeProfileUseCase: updateProfileuseCase)
+        self.profileReactor = ProfileReactor(
+            completeProfileUseCase: updateProfileuseCase,
+            fetchUserStatusUseCase: userStateUseCase,
+            cancleConnectUseCase: cancleConnectUseCase
+        )
     }
     
     func start() {
         let profileViewController = ProfileViewController()
+        profileViewController.reactor = profileReactor
         profileViewController.coordinator = self
         navigationController.setViewControllers([profileViewController], animated: false)
     }
@@ -92,17 +104,24 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     // CancleNotificationViewController 표시
     func showCancleNotification(onDisconnectComplete: (() -> Void)? = nil) {
         let notificationVC = CancleNotificationViewController()
+        notificationVC.reactor = profileReactor
         notificationVC.coordinator = self
         notificationVC.onDisconnectComplete = onDisconnectComplete
         navigationController.pushViewController(notificationVC, animated: true)
     }
     
-    func handleDisconnectComplete(onComplete: @escaping () -> Void) {
+    func handleDisconnectAndWithdrawal(onComplete: @escaping () -> Void) {
         if let withdrawalVC = navigationController.viewControllers.first(where: { $0 is WithdrawalViewController }) {
             navigationController.popToViewController(withdrawalVC, animated: true)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 onComplete()
             }
+        }
+    }
+    
+    func handleDisconnect() {
+        if let profileVC = navigationController.viewControllers.first(where: { $0 is ProfileViewController }) {
+            navigationController.popToViewController(profileVC, animated: true)
         }
     }
     

@@ -12,11 +12,13 @@ import UIKit
 final class ProfileReactor: Reactor {
 
     enum Action {
+        case viewWillAppear
         case selectImage(Data)
         case updateNickname(String)
         case updateBirthDate(String)
         case saveProfile(nickname: String, birthDate: String, image: UIImage?)
         case completeProfile
+        case cancleConnect
     }
     
     enum Mutation {
@@ -25,8 +27,10 @@ final class ProfileReactor: Reactor {
         case setBirthDate(String)
         case setLoading(Bool)
         case setUser(User)
+        case setUserStatus(OnboardingStatus)
         case setSuccess
         case setError(String)
+        case cancleSuccess
     }
     
     struct State {
@@ -37,13 +41,23 @@ final class ProfileReactor: Reactor {
         var isLoading: Bool = false
         var isCompleted: Bool = false
         var errorMessage: String?
+        var userStatus: OnboardingStatus?
+        var cancleSuccess: Bool = false
     }
     
     var initialState: State = .init()
     private let completeProfileUseCase: CompleteProfileUseCaseProtocol
+    private let fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol
+    private let cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
     
-    init(completeProfileUseCase: CompleteProfileUseCaseProtocol) {
+    init(
+        completeProfileUseCase: CompleteProfileUseCaseProtocol,
+        fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol,
+        cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
+    ) {
         self.completeProfileUseCase = completeProfileUseCase
+        self.fetchUserStatusUseCase = fetchUserStatusUseCase
+        self.cancleConnectUseCase = cancleConnectUseCase
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
@@ -68,6 +82,10 @@ final class ProfileReactor: Reactor {
             
         case .updateBirthDate(let birthDate):
             return .just(.setBirthDate(birthDate))
+        case .viewWillAppear:
+            return fetchUserStatus()
+        case .cancleConnect:
+            return cancleConnect()
         }
     }
     
@@ -97,6 +115,12 @@ final class ProfileReactor: Reactor {
             
         case .setUser(let user):
             newState.user = user
+            
+        case .setUserStatus(let status):
+            newState.userStatus = status
+            
+        case .cancleSuccess:
+            newState.cancleSuccess = true
         }
         
         return newState
@@ -135,6 +159,74 @@ final class ProfileReactor: Reactor {
                         
                     } catch {
                         observer.onNext(.setError("프로필 설정에 실패했습니다."))
+                        observer.onCompleted()
+                    }
+                }
+                
+                return Disposables.create()
+            }
+        )
+    }
+    
+    private func fetchUserStatus() -> Observable<Mutation> {
+        return Observable.concat(
+            .just(.setLoading(true)),
+            
+            Observable.create { [weak self] observer in
+                guard let self = self else {
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                
+                Task { @MainActor in
+                    do {
+                        let result = try await self.fetchUserStatusUseCase.execute()
+                        observer.onNext(.setUserStatus(result))
+                        observer.onCompleted()
+                    } catch let error as UploadImageError {
+                        observer.onNext(.setError(error.message))
+                        observer.onCompleted()
+                        
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
+                        observer.onCompleted()
+                        
+                    } catch {
+                        observer.onNext(.setError("프로필 설정에 실패했습니다."))
+                        observer.onCompleted()
+                    }
+                }
+                
+                return Disposables.create()
+            }
+        )
+    }
+    
+    private func cancleConnect() -> Observable<Mutation> {
+        return Observable.concat(
+            .just(.setLoading(true)),
+            
+            Observable.create { [weak self] observer in
+                guard let self = self else {
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                
+                Task { @MainActor in
+                    do {
+                        try await self.cancleConnectUseCase.execute()
+                        observer.onNext(.cancleSuccess)
+                        observer.onCompleted()
+                    } catch let error as UploadImageError {
+                        observer.onNext(.setError(error.message))
+                        observer.onCompleted()
+                        
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
+                        observer.onCompleted()
+                        
+                    } catch {
+                        observer.onNext(.setError("연결 해제에 실패했습니다."))
                         observer.onCompleted()
                     }
                 }

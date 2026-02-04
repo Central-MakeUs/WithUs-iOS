@@ -49,4 +49,9 @@ final class UpdateCompleteProfileUseCase: CompleteProfileUseCaseProtocol {
         
         return User(from: response)
     }
+    
+    func execute() async throws -> User {
+        let response = try await updateUserRepository.getProfile()
+        return User(from: response)
+    }
 }

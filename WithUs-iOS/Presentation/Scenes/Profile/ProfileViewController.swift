@@ -9,10 +9,12 @@ import UIKit
 import SnapKit
 import Then
 import SwiftUI
+import ReactorKit
+import RxSwift
 
-final class ProfileViewController: BaseViewController {
+final class ProfileViewController: BaseViewController, ReactorKit.View {
     weak var coordinator: ProfileCoordinator?
-    private var isConnected: Bool = false
+    var disposeBag: DisposeBag = DisposeBag()
     
     private let profileView = UIView().then {
         $0.backgroundColor = .white
@@ -75,6 +77,18 @@ final class ProfileViewController: BaseViewController {
         return collectionView
     }()
     
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupCellRegistration()
+    }
+    
+    func bind(reactor: ProfileReactor) {
+        rx.viewWillAppear
+            .map { _ in Reactor.Action.viewWillAppear }
+            .bind(to: reactor.action)
+            .disposed(by: disposeBag)
+    }
+    
     struct SettingItem {
         let title: String
         let id: MyProfileCategory
@@ -109,10 +123,7 @@ final class ProfileViewController: BaseViewController {
     private var cellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, SettingItem>!
     private var headerRegistration: UICollectionView.SupplementaryRegistration<UICollectionViewCell>!
     
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        setupCellRegistration()
-    }
+
     
     private func setupCellRegistration() {
         cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, SettingItem> { cell, indexPath, item in
@@ -274,10 +285,13 @@ extension ProfileViewController: UICollectionViewDelegate {
         case .account:
             self.coordinator?.showAccountModification()
         case .connect:
-            if isConnected {
+            guard let status = reactor?.currentState.userStatus else { return }
+            if status == .completed {
                 self.coordinator?.showCancleConnect()
-            } else {
+            } else if status == .needCoupleConnect {
                 self.coordinator?.showConnectCoupleFlow()
+            } else {
+                ToastView.show(message: "회원가입을 진행해주세요.", icon: nil, position: .bottom)
             }
         default:
             break

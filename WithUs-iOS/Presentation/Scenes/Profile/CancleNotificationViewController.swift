@@ -6,11 +6,13 @@
 import UIKit
 import SnapKit
 import Then
+import ReactorKit
+import RxSwift
 
-final class CancleNotificationViewController: BaseViewController {
-    
+final class CancleNotificationViewController: BaseViewController, ReactorKit.View {
     weak var coordinator: ProfileCoordinator?
     var onDisconnectComplete: (() -> Void)? // 연결 해제 완료 후 실행할 클로저
+    var disposeBag: DisposeBag = DisposeBag()
     
     // MARK: - UI Components
     private let titleLabel = UILabel().then {
@@ -257,6 +259,17 @@ final class CancleNotificationViewController: BaseViewController {
         disconnectButton.addTarget(self, action: #selector(disconnectButtonTapped), for: .touchUpInside)
     }
     
+    func bind(reactor: ProfileReactor) {
+        reactor.state.map { $0.cancleSuccess }
+            .distinctUntilChanged()
+            .filter({ $0 })
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] _ in
+                self?.showDisconnectSuccessAlert()
+            })
+            .disposed(by: disposeBag)
+    }
+    
     @objc private func cancelButtonTapped() {
         navigationController?.popViewController(animated: true)
     }
@@ -266,13 +279,7 @@ final class CancleNotificationViewController: BaseViewController {
     }
     
     private func performDisconnect() {
-        // TODO: 서버에 연결 해제 요청
-        // reactor?.action.onNext(.disconnectPartner)
-        
-        // 임시: 바로 성공했다고 가정
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.showDisconnectSuccessAlert()
-        }
+        reactor?.action.onNext(.cancleConnect)
     }
     
     private func showDisconnectSuccessAlert() {
@@ -287,9 +294,9 @@ final class CancleNotificationViewController: BaseViewController {
             
             if let onDisconnectComplete = self.onDisconnectComplete {
                 // 회원 탈퇴 플로우: CancleConnectViewController까지 pop 후 다음 화면으로
-                self.coordinator?.handleDisconnectComplete(onComplete: onDisconnectComplete)
+                self.coordinator?.handleDisconnectAndWithdrawal(onComplete: onDisconnectComplete)
             } else {
-                
+                self.coordinator?.handleDisconnect()
             }
         })
         

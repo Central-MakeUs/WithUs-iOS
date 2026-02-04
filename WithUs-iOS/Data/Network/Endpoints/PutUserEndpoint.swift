@@ -12,12 +12,15 @@ enum PutUserEndpoint {
     case updateProfile(nickname: String,
                        birthday: String,
                        imageKey: String?)
+    case getProfile
 }
 
 extension PutUserEndpoint: EndpointProtocol {
     var path: String {
         switch self {
         case .updateProfile:
+            return "/api/me/user/profile"
+        case .getProfile:
             return "/api/me/user/profile"
         }
     }
@@ -26,6 +29,8 @@ extension PutUserEndpoint: EndpointProtocol {
         switch self {
         case .updateProfile:
             return .put
+        case .getProfile:
+            return .get
         }
     }
     
@@ -40,6 +45,8 @@ extension PutUserEndpoint: EndpointProtocol {
                 params["imageKey"] = imageKey
             }
             return params
+        case .getProfile:
+            return nil
         }
     }
 }
