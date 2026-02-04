@@ -20,11 +20,25 @@ final class UserDefaultsManager {
         static let refreshToken = "refreshToken"
         static let fcmToken = "fcmToken"
         static let nickname = "nickname"
+        static let fullName = "fullName"
         static let userId = "userId"
         static let profileImageUrl = "profileImageUrl"
 
         static let appleUserIdentifier = "appleUserIdentifier"
         static let email = "email"
+    }
+
+    var fullName: String? {
+        get {
+            return userDefaults.string(forKey: Keys.fullName)
+        }
+        set {
+            if let nickname = newValue {
+                userDefaults.set(nickname, forKey: Keys.fullName)
+            } else {
+                userDefaults.removeObject(forKey: Keys.fullName)
+            }
+        }
     }
 
     

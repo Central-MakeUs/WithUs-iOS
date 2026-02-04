@@ -12,6 +12,11 @@ final class UserManager {
     private let storage = UserDefaultsManager.shared
     private init() {}
 
+    var fullName: String? {
+        get { storage.fullName }
+        set { storage.fullName = newValue }
+    }
+    
     var nickName: String? {
         get { storage.nickname }
         set { storage.nickname = newValue }

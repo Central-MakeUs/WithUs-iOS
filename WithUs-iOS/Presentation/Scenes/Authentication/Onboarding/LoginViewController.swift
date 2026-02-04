@@ -195,8 +195,10 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
             UserManager.shared.email = email
         }
 
-        if let givenName = fullName?.givenName {
-            UserManager.shared.nickName = givenName
+        if let familyName = fullName?.familyName,
+            let givenName = fullName?.givenName {
+            
+            UserManager.shared.fullName = familyName + givenName
         }
         reactor?.action.onNext(.appleLogin(identityToken: identityTokenString))
     }
