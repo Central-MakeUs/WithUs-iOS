@@ -15,6 +15,12 @@ class FourCutViewController: BaseViewController {
     private let makeControl = MakeMemoryControl().then {
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 16
+        $0.addShadow(
+            color: .black,
+            opacity: 0.12,
+            offset: CGSize(width: 6, height: 6),
+            radius: 4
+        )
     }
     
     private let dateLabel = UILabel().then {
@@ -86,9 +92,7 @@ class FourCutViewController: BaseViewController {
     }
     
     @objc private func toggleTapped() {
-        let vc = MemoryDateSelectBottomSheetViewController()
-        vc.modalPresentationStyle = .overFullScreen
-        self.present(vc, animated: true)
+        self.coordinator?.showDateSelectionBottomSheet()
     }
     
     @objc private func didAddButtonTapped() {

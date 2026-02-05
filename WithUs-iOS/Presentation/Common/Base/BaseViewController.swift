@@ -59,9 +59,9 @@ class BaseViewController: UIViewController {
         
         let barButtonItem = UIBarButtonItem(customView: button)
         navigationItem.leftBarButtonItem = barButtonItem
-        if #available(iOS 26.0, *) {
-          navigationItem.leftBarButtonItem?.hidesSharedBackground = true
-        }
+//        if #available(iOS 26.0, *) {
+//          navigationItem.leftBarButtonItem?.hidesSharedBackground = true
+//        }
     }
     
     /// 네비게이션 바 오른쪽에 버튼 추가
@@ -103,9 +103,9 @@ class BaseViewController: UIViewController {
         
         let barButtonItem = UIBarButtonItem(customView: button)
         navigationItem.rightBarButtonItem = barButtonItem
-        if #available(iOS 26.0, *) {
-          navigationItem.rightBarButtonItem?.hidesSharedBackground = true
-        }
+//        if #available(iOS 26.0, *) {
+//          navigationItem.rightBarButtonItem?.hidesSharedBackground = true
+//        }
     }
     
     func setCenterLogo(image: UIImage?, width: CGFloat? = nil, height: CGFloat = 20) {

@@ -10,10 +10,6 @@ import UIKit
 import SnapKit
 import Then
 
-protocol MemoryDateSelectDelegate: AnyObject {
-    
-}
-
 final class MemoryDateSelectBottomSheetViewController: BaseViewController {
     
     private var viewTranslation = CGPoint(x: 0, y: 0)
@@ -31,6 +27,40 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
     private let barView = UIView().then {
         $0.backgroundColor = .black
         $0.layer.cornerRadius = 3
+    }
+    
+    private let leftArrowButton = UIButton().then {
+        $0.contentMode = .scaleAspectFit
+        $0.setImage(UIImage(named: "ic_left_arrow"), for: .normal)
+    }
+    
+    private let rightArrowButton = UIButton().then {
+        $0.contentMode = .scaleAspectFit
+        $0.setImage(UIImage(named: "ic_right_arrow"), for: .normal)
+    }
+    
+    private let selectedLabel = UILabel().then {
+        $0.font = UIFont.pretendard16SemiBold
+        $0.text = "2026년"
+        $0.textColor = UIColor.gray900
+    }
+    
+    private let selectedDateStackView = UIStackView().then {
+        $0.axis = .horizontal
+        $0.distribution = .equalSpacing
+        $0.alignment = .center
+    }
+    
+    private lazy var monthCollectionView = MonthCollectionView().then {
+        $0.delegate = self
+    }
+    
+    private let selectButton = UIButton().then {
+        $0.setTitle("날짜 선택", for: .normal)
+        $0.titleLabel?.font = UIFont.pretendard16SemiBold
+        $0.setTitleColor(.white, for: .normal)
+        $0.backgroundColor = .black
+        $0.layer.cornerRadius = 8
     }
     
     override func viewDidLoad() {
@@ -56,6 +86,13 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
         
         view.addSubview(containerView)
         containerView.addSubview(barView)
+        containerView.addSubview(selectedDateStackView)
+        containerView.addSubview(monthCollectionView)
+        containerView.addSubview(selectButton)
+        
+        selectedDateStackView.addArrangedSubview(leftArrowButton)
+        selectedDateStackView.addArrangedSubview(selectedLabel)
+        selectedDateStackView.addArrangedSubview(rightArrowButton)
     }
     
     override func setupConstraints() {
@@ -65,9 +102,27 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
         }
         
         barView.snp.makeConstraints {
-            $0.size.equalTo(CGSize(width: 56, height: 6))
+            $0.size.equalTo(CGSize(width: 34, height: 5))
             $0.top.equalToSuperview().offset(10)
             $0.centerX.equalToSuperview()
+        }
+        
+        selectedDateStackView.snp.makeConstraints {
+            $0.top.equalTo(barView.snp.bottom).offset(32)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+        }
+        
+        monthCollectionView.snp.makeConstraints {
+            $0.top.equalTo(selectedDateStackView.snp.bottom).offset(12)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.bottom.equalTo(selectButton.snp.top).offset(-36)
+            $0.height.equalTo(208)
+        }
+        
+        selectButton.snp.makeConstraints {
+            $0.height.equalTo(56)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
         }
     }
     
@@ -116,3 +171,10 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
     }
     
 }
+
+extension MemoryDateSelectBottomSheetViewController: MonthCollectionViewDelegate {
+    func monthCollectionView(_ view: MonthCollectionView, didSelectMonth month: Int) {
+        print("month: \(month)")
+    }
+}
+

@@ -55,6 +55,12 @@ class FourCutCoordinator: Coordinator {
         navigationController.pushViewController(vc, animated: true)
     }
     
+    func showDateSelectionBottomSheet() {
+        let vc = MemoryDateSelectBottomSheetViewController()
+        vc.modalPresentationStyle = .overFullScreen
+        self.navigationController.present(vc, animated: true)
+    }
+    
     func finish() {
         
     }
