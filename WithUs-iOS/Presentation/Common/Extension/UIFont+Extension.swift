@@ -28,6 +28,10 @@ extension UIFont {
             }
         }
     }
+    static func didot(size: CGFloat, isRegular: Bool = true) -> UIFont {
+        let fontName = isRegular ? "DidotLTStd-Roman" : "DidotLTStd-Italic"
+        return UIFont(name: fontName, size: size) ?? .systemFont(ofSize: size)
+    }
     
     static func pretendard(_ weight: PretendardWeight, size: CGFloat) -> UIFont {
         return UIFont(name: weight.fontName, size: size) ?? .systemFont(ofSize: size)

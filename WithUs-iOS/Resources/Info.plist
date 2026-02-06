@@ -24,6 +24,8 @@
 	</array>
 	<key>UIAppFonts</key>
 	<array>
+		<string>DidotLTStd-Italic.otf</string>
+		<string>DidotLTStd-Roman.otf</string>
 		<string>Pretendard-Bold.otf</string>
 		<string>Pretendard-ExtraBold.otf</string>
 		<string>Pretendard-Regular.otf</string>

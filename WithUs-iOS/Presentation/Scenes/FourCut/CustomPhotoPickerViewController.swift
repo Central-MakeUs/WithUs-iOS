@@ -55,6 +55,10 @@ class CustomPhotoPickerViewController: BaseViewController {
         $0.backgroundColor = .white
     }
     
+    private let indicatorContainer = UIView().then {
+        $0.backgroundColor = .white
+    }
+    
     private let selectedLabel = UILabel().then {
         $0.text = "12장의 사진을 선택해주세요."
         $0.font = UIFont.pretendard16SemiBold
@@ -87,9 +91,11 @@ class CustomPhotoPickerViewController: BaseViewController {
     override func setupUI() {
         view.addSubview(photoCollectionView)
         view.addSubview(selectedContainerView)
-        selectedContainerView.addSubview(selectedLabel)
-        selectedContainerView.addSubview(doneButton)
+        selectedContainerView.addSubview(indicatorContainer)
         selectedContainerView.addSubview(selectedPhotosCollectionView)
+        
+        indicatorContainer.addSubview(selectedLabel)
+        indicatorContainer.addSubview(doneButton)
     }
     
     override func setupConstraints() {
@@ -98,13 +104,18 @@ class CustomPhotoPickerViewController: BaseViewController {
             $0.horizontalEdges.equalToSuperview()
         }
         
+        indicatorContainer.snp.makeConstraints {
+            $0.height.equalTo(60)
+            $0.top.horizontalEdges.equalToSuperview()
+        }
+        
         selectedLabel.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(18)
             $0.left.equalToSuperview().offset(16)
+            $0.centerY.equalToSuperview()
         }
         
         doneButton.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(13.5)
+            $0.centerY.equalToSuperview()
             $0.right.equalToSuperview().inset(16)
             $0.size.equalTo(CGSize(width: 66, height: 33))
         }
@@ -190,9 +201,63 @@ class CustomPhotoPickerViewController: BaseViewController {
         dismiss(animated: true)
     }
     
+    // MARK: - Actions
     @objc private func doneButtonTapped() {
-        print("선택된 사진 개수: \(selectedAssets.count)")
-        dismiss(animated: true)
+        guard selectedAssets.count == 12 else {
+            let alert = UIAlertController(
+                title: "사진을 12장 선택해주세요",
+                message: "현재 \(selectedAssets.count)장이 선택되었습니다.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "확인", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        Task { [weak self] in
+            guard let self = self else { return }
+
+            let options = PHImageRequestOptions()
+            options.isSynchronous = false
+            options.deliveryMode = .highQualityFormat
+
+            var images: [UIImage] = []
+            images.reserveCapacity(12)
+
+            for asset in self.selectedAssets {
+                if let image = await self.requestImage(
+                    for: asset,
+                    targetSize: PHImageManagerMaximumSize,
+                    contentMode: .aspectFill,
+                    options: options
+                ) {
+                    images.append(image)
+                }
+            }
+
+            await MainActor.run {
+                guard images.count == 12 else { return }
+                self.coordinator?.showFilterSelection(images)
+            }
+        }
+    }
+    
+    private func requestImage(
+        for asset: PHAsset,
+        targetSize: CGSize,
+        contentMode: PHImageContentMode,
+        options: PHImageRequestOptions
+    ) async -> UIImage? {
+        await withCheckedContinuation { continuation in
+            imageManager.requestImage(
+                for: asset,
+                targetSize: targetSize,
+                contentMode: contentMode,
+                options: options
+            ) { image, _ in
+                continuation.resume(returning: image)
+            }
+        }
     }
     
     private func updateSelectedContainerVisibility() {
@@ -317,3 +382,4 @@ extension CustomPhotoPickerViewController: UICollectionViewDelegate {
         }
     }
 }
+

@@ -11,60 +11,61 @@ import UIKit
 
 class TextInputViewController: BaseViewController {
     
-    // MARK: - Properties
     weak var coordinator: FourCutCoordinator?
     var selectedPhotos: [UIImage] = []
-    var selectedFilter: PhotoFilterType = .original
-    
-    // MARK: - UI Components
-    
-    private let titleLabel = UILabel().then {
-        $0.text = "원하는 문구를 작성할 수 있어요"
-        $0.font = .systemFont(ofSize: 20, weight: .semibold)
-        $0.textAlignment = .center
-    }
+    private var selectedFrameColor: FrameColorType = .white
+    private var customText: String = ""
     
     private let frameContainerView = UIView().then {
-        $0.backgroundColor = .black
-    }
-    
-    private let topBar = UIView().then {
-        $0.backgroundColor = .black
-    }
-    
-    private let textField = UITextField().then {
-        $0.placeholder = "문구를 입력하세요"
-        $0.textColor = .white
-        $0.textAlignment = .center
-        $0.font = .systemFont(ofSize: 14, weight: .medium)
-        $0.attributedPlaceholder = NSAttributedString(
-            string: "문구를 입력하세요",
-            attributes: [NSAttributedString.Key.foregroundColor: UIColor.systemGray]
-        )
+        $0.backgroundColor = .white
     }
     
     private let gridStackView = UIStackView().then {
         $0.axis = .vertical
         $0.distribution = .fillEqually
-        $0.spacing = 6
+        $0.spacing = 1.83
     }
     
     private let bottomBar = UIView().then {
-        $0.backgroundColor = .black
+        $0.backgroundColor = .white
     }
     
-   private let withusLabel = UILabel().then {
-        $0.text = "WITHUS"
-        $0.font = UIFont.pretendard10Regular
-        $0.textColor = .white
+    private let dateLabel = UILabel().then {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy.MM.dd"
+        $0.text = dateFormatter.string(from: Date())
+        $0.textColor = .black
+        $0.font = UIFont.didot(size: 34.76, isRegular: false)
+        $0.isUserInteractionEnabled = true
     }
     
-    private let saveButton = UIButton().then {
-        $0.setTitle("저장하기", for: .normal)
-        $0.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        $0.setTitleColor(.white, for: .normal)
-        $0.backgroundColor = .black
+    private let containerView = UIView().then {
+        $0.backgroundColor = UIColor.gray50
+    }
+    
+    private let textBtn = UIButton().then {
+        $0.setTitle("문구 다시 작성하기", for: .normal)
+        $0.setTitleColor(UIColor.gray900, for: .normal)
+        $0.titleLabel?.font = UIFont.pretendard18SemiBold
+        $0.backgroundColor = UIColor.gray50
+        $0.layer.borderColor = UIColor.gray700.cgColor
+        $0.layer.borderWidth = 1
         $0.layer.cornerRadius = 8
+    }
+    
+    private let listBtn = UIButton().then {
+        $0.setTitle("추억 생성하기", for: .normal)
+        $0.setTitleColor(.white, for: .normal)
+        $0.titleLabel?.font = UIFont.pretendard18SemiBold
+        $0.backgroundColor = UIColor.gray900
+        $0.layer.cornerRadius = 8
+    }
+    
+    private let buttonStackView = UIStackView().then {
+        $0.axis = .vertical
+        $0.spacing = 6
+        $0.alignment = .center
+        $0.backgroundColor = UIColor.gray50
     }
     
     private var photoImageViews: [UIImageView] = []
@@ -73,9 +74,9 @@ class TextInputViewController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = UIColor.gray50
         setupGridWithStackView()
         displayPhotos()
-        setupKeyboardNotifications()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -86,100 +87,108 @@ class TextInputViewController: BaseViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         self.tabBarController?.tabBar.isHidden = false
-        NotificationCenter.default.removeObserver(self)
     }
     
     override func setNavigation() {
-        setRightBarButton(image: UIImage(systemName: "checkmark"), tintColor: .clear)
-        navigationItem.rightBarButtonItem?.isEnabled = false
-        self.navigationItem.title = "4/4"
-        setLeftBarButton(image: UIImage(systemName: "xmark"))
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
+        let image = UIImage(systemName: "xmark", withConfiguration: config)
+        setRightBarButton(
+            image: image,
+            tintColor: .black
+        )
+        let titleLabel = UILabel()
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.pretendard20SemiBold,
+            .foregroundColor: UIColor.black
+        ]
+        titleLabel.attributedText = NSAttributedString(string: "문구 작성", attributes: attributes)
+        titleLabel.sizeToFit()
+        navigationItem.titleView = titleLabel
     }
     
     override func setupUI() {
         super.setupUI()
         
-        view.addSubview(titleLabel)
         view.addSubview(frameContainerView)
-        view.addSubview(saveButton)
-        
-        frameContainerView.addSubview(topBar)
-        topBar.addSubview(textField)
+        view.addSubview(containerView)
         
         frameContainerView.addSubview(gridStackView)
         frameContainerView.addSubview(bottomBar)
+        bottomBar.addSubview(dateLabel)
         
-        bottomBar.addSubview(withusLabel)
+        containerView.addSubview(buttonStackView)
+        
+        buttonStackView.addArrangedSubview(textBtn)
+        buttonStackView.addArrangedSubview(listBtn)
     }
     
     override func setupConstraints() {
-        titleLabel.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(15)
-            $0.centerX.equalToSuperview()
+        containerView.snp.makeConstraints {
+            $0.height.equalTo(120)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide)
+            $0.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
         }
         
-        saveButton.snp.makeConstraints {
+        buttonStackView.snp.makeConstraints {
+            $0.top.bottom.equalToSuperview()
             $0.horizontalEdges.equalToSuperview().inset(16)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-12)
+        }
+        
+        textBtn.snp.makeConstraints {
             $0.height.equalTo(56)
+            $0.horizontalEdges.equalToSuperview()
+        }
+        
+        listBtn.snp.makeConstraints {
+            $0.height.equalTo(56)
+            $0.horizontalEdges.equalToSuperview()
         }
         
         frameContainerView.snp.makeConstraints {
-            $0.top.equalTo(titleLabel.snp.bottom).offset(15)
-            $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-119)
-        }
-        
-        topBar.snp.makeConstraints {
-            $0.top.leading.trailing.equalToSuperview()
-            $0.height.equalTo(46)
-        }
-        
-        textField.snp.makeConstraints {
-            $0.center.equalToSuperview()
-            $0.leading.trailing.equalToSuperview().inset(16)
-        }
-        
-        bottomBar.snp.makeConstraints {
-            $0.leading.trailing.bottom.equalToSuperview()
-            $0.height.equalTo(30)
+            $0.top.equalTo(view.safeAreaLayoutGuide)
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.bottom.equalTo(containerView.snp.top).offset(-8)
         }
         
         gridStackView.snp.makeConstraints {
-            $0.top.equalTo(topBar.snp.bottom)
-            $0.leading.trailing.equalToSuperview().inset(8)
-            $0.bottom.equalTo(bottomBar.snp.top)
+            $0.top.equalToSuperview().offset(9.15)
+            $0.leading.trailing.equalToSuperview().inset(5.49)
         }
-
-        withusLabel.snp.makeConstraints {
-            $0.trailing.equalToSuperview().inset(8)
-            $0.bottom.equalToSuperview().inset(8)
+        
+        bottomBar.snp.makeConstraints {
+            $0.top.equalTo(gridStackView.snp.bottom)
+            $0.leading.trailing.bottom.equalToSuperview()
+        }
+        
+        dateLabel.snp.makeConstraints {
+            $0.top.left.equalToSuperview().inset(9.15)
         }
     }
     
     override func setupActions() {
         super.setupActions()
-        
-        saveButton.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
-        textField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+        textBtn.addTarget(self, action: #selector(dateLabelTapped), for: .touchUpInside)
+
     }
     
     // MARK: - Setup Grid
     
     private func setupGridWithStackView() {
-        for row in 0..<2 {
+        for row in 0..<4 {
             let rowStack = UIStackView()
             rowStack.axis = .horizontal
             rowStack.distribution = .fillEqually
-            rowStack.spacing = 6
+            rowStack.spacing = 1.83
             
-            for col in 0..<2 {
+            for col in 0..<3 {
                 let imageView = UIImageView().then {
                     $0.backgroundColor = .white
                     $0.contentMode = .scaleAspectFill
                     $0.clipsToBounds = true
-                    $0.layer.borderWidth = 1
-                    $0.layer.borderColor = UIColor.black.cgColor
+                }
+                
+                imageView.snp.makeConstraints {
+                    $0.width.equalTo(imageView.snp.height)
                 }
                 
                 photoImageViews.append(imageView)
@@ -195,45 +204,36 @@ class TextInputViewController: BaseViewController {
     private func displayPhotos() {
         for (index, imageView) in photoImageViews.enumerated() {
             if index < selectedPhotos.count {
-                let image = selectedPhotos[index]
-                imageView.image = selectedFilter.apply(to: image)
+                imageView.image = selectedPhotos[index]
             }
         }
     }
     
-    // MARK: - Keyboard Handling
-    
-    private func setupKeyboardNotifications() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-        tapGesture.cancelsTouchesInView = false
-        view.addGestureRecognizer(tapGesture)
-    }
-    
-    @objc private func dismissKeyboard() {
-        view.endEditing(true)
-    }
-    
     // MARK: - Actions
+    
+    @objc private func dateLabelTapped() {
+        let bottomSheet = TextInputBottomSheet()
+        bottomSheet.currentText = customText.isEmpty ? getTodayDate() : customText
+        bottomSheet.modalPresentationStyle = .overFullScreen
+        bottomSheet.modalTransitionStyle = .crossDissolve
+        
+        bottomSheet.onTextInput = { [weak self] text in
+            self?.customText = text
+            self?.dateLabel.text = text
+        }
+        
+        present(bottomSheet, animated: true)
+    }
     
     @objc private func saveButtonTapped() {
         let finalImage = captureFrameAsImage()
-//        saveImageToPhotoLibrary(finalImage)
-        
-        CustomAlertViewController
-            .showWithCancel(
-                on: self,
-                title: "수정을 종료하시겠어요?",
-                message: "나가면 변경 내용이 사라질 수 있어요.\n저장이 되었는지 꼭 확인해 주세요.",
-                confirmTitle: "종료하기",
-                cancelTitle: "취소",
-                confirmAction: { [weak self] in
-                    self?.coordinator?.showFourcutConfirm(finalImage)
-                }
-            )
+        saveImageToPhotoLibrary(finalImage)
     }
     
-    @objc private func textFieldDidChange() {
-        // 텍스트 입력 상태 체크 (선택사항)
+    private func getTodayDate() -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy.MM.dd"
+        return dateFormatter.string(from: Date())
     }
     
     // MARK: - Image Capture & Save
@@ -255,7 +255,6 @@ class TextInputViewController: BaseViewController {
             showAlert(title: "저장 실패", message: error.localizedDescription)
         } else {
             showAlert(title: "저장 완료", message: "사진이 앨범에 저장되었습니다.") {
-                // 저장 후 처음 화면으로 돌아가기
                 self.navigationController?.popToRootViewController(animated: true)
             }
         }
