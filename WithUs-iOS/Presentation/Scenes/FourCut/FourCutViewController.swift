@@ -99,7 +99,7 @@ class FourCutViewController: BaseViewController {
     }
     
     @objc private func didAddButtonTapped() {
-        
+        coordinator?.showPhotoPicker()
     }
 }
 

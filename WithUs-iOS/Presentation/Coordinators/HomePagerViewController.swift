@@ -68,7 +68,6 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
         $0.backgroundColor = UIColor.redWarning
     }
     
-    // MARK: - Lifecycle
     override func setupUI() {
         super.setupUI()
         

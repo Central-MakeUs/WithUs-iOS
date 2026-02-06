@@ -203,7 +203,6 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         hideAllContentViews()
     }
     
-    // MARK: - UI Update
     private func updateDailyUI(with data: TodayKeywordResponse) {
         hideAllContentViews()
         

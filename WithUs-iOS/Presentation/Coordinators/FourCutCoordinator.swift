@@ -67,6 +67,12 @@ class FourCutCoordinator: Coordinator {
         self.navigationController.present(vc, animated: true)
     }
     
+    func showPhotoPicker() {
+        let picker = CustomPhotoPickerViewController()
+        picker.coordinator = self
+        navigationController.pushViewController(picker, animated: true)
+    }
+    
     func finish() {
         
     }

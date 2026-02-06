@@ -28,7 +28,7 @@ struct KeywordCellView: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 20)
-                .fill(Color(uiColor: isSelected ? UIColor.init(hex: "#E95053") : .gray50))
+                .fill(Color(uiColor: isSelected ? UIColor.redWarning : .gray50))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20)
