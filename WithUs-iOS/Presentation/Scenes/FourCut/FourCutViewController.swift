@@ -40,7 +40,9 @@ class FourCutViewController: BaseViewController {
         $0.spacing = 0
     }
     
-    private let memoryCollectionView = MemoryCollectionView()
+    private lazy var memoryCollectionView = MemoryCollectionView().then {
+        $0.delegate = self
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -81,6 +83,7 @@ class FourCutViewController: BaseViewController {
     
     override func setupActions() {
         toggleButton.addTarget(self, action: #selector(toggleTapped), for: .touchUpInside)
+        makeControl.addTarget(self, action: #selector(didAddButtonTapped), for: .touchUpInside)
     }
     
     override func setNavigation() {
@@ -92,10 +95,16 @@ class FourCutViewController: BaseViewController {
     }
     
     @objc private func toggleTapped() {
-        self.coordinator?.showDateSelectionBottomSheet()
+        coordinator?.showDateSelectionBottomSheet()
     }
     
     @objc private func didAddButtonTapped() {
         
+    }
+}
+
+extension FourCutViewController: MemoryCollectionViewDelegate {
+    func memoryCollectionView(_ view: MemoryCollectionView, didSelectItemAt index: Int) {
+        coordinator?.showMemoryDetail()
     }
 }

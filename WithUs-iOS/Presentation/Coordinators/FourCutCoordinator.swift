@@ -61,6 +61,12 @@ class FourCutCoordinator: Coordinator {
         self.navigationController.present(vc, animated: true)
     }
     
+    func showMemoryDetail() {
+        let vc = FourCutDetailViewController()
+        vc.modalPresentationStyle = .overFullScreen
+        self.navigationController.present(vc, animated: true)
+    }
+    
     func finish() {
         
     }

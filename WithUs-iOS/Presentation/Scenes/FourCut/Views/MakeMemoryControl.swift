@@ -17,18 +17,21 @@ final class MakeMemoryControl: UIControl {
         $0.textColor = UIColor.gray50
         $0.text = "jpg님과 쏘피님이 함께한\n추억을 직접 만들어 보세요!"
         $0.numberOfLines = 2
+        $0.isUserInteractionEnabled = false
     }
     
     private let imageView = UIImageView().then {
         $0.contentMode = .scaleAspectFit
         $0.isUserInteractionEnabled = false
         $0.image = UIImage(named: "ic_circle_arrow")
+        $0.isUserInteractionEnabled = false
     }
     
     private let stackView = UIStackView().then {
         $0.axis = .horizontal
         $0.distribution = .fill
         $0.alignment = .center
+        $0.isUserInteractionEnabled = false
     }
     
     override init(frame: CGRect) {
