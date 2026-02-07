@@ -11,6 +11,11 @@ import SnapKit
 import Then
 
 final class MemoryDateSelectBottomSheetViewController: BaseViewController {
+    var onDateSelected: ((Int, Int) -> Void)?
+    var currentYear: Int = Calendar.current.component(.year, from: Date())
+    var currentMonth: Int = Calendar.current.component(.month, from: Date())
+    private var selectedYear: Int = Calendar.current.component(.year, from: Date())
+    private var selectedMonth: Int = Calendar.current.component(.month, from: Date())
     
     private var viewTranslation = CGPoint(x: 0, y: 0)
     
@@ -65,6 +70,9 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        selectedYear = currentYear
+        selectedMonth = currentMonth
+        updateSelectedLabel()
         containerView.transform = CGAffineTransform(translationX: 0, y: view.frame.height)
         localBlackView.alpha = 0
     }
@@ -131,6 +139,41 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
         localBlackView.addGestureRecognizer(tapGesture)
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePanGesture))
         containerView.addGestureRecognizer(panGesture)
+        selectButton.addTarget(self, action: #selector(selectButtonTapped), for: .touchUpInside)
+        leftArrowButton.addTarget(self, action: #selector(leftArrowTapped), for: .touchUpInside)
+        rightArrowButton.addTarget(self, action: #selector(rightArrowTapped), for: .touchUpInside)
+    }
+    
+    @objc private func leftArrowTapped() {
+        selectedYear -= 1
+        updateSelectedLabel()
+    }
+    
+    @objc private func rightArrowTapped() {
+        selectedYear += 1
+        updateSelectedLabel()
+    }
+    
+    @objc private func selectButtonTapped() {
+        onDateSelected?(selectedYear, selectedMonth)
+        dismissWithAnimation()
+    }
+    
+    @objc private func backgroundTapped() {
+        dismissWithAnimation()
+    }
+    
+    private func updateSelectedLabel() {
+        selectedLabel.text = "\(selectedYear)년"
+    }
+    
+    private func dismissWithAnimation() {
+        UIView.animate(withDuration: 0.3, animations: {
+            self.containerView.transform = CGAffineTransform(translationX: 0, y: self.view.frame.height)
+            self.localBlackView.alpha = 0
+        }) { _ in
+            self.dismiss(animated: false)
+        }
     }
     
     @objc private func handlePanGesture(_ sender: UIPanGestureRecognizer) {
@@ -161,6 +204,7 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
         }
     }
     
+    
     @objc private func confirmBtnTapped() {
         UIView.animate(withDuration: 0.3, animations: {
             self.containerView.transform = CGAffineTransform(translationX: 0, y: self.view.frame.height)
@@ -174,7 +218,8 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
 
 extension MemoryDateSelectBottomSheetViewController: MonthCollectionViewDelegate {
     func monthCollectionView(_ view: MonthCollectionView, didSelectMonth month: Int) {
-        print("month: \(month)")
-    }
+         selectedMonth = month
+         print("Selected: \(selectedYear)년 \(selectedMonth)월")
+     }
 }
 

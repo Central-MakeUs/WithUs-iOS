@@ -10,12 +10,12 @@ import SwiftUI
 // MARK: - Memory Full Cell View (DateRange + MemoryCell 통합)
 
 struct MemoryFullCellView: View {
-    let item: MemoryItem
+    let item: WeekMemorySummary
     
     var body: some View {
         VStack(spacing: 12) {
             HStack {
-                Text(item.dateRange)
+                Text(item.title)
                     .font(Font(UIFont.pretendard14SemiBold))
                     .foregroundColor(Color(uiColor: UIColor(hex: "#000000")))
                 
@@ -24,41 +24,62 @@ struct MemoryFullCellView: View {
             .frame(height: 24)
             
             ZStack {
-                if let imageURL = item.imageURL, !imageURL.isEmpty, let url = URL(string: imageURL) {
-                    GeometryReader { geometry in
-                        AsyncImage(url: url) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: geometry.size.width, height: geometry.size.height)
-                                    .clipped()
-                            case .failure, .empty:
-                                placeholderView
-                            @unknown default:
-                                placeholderView
+                switch item.status {
+                case .created:
+                    if let imageURL = item.createdImageUrl,
+                       let url = URL(string: imageURL) {
+                        GeometryReader { geometry in
+                            AsyncImage(url: url) { phase in
+                                switch phase {
+                                case .success(let image):
+                                    image
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: geometry.size.width, height: geometry.size.height)
+                                        .clipped()
+                                case .failure, .empty:
+                                    placeholderView
+                                @unknown default:
+                                    placeholderView
+                                }
                             }
                         }
+                    } else {
+                        placeholderView
                     }
-                } else {
-                    placeholderView
                     
-                    VStack(spacing: 4) {
-                        Text(item.title)
-                            .font(Font(UIFont.pretendard14SemiBold))
-                            .foregroundColor(.white)
-                            .multilineTextAlignment(.center)
+                case .needCreate:
+                    ZStack {
+                        Color.black.opacity(0.7)
                         
-                        if !item.subtitle.isEmpty {
-                            Text(item.subtitle)
-                                .font(Font(UIFont.pretendard12Regular))
+                        VStack(spacing: 8) {
+                            Text(getWeekText())
+                                .font(Font(UIFont.pretendard16SemiBold))
                                 .foregroundColor(.white)
                                 .multilineTextAlignment(.center)
-                                .lineLimit(2)
+                            
+                            Text("추억이 만들어졌어요.\n화면을 터치해 확인해 보세요!")
+                                .font(Font(UIFont.pretendard14Regular))
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(4)
                         }
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.horizontal, 12)
+                    
+                case .unavailable:
+                    ZStack {
+                        Color.black.opacity(0.7)
+                        
+                        VStack(spacing: 8) {
+                            Text("두 명 모두 6장 이상\n사진을 올려서\n추억이 자동 생성돼요.")
+                                .font(Font(UIFont.pretendard14Regular))
+                                .foregroundColor(.white.opacity(0.9))
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(4)
+                        }
+                        .padding(.horizontal, 20)
+                    }
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -75,6 +96,14 @@ struct MemoryFullCellView: View {
             
             VisualEffectBlur(blurStyle: .systemMaterial)
         }
+    }
+    
+    private func getWeekText() -> String {
+        let components = item.title.components(separatedBy: " ")
+        if components.count >= 2 {
+            return "\(components[0]) \(components[1]) 추억"
+        }
+        return "이번주 추억"
     }
 }
 

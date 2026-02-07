@@ -49,6 +49,7 @@ class CustomPhotoPickerViewController: BaseViewController {
         $0.dataSource = self
         $0.contentInset = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
         $0.backgroundColor = .clear
+        $0.showsHorizontalScrollIndicator = false
     }
     
     private let selectedContainerView = UIView().then {
@@ -198,10 +199,9 @@ class CustomPhotoPickerViewController: BaseViewController {
     
     // MARK: - Actions
     @objc private func cancelButtonTapped() {
-        dismiss(animated: true)
+        coordinator?.pop()
     }
     
-    // MARK: - Actions
     @objc private func doneButtonTapped() {
         guard selectedAssets.count == 12 else {
             let alert = UIAlertController(

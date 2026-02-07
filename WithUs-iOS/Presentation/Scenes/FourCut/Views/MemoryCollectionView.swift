@@ -18,7 +18,7 @@ protocol MemoryCollectionViewDelegate: AnyObject {
 class MemoryCollectionView: UIView {
     weak var delegate: MemoryCollectionViewDelegate?
     
-    var memoryData: [MemoryItem] = [] {
+    var memoryData: [WeekMemorySummary] = [] {
         didSet {
             collectionView.reloadData()
         }
@@ -34,7 +34,7 @@ class MemoryCollectionView: UIView {
         return cv
     }()
     
-    private var cellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, MemoryItem>!
+    private var cellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, WeekMemorySummary>!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -47,7 +47,7 @@ class MemoryCollectionView: UIView {
     }
     
     private func setupRegistrations() {
-        cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, MemoryItem> {
+        cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, WeekMemorySummary> {
             cell, _, item in
             
             cell.contentConfiguration = UIHostingConfiguration {
@@ -126,41 +126,3 @@ extension MemoryCollectionView: UICollectionViewDelegate {
     }
 }
 
-// MARK: - Data Models
-
-struct MemoryItem {
-    let dateRange: String
-    let imageURL: String?
-    let title: String
-    let subtitle: String
-    
-    // 더미 데이터
-    static func dummyData() -> [MemoryItem] {
-        return [
-            MemoryItem(
-                dateRange: "4월 2주 (03.29~04.04)",
-                imageURL: "https://picsum.photos/200/300?random=1",
-                title: "두부 모두 6천 이상",
-                subtitle: "사진을 올려서\n추억이 자동 생성되요."
-            ),
-            MemoryItem(
-                dateRange: "4월 3주 (04.05~04.11)",
-                imageURL: "https://picsum.photos/200/300?random=6",
-                title: "이번주 수",
-                subtitle: "직접 추억"
-            ),
-            MemoryItem(
-                dateRange: "4월 4주 (04.12~04.18)",
-                imageURL: nil,
-                title: "샘플 3",
-                subtitle: "설명 3"
-            ),
-            MemoryItem(
-                dateRange: "4월 5주 (04.19~04.25)",
-                imageURL: nil,
-                title: "샘플 4",
-                subtitle: "설명 4"
-            ),
-        ]
-    }
-}

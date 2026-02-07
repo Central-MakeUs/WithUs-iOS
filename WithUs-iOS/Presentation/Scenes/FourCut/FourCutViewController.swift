@@ -8,8 +8,13 @@
 import UIKit
 import SnapKit
 import Then
+import ReactorKit
+import RxCocoa
 
-class FourCutViewController: BaseViewController {
+class FourCutViewController: BaseViewController, View {
+    
+    var disposeBag: DisposeBag = DisposeBag()
+    
     weak var coordinator: FourCutCoordinator?
     
     private let makeControl = MakeMemoryControl().then {
@@ -44,9 +49,12 @@ class FourCutViewController: BaseViewController {
         $0.delegate = self
     }
     
+    private var currentYear: Int = 2026
+    private var currentMonth: Int = 4
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        memoryCollectionView.memoryData = MemoryItem.dummyData()
+        updateDateLabel()
     }
     
     override func setupUI() {
@@ -94,8 +102,57 @@ class FourCutViewController: BaseViewController {
         setLeftBarButton(attributedTitle: attributedText)
     }
     
+    func bind(reactor: MemoryReactor) {
+        rx.viewWillAppear
+            .map { _ in Reactor.Action.viewWillAppear }
+            .bind(to: reactor.action)
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.memorySummary?.weekMemorySummaries ?? [] }
+            .distinctUntilChanged()
+            .bind(to: memoryCollectionView.rx.memoryData)
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { "\($0.selectedYear)년 \($0.selectedMonth)월" }
+            .distinctUntilChanged()
+            .bind(to: dateLabel.rx.text)
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.isMemoriesLoading }
+            .distinctUntilChanged()
+            .bind(onNext: { [weak self] isLoading in
+                if isLoading {
+                } else {
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state.compactMap { $0.errorMessage }
+            .bind(onNext: { [weak self] errorMessage in
+                self?.showErrorAlert(message: errorMessage)
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func updateDateLabel() {
+        dateLabel.text = "\(currentYear)년 \(currentMonth)월"
+    }
+    
+    private func showErrorAlert(message: String) {
+        let alert = UIAlertController(title: "오류", message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
+    }
+    
     @objc private func toggleTapped() {
-        coordinator?.showDateSelectionBottomSheet()
+        guard let reactor = reactor else { return }
+        coordinator?.showDateSelectionBottomSheet(
+            currentYear: reactor.currentState.selectedYear,
+            currentMonth: reactor.currentState.selectedMonth,
+            onDateSelected: { [weak self] year, month in
+                self?.reactor?.action.onNext(.selectDate(year: year, month: month))
+            }
+        )
     }
     
     @objc private func didAddButtonTapped() {
@@ -103,8 +160,56 @@ class FourCutViewController: BaseViewController {
     }
 }
 
+// MARK: - MemoryCollectionViewDelegate
 extension FourCutViewController: MemoryCollectionViewDelegate {
     func memoryCollectionView(_ view: MemoryCollectionView, didSelectItemAt index: Int) {
-        coordinator?.showMemoryDetail()
+        guard let summary = reactor?.currentState.memorySummary?.weekMemorySummaries[index] else { return }
+        
+        switch summary.status {
+        case .unavailable:
+            showUnavailableAlert()
+        case .needCreate:
+            // 추억 만들기 화면으로 이동
+            showCreateMemoryScreen(summary: summary)
+            
+        case .created:
+            if summary.memoryType == .customMemory {
+                // 커스텀 메모리 상세
+//                coordinator?.showCustomMemoryDetail(customMemoryId: summary.customMemoryId!)
+            } else {
+                // 주간 메모리 상세
+//                coordinator?.showWeekMemoryDetail(imageUrl: summary.createdImageUrl!)
+            }
+        }
+    }
+    
+    private func showUnavailableAlert() {
+        let alert = UIAlertController(
+            title: "추억 생성 불가",
+            message: "두 명 모두 6장 이상의 사진을 올려주세요.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "확인", style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func showCreateMemoryScreen(summary: WeekMemorySummary) {
+        guard let imageUrls = summary.needCreateImageUrls,
+              let weekEndDate = summary.weekEndDate else { return }
+        
+        // 추억 만들기 화면으로 이동
+//        coordinator?.showCreateWeekMemory(
+//            imageUrls: imageUrls,
+//            weekEndDate: weekEndDate
+//        )
+    }
+}
+
+// MARK: - Reactive Extension
+extension Reactive where Base: MemoryCollectionView {
+    var memoryData: Binder<[WeekMemorySummary]> {
+        return Binder(base) { collectionView, data in
+            collectionView.memoryData = data
+        }
     }
 }

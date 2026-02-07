@@ -8,12 +8,16 @@
 import SnapKit
 import Then
 import UIKit
+import ReactorKit
 
-class TextInputViewController: BaseViewController {
+class TextInputViewController: BaseViewController, View {
     
+    var disposeBag: DisposeBag = DisposeBag()
     weak var coordinator: FourCutCoordinator?
     var selectedPhotos: [UIImage] = []
-    private var selectedFrameColor: FrameColorType = .white
+    var selectedFrameColor: FrameColorType = .white {
+        didSet { updateFrameColor() }
+    }
     private var customText: String = ""
     
     private let frameContainerView = UIView().then {
@@ -168,10 +172,13 @@ class TextInputViewController: BaseViewController {
     override func setupActions() {
         super.setupActions()
         textBtn.addTarget(self, action: #selector(dateLabelTapped), for: .touchUpInside)
+        listBtn.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
 
     }
     
-    // MARK: - Setup Grid
+    func bind(reactor: MemoryReactor) {
+        
+    }
     
     private func setupGridWithStackView() {
         for row in 0..<4 {
@@ -209,6 +216,17 @@ class TextInputViewController: BaseViewController {
         }
     }
     
+    private func updateFrameColor() {
+        let backgroundColor = selectedFrameColor.backgroundColor
+        let textColor = selectedFrameColor.textColor
+        
+        UIView.animate(withDuration: 0.3) {
+            self.frameContainerView.backgroundColor = backgroundColor
+            self.bottomBar.backgroundColor = backgroundColor
+            self.dateLabel.textColor = textColor
+        }
+    }
+    
     // MARK: - Actions
     
     @objc private func dateLabelTapped() {
@@ -227,7 +245,7 @@ class TextInputViewController: BaseViewController {
     
     @objc private func saveButtonTapped() {
         let finalImage = captureFrameAsImage()
-        saveImageToPhotoLibrary(finalImage)
+        reactor?.action.onNext(.uploadImage(image: finalImage, title: dateLabel.text ?? ""))
     }
     
     private func getTodayDate() -> String {
@@ -268,3 +286,4 @@ class TextInputViewController: BaseViewController {
         present(alert, animated: true)
     }
 }
+

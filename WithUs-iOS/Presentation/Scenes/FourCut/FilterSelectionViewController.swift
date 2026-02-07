@@ -66,6 +66,12 @@ class FilterSelectionViewController: BaseViewController {
         $0.font = UIFont.didot(size: 34.76, isRegular: false)
     }
     
+    private let profileLabel = UILabel().then {
+        $0.text = "by"
+        $0.textColor = .black
+        $0.font = UIFont.didot(size: 14.63, isRegular: true)
+    }
+    
     private let blackFrameButton = UIButton().then {
         $0.setTitle("검은색", for: .normal)
         $0.titleLabel?.font = UIFont.pretendard18SemiBold
@@ -149,6 +155,7 @@ class FilterSelectionViewController: BaseViewController {
         frameContainerView.addSubview(gridStackView)
         frameContainerView.addSubview(bottomBar)
         bottomBar.addSubview(dateLabel)
+        bottomBar.addSubview(profileLabel)
         
         containerView.addSubview(indicatorContainer)
         containerView.addSubview(buttonStackView)
@@ -217,6 +224,10 @@ class FilterSelectionViewController: BaseViewController {
         dateLabel.snp.makeConstraints {
             $0.top.left.equalToSuperview().inset(9.15)
         }
+        
+//        profileLabel.snp.makeConstraints {
+//            
+//        }
     }
     
     override func setupActions() {
@@ -309,7 +320,7 @@ class FilterSelectionViewController: BaseViewController {
                 cancelTitle: "취소",
                 confirmAction: { [weak self] in
                     guard let self, !selectedPhotos.isEmpty else { return }
-                    self.coordinator?.showTextInputSelection(self.selectedPhotos)
+                    self.coordinator?.showTextInputSelection(self.selectedPhotos, selectedFrameColor)
                 }
             )
     }

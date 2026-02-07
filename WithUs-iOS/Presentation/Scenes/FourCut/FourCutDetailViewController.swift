@@ -9,19 +9,20 @@ import Foundation
 import UIKit
 import Then
 import SnapKit
+import Kingfisher
 
 final class FourCutDetailViewController: BaseViewController {
     private let backgroundImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.clipsToBounds = true
-        $0.image = UIImage(systemName: "xmark")
+        $0.backgroundColor = UIColor.gray300
     }
     
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
     
     private let mainImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFit
-        $0.image = UIImage(systemName: "xmark")
+        $0.backgroundColor = UIColor.gray300
     }
     
     private let pageControl = UIPageControl().then {
@@ -122,7 +123,29 @@ final class FourCutDetailViewController: BaseViewController {
     
     @objc private func didTapCloseButton() {
         self.dismiss(animated: true) {
+        }
+    }
+    
+    func configure(_ imageUrl: String) {
+        if let url = URL(string: imageUrl) {
             
+            backgroundImageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
+            
+            mainImageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
         }
     }
 }

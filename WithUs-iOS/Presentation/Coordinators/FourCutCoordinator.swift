@@ -10,13 +10,27 @@ import UIKit
 class FourCutCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
+    private let contentUsecase: MemoryContentUseCaseProtocol
+    private let reactor: MemoryReactor?
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
+        
+        let networkService = NetworkService.shared
+        
+        //Repositories
+        let repository = MemoryContentRepository(networkService: networkService)
+        let imageRepository = ImageRepository(networkService: networkService)
+        
+        //Usecases
+        self.contentUsecase = MemoryContentUseCase(repository: repository, uploadImageUseCase: UploadImageUseCase(imageRepository: imageRepository))
+        
+        self.reactor = MemoryReactor(memoryContentUsecase: contentUsecase)
     }
     
     func start() {
         let fourCutViewController = FourCutViewController()
+        fourCutViewController.reactor = self.reactor
         fourCutViewController.coordinator = self
         navigationController.setViewControllers([fourCutViewController], animated: false)
     }
@@ -40,10 +54,12 @@ class FourCutCoordinator: Coordinator {
         navigationController.pushViewController(filterVC, animated: true)
     }
     
-    func showTextInputSelection(_ selectedPhotos: [UIImage]) {
+    func showTextInputSelection(_ selectedPhotos: [UIImage], _ type: FrameColorType) {
         let textInputVC = TextInputViewController()
         textInputVC.selectedPhotos = selectedPhotos
         textInputVC.coordinator = self
+        textInputVC.selectedFrameColor = type
+        textInputVC.reactor = self.reactor
         navigationController.pushViewController(textInputVC, animated: true)
     }
     
@@ -54,14 +70,23 @@ class FourCutCoordinator: Coordinator {
         navigationController.pushViewController(vc, animated: true)
     }
     
-    func showDateSelectionBottomSheet() {
+    func showDateSelectionBottomSheet(
+        currentYear: Int,
+        currentMonth: Int,
+        onDateSelected: @escaping (Int, Int) -> Void
+    ) {
         let vc = MemoryDateSelectBottomSheetViewController()
+        vc.currentYear = currentYear
+        vc.currentMonth = currentMonth
+        vc.onDateSelected = onDateSelected
         vc.modalPresentationStyle = .overFullScreen
-        self.navigationController.present(vc, animated: true)
+        vc.modalTransitionStyle = .crossDissolve
+        navigationController.present(vc, animated: true)
     }
     
-    func showMemoryDetail() {
+    func showMemoryDetail(_ imageUrl: String) {
         let vc = FourCutDetailViewController()
+        vc.configure(imageUrl)
         vc.modalPresentationStyle = .overFullScreen
         self.navigationController.present(vc, animated: true)
     }
@@ -70,6 +95,10 @@ class FourCutCoordinator: Coordinator {
         let picker = CustomPhotoPickerViewController()
         picker.coordinator = self
         navigationController.pushViewController(picker, animated: true)
+    }
+    
+    func pop() {
+        navigationController.popViewController(animated: true)
     }
     
     func finish() {
