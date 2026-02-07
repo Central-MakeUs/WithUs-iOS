@@ -46,6 +46,11 @@ class ArchivePhotoCell: UICollectionViewCell {
     private let combinedImageView = ArchiveRecentImageView()
     private let singleImageView = ArchiveBlurredImageView()
     
+    private let checkboxImageView = UIImageView().then {
+        $0.contentMode = .scaleAspectFit
+        $0.isHidden = true
+    }
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
@@ -59,6 +64,7 @@ class ArchivePhotoCell: UICollectionViewCell {
         contentView.addSubview(combinedImageView)
         contentView.addSubview(singleImageView)
         contentView.addSubview(dateLabel)
+        contentView.addSubview(checkboxImageView)
         
         combinedImageView.snp.makeConstraints {
             $0.edges.equalToSuperview()
@@ -72,12 +78,20 @@ class ArchivePhotoCell: UICollectionViewCell {
             $0.top.equalToSuperview().offset(8)
             $0.leading.equalToSuperview().offset(8)
         }
+        
+        checkboxImageView.snp.makeConstraints {
+            $0.top.equalToSuperview().offset(6)
+            $0.trailing.equalToSuperview().offset(-6)
+            $0.size.equalTo(18)
+        }
     }
     
     func configure(
         photo: ArchivePhotoViewModel,
         showDate: Bool,
-        dateText: String
+        dateText: String,
+        isSelectionMode: Bool,
+        isSelected: Bool
     ) {
         dateLabel.isHidden = !showDate
         dateLabel.label.text = dateText
@@ -97,6 +111,16 @@ class ArchivePhotoCell: UICollectionViewCell {
             singleImageView.isHidden = false
             let imageUrl = photo.myImageUrl ?? photo.partnerImageUrl
             singleImageView.configure(backgroundImageURL: imageUrl ?? "")
+        }
+        
+        checkboxImageView.isHidden = !isSelectionMode
+        
+        if isSelectionMode {
+            if isSelected {
+                checkboxImageView.image = UIImage(named: "ic_archive_checked")
+            } else {
+                checkboxImageView.image = UIImage(named: "ic_archive_no_checked")
+            }
         }
     }
 }

@@ -90,12 +90,12 @@ final class InviteVerifiedViewController: BaseViewController, View {
     
     override func setupConstraints() {
         titleStackView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(108)
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(108)
             $0.centerX.equalToSuperview()
         }
         
         imageView.snp.makeConstraints {
-            $0.top.equalTo(titleStackView.snp.bottom).offset(42)
+            $0.top.equalTo(titleStackView.snp.bottom)
             $0.size.equalTo(167)
             $0.centerX.equalToSuperview()
         }
@@ -119,6 +119,10 @@ final class InviteVerifiedViewController: BaseViewController, View {
     override func setupActions() {
         acceptButton.addTarget(self, action: #selector(acceptBtnTapped), for: .touchUpInside)
         laterButton.addTarget(self, action: #selector(laterBtnTapped), for: .touchUpInside)
+    }
+    
+    override func setNavigation() {
+        navigationItem.hidesBackButton = true
     }
     
     func bind(reactor: InviteInputCodeReactor) {

@@ -12,6 +12,7 @@ import Then
 protocol ArchiveRecentViewDelegate: AnyObject {
     func didSelectPhoto(_ photo: ArchivePhotoViewModel)
     func didScrollToBottomRecent()
+    func didChangeSelection(count: Int)
 }
 
 final class ArchiveRecentView: UIView {
@@ -19,6 +20,20 @@ final class ArchiveRecentView: UIView {
     weak var delegate: ArchiveRecentViewDelegate?
     
     private var photos: [ArchivePhotoViewModel] = []
+    private var selectedIndexes: Set<Int> = [] {
+        didSet {
+            delegate?.didChangeSelection(count: selectedIndexes.count)
+        }
+    }
+    
+    var isSelectionMode: Bool = false {
+        didSet {
+            if !isSelectionMode {
+                selectedIndexes.removeAll()
+            }
+            collectionView.reloadData()
+        }
+    }
     
     private lazy var collectionView: UICollectionView = {
         let layout = createLayout()
@@ -107,6 +122,10 @@ final class ArchiveRecentView: UIView {
         }
         return "\(month)월 \(day)일"
     }
+    
+    func getSelectedPhotos() -> [ArchivePhotoViewModel] {
+        return selectedIndexes.map { photos[$0] }
+    }
 }
 
 extension ArchiveRecentView: UICollectionViewDataSource {
@@ -123,11 +142,14 @@ extension ArchiveRecentView: UICollectionViewDataSource {
         let photo = photos[indexPath.item]
         let showDate = shouldShowDate(at: indexPath.item)
         let dateText = formatDate(photo.date)
+        let isSelected = selectedIndexes.contains(indexPath.item)
         
         cell.configure(
             photo: photo,
             showDate: showDate,
-            dateText: dateText
+            dateText: dateText,
+            isSelectionMode: isSelectionMode,
+            isSelected: isSelected
         )
         
         return cell
@@ -136,8 +158,19 @@ extension ArchiveRecentView: UICollectionViewDataSource {
 
 extension ArchiveRecentView: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let photo = photos[indexPath.item]
-        delegate?.didSelectPhoto(photo)
+        func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+            if isSelectionMode {
+                if selectedIndexes.contains(indexPath.item) {
+                    selectedIndexes.remove(indexPath.item)
+                } else {
+                    selectedIndexes.insert(indexPath.item)
+                }
+                collectionView.reloadItems(at: [indexPath])
+            } else {
+                let photo = photos[indexPath.item]
+                delegate?.didSelectPhoto(photo)
+            }
+        }
     }
     
     func scrollViewDidScroll(_ scrollView: UIScrollView) {

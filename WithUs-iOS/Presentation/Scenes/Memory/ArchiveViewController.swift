@@ -39,16 +39,33 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
     
     private var cellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, ArchivePhoto>!
     
+    private let deleteContainer = UIView().then {
+        $0.backgroundColor = .white
+        $0.isHidden = true
+    }
+    
+    private let deleteButton = UIButton().then {
+        $0.setTitle("삭제하기", for: .normal)
+        $0.setTitleColor(UIColor.gray50, for: .normal)
+        $0.backgroundColor = UIColor.gray300
+        $0.titleLabel?.font = UIFont.pretendard16SemiBold
+        $0.layer.cornerRadius = 8
+        $0.isEnabled = false
+    }
+    
     override func setupUI() {
         super.setupUI()
         segmentedControl.delegate = self
         
         view.addSubview(segmentedControl)
         view.addSubview(containerView)
+        view.addSubview(deleteContainer)
         
         containerView.addSubview(recentView)
         containerView.addSubview(calendarView)
         containerView.addSubview(questionView)
+        
+        deleteContainer.addSubview(deleteButton)
     }
     
     override func setupConstraints() {
@@ -74,6 +91,18 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         questionView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
+        
+        deleteContainer.snp.makeConstraints {
+            $0.horizontalEdges.equalToSuperview()
+            $0.bottom.equalToSuperview()
+            $0.height.equalTo(100)
+        }
+        
+        deleteButton.snp.makeConstraints {
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.height.equalTo(56)
+            $0.top.equalToSuperview().offset(9)
+        }
     }
     
     override func setNavigation() {
@@ -83,10 +112,38 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         )
         setLeftBarButton(attributedTitle: attributedText)
         
-        let moreButton = UIButton(type: .system)
-        moreButton.setImage(UIImage(systemName: "ellipsis"), for: .normal)
-        moreButton.tintColor = .gray900
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: moreButton)
+        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
+        let image = UIImage(systemName: "ellipsis", withConfiguration: config)
+        setRightBarButton(image: image, action: #selector(navigationBarTapped), tintColor: .black)
+    }
+    
+    override func setupActions() {
+        deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+    }
+    
+    @objc private func navigationBarTapped() {
+        let alert = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+
+        let deleteAllAction = UIAlertAction(title: "전체 삭제", style: .default) { [weak self] _ in
+            self?.showDeleteAllConfirmation()
+        }
+        deleteAllAction.setValue(UIColor.redWarning, forKey: "titleTextColor")
+
+        let deleteSelectedAction = UIAlertAction(title: "선택 삭제", style: .default) { [weak self] _ in
+            self?.enableSelectionMode()
+        }
+
+        let cancelAction = UIAlertAction(title: "취소", style: .cancel, handler: nil)
+
+        alert.addAction(deleteAllAction)
+        alert.addAction(deleteSelectedAction)
+        alert.addAction(cancelAction)
+
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    @objc private func deleteButtonTapped() {
+        deleteSelectedPhotos()
     }
     
     func bind(reactor: ArchiveReactor) {
@@ -168,6 +225,19 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
             .disposed(by: disposeBag)
     }
     
+    private func enableSelectionMode() {
+        recentView.isSelectionMode = true
+        deleteContainer.isHidden = false
+        updateDeleteButton(selectedCount: 0)
+        self.tabBarController?.tabBar.isHidden = true 
+    }
+    
+    private func cancelSelectionMode() {
+        recentView.isSelectionMode = false
+        deleteContainer.isHidden = true
+        self.tabBarController?.tabBar.isHidden = false
+    }
+    
     private func showView(at index: Int) {
         recentView.isHidden = true
         calendarView.isHidden = true
@@ -183,6 +253,64 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         default:
             break
         }
+    }
+    
+    private func updateDeleteButton(selectedCount: Int) {
+        if selectedCount > 0 {
+            deleteButton.isEnabled = true
+            deleteButton.setTitle("\(selectedCount)장 삭제하기", for: .normal)
+            deleteButton.setTitleColor(.white, for: .normal)
+            deleteButton.backgroundColor = .black
+        } else {
+            deleteButton.isEnabled = false
+            deleteButton.setTitle("삭제하기", for: .normal)
+            deleteButton.setTitleColor(UIColor.gray50, for: .normal)
+            deleteButton.backgroundColor = UIColor.gray300
+        }
+    }
+    
+    private func deleteSelectedPhotos() {
+        let selectedPhotos = recentView.getSelectedPhotos()
+        
+        if selectedPhotos.isEmpty {
+            let alert = UIAlertController(title: "알림", message: "삭제할 사진을 선택해주세요", preferredStyle: .alert)
+            alert.addAction(UIAlertAction(title: "확인", style: .default))
+            present(alert, animated: true)
+            return
+        }
+        
+        let alert = UIAlertController(
+            title: "사진 삭제",
+            message: "\(selectedPhotos.count)장의 사진을 삭제하시겠습니까?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
+            // TODO: Reactor에 삭제 액션 전달
+            print("삭제된 사진 개수: \(selectedPhotos.count)")
+            
+            // 삭제 완료 후 선택 모드 해제
+            self?.cancelSelectionMode()
+        })
+        
+        present(alert, animated: true)
+    }
+    
+    private func showDeleteAllConfirmation() {
+        let alert = UIAlertController(
+            title: "전체 삭제",
+            message: "모든 사진을 삭제하시겠습니까?",
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
+            // TODO: Reactor에 전체 삭제 액션 전달
+            print("전체 삭제 실행")
+        })
+        
+        present(alert, animated: true)
     }
 }
 
@@ -200,7 +328,6 @@ extension ArchiveViewController: CalendarViewDelegate {
 
 extension ArchiveViewController: QuestionListViewDelegate {
     func didSelectQuestion(_ question: ArchiveQuestionItem) {
-        
         reactor?.action.onNext(.fetchQuestionDetail(coupleQuestionId: question.coupleQuestionId))
     }
     
@@ -218,5 +345,9 @@ extension ArchiveViewController: ArchiveRecentViewDelegate {
     
     func didScrollToBottomRecent() {
         reactor?.action.onNext(.loadMoreRecent)
+    }
+    
+    func didChangeSelection(count: Int) {
+        updateDeleteButton(selectedCount: count)
     }
 }

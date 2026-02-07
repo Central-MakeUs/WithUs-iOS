@@ -84,14 +84,6 @@ final class SignUpNickNameViewController: BaseViewController, View {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupKeyboardObservers()
-        let attributed = createHighlightedAttributedString(
-            fullText: "1 / 3",
-            highlightText: "1",
-            highlightColor: UIColor(hex: "#EF4044"),
-            normalColor: UIColor.gray900,
-            font: UIFont.pretendard16SemiBold
-        )
-        setRightBarButton(attributedTitle: attributed)
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -137,6 +129,17 @@ final class SignUpNickNameViewController: BaseViewController, View {
     override func setupActions() {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         nicknameTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+    }
+    
+    override func setNavigation() {
+        let attributed = createHighlightedAttributedString(
+            fullText: "1 / 3",
+            highlightText: "1",
+            highlightColor: UIColor(hex: "#EF4044"),
+            normalColor: UIColor.gray900,
+            font: UIFont.pretendard16SemiBold
+        )
+        setRightBarButton(attributedTitle: attributed)
     }
     
     func bind(reactor: SignUpReactor) {

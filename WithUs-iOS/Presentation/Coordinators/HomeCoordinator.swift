@@ -163,6 +163,12 @@ class HomeCoordinator: Coordinator {
 
 extension HomeCoordinator: InviteCoordinatorDelegate {
     func inviteCoordinatorDidFinish(_ coordinator: InviteCoordinator) {
+        if let homePagerVC = navigationController.viewControllers.first(where: { $0 is HomePagerViewController }) {
+            navigationController.popToViewController(homePagerVC, animated: true)
+        } else {
+            navigationController.popToRootViewController(animated: true)
+        }
+        
         childCoordinators.removeAll { $0 === coordinator }
         inviteCoordinator = nil
         coordinator.finish()

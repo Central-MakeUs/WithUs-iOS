@@ -87,15 +87,6 @@ final class SignupBirthDayViewController: BaseViewController, View {
         super.viewDidLoad()
         setupKeyboardObservers()
         setupGestureRecognizer()
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
-        let attributed = createHighlightedAttributedString(
-            fullText: "2 / 3",
-            highlightText: "2",
-            highlightColor: UIColor(hex: "#EF4044"),
-            normalColor: UIColor.gray900,
-            font: UIFont.pretendard16SemiBold
-        )
-        setRightBarButton(attributedTitle: attributed)
     }
     
     override func setupUI() {
@@ -136,6 +127,18 @@ final class SignupBirthDayViewController: BaseViewController, View {
         nextButton.addTarget(self, action: #selector(nextButtonTapped), for: .touchUpInside)
         birthDayTextField.delegate = self
         birthDayTextField.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
+    }
+    
+    override func setNavigation() {
+        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        let attributed = createHighlightedAttributedString(
+            fullText: "2 / 3",
+            highlightText: "2",
+            highlightColor: UIColor(hex: "#EF4044"),
+            normalColor: UIColor.gray900,
+            font: UIFont.pretendard16SemiBold
+        )
+        setRightBarButton(attributedTitle: attributed)
     }
     
     func bind(reactor: SignUpReactor) {
