@@ -14,7 +14,7 @@ final class LoginReactor: Reactor {
         
     enum Action {
         case kakaoLogin
-        case appleLogin(identityToken: String)
+        case appleLogin(identityToken: String, authorizationCode: String)
     }
     
     enum Mutation {
@@ -45,9 +45,8 @@ final class LoginReactor: Reactor {
         case .kakaoLogin:
             return kakaoLoginFlow()
             
-        case .appleLogin(let token):
-            print(token)
-            return .just(.setError("Apple 로그인은 준비 중입니다."))
+        case .appleLogin(let identityToken, let authorizationCode):
+            return appleLoginFlow(identityToken: identityToken, authorizationCode: authorizationCode)
         }
     }
     
@@ -85,15 +84,58 @@ final class LoginReactor: Reactor {
                         let oauthToken = try await self.kakaoLogin()
                         let fcmToken = FCMTokenManager.shared.fcmToken ?? ""
                         
-                        let result = try await self.kakaoLoginUseCase.execute(
+                        let result = try await self.kakaoLoginUseCase.executeKakao(
                             oauthToken: oauthToken,
-                            fcmToken: fcmToken
+                            fcmToken: fcmToken,
+                            authorizationCode: ""
                         ).userOnboardingStatus
                         
                         observer.onNext(.setLoginSuccess(status: result))
                         observer.onCompleted()
                         
                     } catch let error as KakaoLoginError {
+                        observer.onNext(.setError(error.message))
+                        observer.onCompleted()
+                        
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
+                        observer.onCompleted()
+                        
+                    } catch {
+                        observer.onNext(.setError("로그인에 실패했습니다."))
+                        observer.onCompleted()
+                    }
+                }
+                
+                return Disposables.create()
+            }
+        ])
+    }
+    
+    private func appleLoginFlow(identityToken: String, authorizationCode: String) -> Observable<Mutation> {
+        return Observable.concat([
+            .just(.setLoading(true)),
+            Observable.create { [weak self] observer in
+                guard let self = self else {
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                
+                Task {
+                    do {
+                        let oauthToken = identityToken
+                        let fcmToken = FCMTokenManager.shared.fcmToken ?? ""
+                        
+                        let result = try await self.kakaoLoginUseCase.executeApple(
+                            oauthToken: oauthToken,
+                            fcmToken: fcmToken,
+                            authorizationCode: authorizationCode
+                        ).userOnboardingStatus
+                        
+                        observer.onNext(.setLoginSuccess(status: result))
+                        observer.onCompleted()
+                        
+                    } catch let error as AppleLoginError {
                         observer.onNext(.setError(error.message))
                         observer.onCompleted()
                         

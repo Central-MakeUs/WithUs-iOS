@@ -181,36 +181,33 @@ extension LoginViewController: ASAuthorizationControllerDelegate {
         guard
             let identityToken = credential.identityToken,
             let authorizationCode = credential.authorizationCode,
-            let identityTokenString = String(data: identityToken, encoding: .utf8)
+            let identityTokenString = String(data: identityToken, encoding: .utf8),
+            let authorizationCodeString = String(data: authorizationCode, encoding: .utf8)
         else {
-            reactor?.action.onNext(.appleLogin(identityToken: ""))
+            reactor?.action.onNext(.appleLogin(identityToken: "", authorizationCode: ""))
             return
         }
         let appleUserIdentifier = credential.user
         let fullName = credential.fullName
         let email = credential.email
-
         UserManager.shared.appleUserIdentifier = appleUserIdentifier
         if let email = email {
             UserManager.shared.email = email
         }
-
         if let familyName = fullName?.familyName,
             let givenName = fullName?.givenName {
-            
             UserManager.shared.fullName = familyName + givenName
         }
-        print(String(data: authorizationCode, encoding: .utf8))
-        reactor?.action.onNext(.appleLogin(identityToken: identityTokenString))
+        print("identityTokenString: \(identityTokenString)")
+        print("authorizationCodeString: \(authorizationCodeString)")
+        reactor?.action.onNext(.appleLogin(identityToken: identityTokenString, authorizationCode: authorizationCodeString))
     }
 
     func authorizationController(
         controller: ASAuthorizationController,
         didCompleteWithError error: Error
     ) {
-        reactor?.action.onNext(
-            .appleLogin(identityToken: "")
-        )
+        reactor?.action.onNext(.appleLogin(identityToken: "", authorizationCode: ""))
     }
 }
 

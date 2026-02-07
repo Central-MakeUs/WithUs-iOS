@@ -8,7 +8,7 @@
 import Alamofire
 
 enum LoginEndpoint {
-    case socialLogin(provider: SocialProvider, oauthToken: String, fcmToken: String?)
+    case socialLogin(provider: SocialProvider, oauthToken: String, fcmToken: String?, authorizationCode: String?)
 }
 
 enum SocialProvider: String {
@@ -21,7 +21,7 @@ extension LoginEndpoint: EndpointProtocol {
     
     var path: String {
         switch self {
-        case .socialLogin(let provider, _, _):
+        case .socialLogin(let provider, _, _, _):
             return "/api/auth/login/\(provider.rawValue)"
         }
     }
@@ -30,13 +30,17 @@ extension LoginEndpoint: EndpointProtocol {
     
     var parameters: Parameters? {
         switch self {
-        case .socialLogin(_, let oauthToken, let fcmToken):
+        case .socialLogin(_, let oauthToken, let fcmToken, let authorizationCode):
             var params: [String: Any] = [
                 "oauthToken": oauthToken
             ]
             
             if let fcmToken = fcmToken {
                 params["fcmToken"] = fcmToken
+            }
+            
+            if let authorizationCode = authorizationCode {
+                params["authorizationCode"] = authorizationCode
             }
             
             return params

@@ -16,7 +16,15 @@ struct SocialLoginResult {
 }
 
 protocol KakaoLoginUseCaseProtocol {
-    func execute(oauthToken: String, fcmToken: String?) async throws -> SocialLoginResult
+    func executeKakao(oauthToken: String,
+                 fcmToken: String?,
+                 authorizationCode: String?
+    ) async throws -> SocialLoginResult
+    
+    func executeApple(oauthToken: String,
+                 fcmToken: String?,
+                 authorizationCode: String?
+    ) async throws -> SocialLoginResult
 }
 
 final class KakaoLoginUseCase: KakaoLoginUseCaseProtocol {
@@ -26,7 +34,10 @@ final class KakaoLoginUseCase: KakaoLoginUseCaseProtocol {
         self.repository = repository
     }
     
-    func execute(oauthToken: String, fcmToken: String?) async throws -> SocialLoginResult {
+    func executeKakao(oauthToken: String,
+                 fcmToken: String?,
+                 authorizationCode: String?
+    ) async throws -> SocialLoginResult {
         guard !oauthToken.isEmpty else {
             throw KakaoLoginError.emptyToken
         }
@@ -34,7 +45,25 @@ final class KakaoLoginUseCase: KakaoLoginUseCaseProtocol {
         let response = try await repository.socialLogin(
             provider: .kakao,
             oauthToken: oauthToken,
-            fcmToken: fcmToken
+            fcmToken: fcmToken,
+            authorizationCode: authorizationCode
+        )
+        
+        return SocialLoginResult(response: response)
+    }
+    
+    func executeApple(oauthToken: String,
+                      fcmToken: String?,
+                      authorizationCode: String?) async throws -> SocialLoginResult {
+        guard !oauthToken.isEmpty, let authorizationCode, !authorizationCode.isEmpty else {
+            throw AppleLoginError.emptyToken
+        }
+        
+        let response = try await repository.socialLogin(
+            provider: .apple,
+            oauthToken: oauthToken,
+            fcmToken: fcmToken,
+            authorizationCode: authorizationCode
         )
         
         return SocialLoginResult(response: response)
@@ -52,6 +81,23 @@ enum KakaoLoginError: Error {
             return "토큰이 올바르지 않습니다."
         case .kakaoLoginFailed:
             return "카카오 로그인에 실패했습니다."
+        case .cancelled:
+            return "로그인이 취소되었습니다."
+        }
+    }
+}
+
+enum AppleLoginError: Error {
+    case emptyToken
+    case appleLoginFailed
+    case cancelled
+    
+    var message: String {
+        switch self {
+        case .emptyToken:
+            return "토큰이 올바르지 않습니다."
+        case .appleLoginFailed:
+            return "애플 로그인에 실패했습니다."
         case .cancelled:
             return "로그인이 취소되었습니다."
         }

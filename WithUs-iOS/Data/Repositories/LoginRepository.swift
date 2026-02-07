@@ -11,7 +11,8 @@ protocol LoginRepositoryProtocol {
     func socialLogin(
         provider: SocialProvider,
         oauthToken: String,
-        fcmToken: String?
+        fcmToken: String?,
+        authorizationCode: String?
     ) async throws -> SocialLoginResponse
 }
 
@@ -25,12 +26,14 @@ final class LoginRepository: LoginRepositoryProtocol {
     func socialLogin(
         provider: SocialProvider,
         oauthToken: String,
-        fcmToken: String?
+        fcmToken: String?,
+        authorizationCode: String?
     ) async throws -> SocialLoginResponse {
         let endpoint = LoginEndpoint.socialLogin(
             provider: provider,
             oauthToken: oauthToken,
-            fcmToken: fcmToken
+            fcmToken: fcmToken,
+            authorizationCode: authorizationCode
         )
         
         let response = try await networkService.request(
