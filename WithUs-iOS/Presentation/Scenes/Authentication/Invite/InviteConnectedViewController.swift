@@ -40,7 +40,8 @@ final class InviteConnectedViewController: BaseViewController, View {
     }
     
     private let imageView = UIImageView().then {
-        $0.image = UIImage(systemName: "heart.fill")
+        $0.image = UIImage(named: "invite_complete")
+        $0.backgroundColor = .white
         $0.contentMode = .scaleAspectFit
         $0.layer.cornerRadius = 20
     }
@@ -78,7 +79,7 @@ final class InviteConnectedViewController: BaseViewController, View {
         
         imageView.snp.makeConstraints {
             $0.top.equalTo(titleStackView.snp.bottom).offset(42)
-            $0.size.equalTo(167)
+            $0.size.equalTo(200)
             $0.centerX.equalToSuperview()
         }
         
@@ -91,6 +92,10 @@ final class InviteConnectedViewController: BaseViewController, View {
     
     override func setupActions() {
         startButton.addTarget(self, action: #selector(startTapped), for: .touchUpInside)
+    }
+    
+    override func setNavigation() {
+        navigationItem.hidesBackButton = true
     }
     
     func bind(reactor: InviteInputCodeReactor) {

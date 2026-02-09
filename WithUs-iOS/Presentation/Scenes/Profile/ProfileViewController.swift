@@ -338,6 +338,13 @@ extension ProfileViewController: UICollectionViewDelegate {
             openExternalBrowser(urlStr: "https://mesquite-castanet-719.notion.site/WITHUS-2e44b00730818039a6d0cf0adf89168c?source=copy_link")
         case .terms:
             openExternalBrowser(urlStr: "https://mesquite-castanet-719.notion.site/WITHUS-2e44b0073081804bb7b8dbc7e4899bc4?source=copy_link")
+        case .notification:
+            guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+                    return
+                }
+                if UIApplication.shared.canOpenURL(settingsUrl) {
+                    UIApplication.shared.open(settingsUrl, options: [:], completionHandler: nil)
+                }
         default:
             break
         }

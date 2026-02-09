@@ -40,7 +40,8 @@ final class InviteVerifiedViewController: BaseViewController, View {
     }
     
     private let imageView = UIImageView().then {
-        $0.image = UIImage(systemName: "heart.fill")
+        $0.image = UIImage(named: "need_invite")
+        $0.backgroundColor = .white
         $0.contentMode = .scaleAspectFit
         $0.layer.cornerRadius = 20
     }
@@ -96,7 +97,7 @@ final class InviteVerifiedViewController: BaseViewController, View {
         
         imageView.snp.makeConstraints {
             $0.top.equalTo(titleStackView.snp.bottom)
-            $0.size.equalTo(167)
+            $0.size.equalTo(200)
             $0.centerX.equalToSuperview()
         }
         
