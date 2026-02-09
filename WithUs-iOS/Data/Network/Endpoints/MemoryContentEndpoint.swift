@@ -11,6 +11,7 @@ enum MemoryContentEndpoint: EndpointProtocol {
     case uploadImage(imageKey: String, title: String)
     case fetchImage(year: Int, month: Int)
     case makeMemory(weekEndDate: String, imageKey: String)
+    case fetchDetailImage(memoryType: MemoryType, weekEndDate: String?, targetId: Int?)
     
     var path: String {
         switch self {
@@ -20,6 +21,8 @@ enum MemoryContentEndpoint: EndpointProtocol {
             return "/api/me/couple/memories"
         case .makeMemory(let weekEndDate, _):
             return "/api/me/couple/memories/\(weekEndDate)"
+        case .fetchDetailImage:
+            return "/api/me/couple/memories/detail"
         }
     }
     
@@ -27,7 +30,7 @@ enum MemoryContentEndpoint: EndpointProtocol {
         switch self {
         case .uploadImage, .makeMemory:
             return .post
-        case .fetchImage:
+        case .fetchImage, .fetchDetailImage:
             return .get
         }
     }
@@ -43,6 +46,20 @@ enum MemoryContentEndpoint: EndpointProtocol {
             return ["monthKey": monthKeyInt]
         case .makeMemory(weekEndDate: _, imageKey: let imageKey):
             return ["imageKey": imageKey]
+        case .fetchDetailImage(memoryType: let memoryType, weekEndDate: let weekEndDate, targetId: let targetId):
+            var params: [String: Any] = [
+                "memoryType": memoryType.rawValue
+            ]
+            
+            if let weekEndDate {
+                params["weekEndDate"] = weekEndDate
+            }
+            
+            if let targetId {
+                params["targetId"] = targetId
+            }
+            
+            return params
         }
     }
 }

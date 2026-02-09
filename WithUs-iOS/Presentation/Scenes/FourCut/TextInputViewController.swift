@@ -9,9 +9,14 @@ import SnapKit
 import Then
 import UIKit
 import ReactorKit
+import RxSwift
+
+protocol TextInputViewControllerDelegate: AnyObject {
+    func didUploadSuccess()
+}
 
 class TextInputViewController: BaseViewController, View {
-    
+    weak var delegate: TextInputViewControllerDelegate?
     var disposeBag: DisposeBag = DisposeBag()
     weak var coordinator: FourCutCoordinator?
     var selectedPhotos: [UIImage] = []
@@ -98,6 +103,7 @@ class TextInputViewController: BaseViewController, View {
         let image = UIImage(systemName: "xmark", withConfiguration: config)
         setRightBarButton(
             image: image,
+            action: #selector(closeButtonTapped),
             tintColor: .black
         )
         let titleLabel = UILabel()
@@ -108,6 +114,7 @@ class TextInputViewController: BaseViewController, View {
         titleLabel.attributedText = NSAttributedString(string: "문구 작성", attributes: attributes)
         titleLabel.sizeToFit()
         navigationItem.titleView = titleLabel
+        setLeftBarButton(image: UIImage(systemName: "chevron.left", withConfiguration: config))
     }
     
     override func setupUI() {
@@ -173,11 +180,17 @@ class TextInputViewController: BaseViewController, View {
         super.setupActions()
         textBtn.addTarget(self, action: #selector(dateLabelTapped), for: .touchUpInside)
         listBtn.addTarget(self, action: #selector(saveButtonTapped), for: .touchUpInside)
-
+        
     }
     
     func bind(reactor: MemoryReactor) {
-        
+        reactor.state.compactMap { $0.uploadedImageUrl }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .bind(onNext: { [weak self] imageUrl in
+                self?.delegate?.didUploadSuccess()
+            })
+            .disposed(by: disposeBag)
     }
     
     private func setupGridWithStackView() {
@@ -228,6 +241,10 @@ class TextInputViewController: BaseViewController, View {
     }
     
     // MARK: - Actions
+    
+    @objc private func closeButtonTapped() {
+        coordinator?.showUploadSuccessAndPopToRoot()
+    }
     
     @objc private func dateLabelTapped() {
         let bottomSheet = TextInputBottomSheet()

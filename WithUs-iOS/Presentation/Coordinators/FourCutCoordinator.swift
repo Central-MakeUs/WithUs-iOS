@@ -60,6 +60,9 @@ class FourCutCoordinator: Coordinator {
         textInputVC.coordinator = self
         textInputVC.selectedFrameColor = type
         textInputVC.reactor = self.reactor
+        if let fourCutVC = navigationController.viewControllers.first as? FourCutViewController {
+            textInputVC.delegate = fourCutVC
+        }
         navigationController.pushViewController(textInputVC, animated: true)
     }
     
@@ -99,6 +102,10 @@ class FourCutCoordinator: Coordinator {
     
     func pop() {
         navigationController.popViewController(animated: true)
+    }
+    
+    func showUploadSuccessAndPopToRoot() {
+        navigationController.popToRootViewController(animated: true)
     }
     
     func finish() {

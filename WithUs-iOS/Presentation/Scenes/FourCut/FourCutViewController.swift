@@ -49,8 +49,8 @@ class FourCutViewController: BaseViewController, View {
         $0.delegate = self
     }
     
-    private var currentYear: Int = 2026
-    private var currentMonth: Int = 4
+    private var currentYear: Int = Calendar.current.component(.year, from: Date())
+    private var currentMonth: Int = Calendar.current.component(.month, from: Date())
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -122,7 +122,20 @@ class FourCutViewController: BaseViewController, View {
             .distinctUntilChanged()
             .bind(onNext: { [weak self] isLoading in
                 if isLoading {
+                    print("로딩중")
                 } else {
+                    print("로딩끝")
+                }
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.isWeekMemoryCreating }
+            .distinctUntilChanged()
+            .bind(onNext: { [weak self] isLoading in
+                if isLoading {
+                    print("로딩중")
+                } else {
+                    print("로딩끝")
                 }
             })
             .disposed(by: disposeBag)
@@ -130,6 +143,15 @@ class FourCutViewController: BaseViewController, View {
         reactor.state.compactMap { $0.errorMessage }
             .bind(onNext: { [weak self] errorMessage in
                 self?.showErrorAlert(message: errorMessage)
+            })
+            .disposed(by: disposeBag)
+        
+        
+        reactor.state.compactMap { $0.detailMemory }
+            .distinctUntilChanged()
+            .bind(onNext: { [weak self] url in
+                guard !url.isEmpty else { return }
+                self?.coordinator?.showMemoryDetail(url)
             })
             .disposed(by: disposeBag)
     }
@@ -167,49 +189,58 @@ extension FourCutViewController: MemoryCollectionViewDelegate {
         
         switch summary.status {
         case .unavailable:
-            showUnavailableAlert()
+            break
         case .needCreate:
-            // 추억 만들기 화면으로 이동
             showCreateMemoryScreen(summary: summary)
             
         case .created:
             if summary.memoryType == .customMemory {
-                // 커스텀 메모리 상세
-//                coordinator?.showCustomMemoryDetail(customMemoryId: summary.customMemoryId!)
+                reactor?.action
+                    .onNext(
+                        .fetchDetailMemory(
+                            memoryType: summary.memoryType,
+                            weekEndDate: nil,
+                            targetId: summary.customMemoryId
+                        )
+                    )
             } else {
-                // 주간 메모리 상세
-//                coordinator?.showWeekMemoryDetail(imageUrl: summary.createdImageUrl!)
+                reactor?.action
+                    .onNext(
+                        .fetchDetailMemory(
+                            memoryType: summary.memoryType,
+                            weekEndDate: summary.weekEndDate,
+                            targetId: nil
+                        )
+                    )
             }
         }
     }
     
-    private func showUnavailableAlert() {
-        let alert = UIAlertController(
-            title: "추억 생성 불가",
-            message: "두 명 모두 6장 이상의 사진을 올려주세요.",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "확인", style: .default))
-        present(alert, animated: true)
-    }
-    
     private func showCreateMemoryScreen(summary: WeekMemorySummary) {
         guard let imageUrls = summary.needCreateImageUrls,
+              imageUrls.count == 12,
               let weekEndDate = summary.weekEndDate else { return }
         
-        // 추억 만들기 화면으로 이동
-//        coordinator?.showCreateWeekMemory(
-//            imageUrls: imageUrls,
-//            weekEndDate: weekEndDate
-//        )
+        reactor?.action.onNext(.createWeekMemory(
+            imageUrls: imageUrls,
+            weekEndDate: weekEndDate
+        ))
     }
 }
 
-// MARK: - Reactive Extension
 extension Reactive where Base: MemoryCollectionView {
     var memoryData: Binder<[WeekMemorySummary]> {
         return Binder(base) { collectionView, data in
             collectionView.memoryData = data
+        }
+    }
+}
+
+extension FourCutViewController: TextInputViewControllerDelegate {
+    func didUploadSuccess() {
+        coordinator?.showUploadSuccessAndPopToRoot()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            ToastView.show(message: "추억이 생성되었어요!", icon: UIImage(named: "ic_ok"))
         }
     }
 }

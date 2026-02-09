@@ -14,8 +14,9 @@ final class MemoryReactor: Reactor {
         case viewWillAppear
         case selectDate(year: Int, month: Int)
         case uploadImage(image: UIImage, title: String)
-        case createWeekMemory(image: UIImage, weekEndDate: String)
+        case createWeekMemory(imageUrls: [String], weekEndDate: String)
         case refreshMemories
+        case fetchDetailMemory(memoryType: MemoryType, weekEndDate: String?, targetId: Int?)
     }
     
     enum Mutation {
@@ -25,6 +26,9 @@ final class MemoryReactor: Reactor {
         case setMemorySummary(MemorySummaryResponse)
         case setMemoriesLoading(Bool)
         case setSelectedDate(year: Int, month: Int)
+        case setWeekMemoryCreating(Bool)
+        case setDetailMemory(String)
+        case clearDetailMemory
     }
     
     struct State {
@@ -33,8 +37,10 @@ final class MemoryReactor: Reactor {
         var errorMessage: String?
         var memorySummary: MemorySummaryResponse?
         var isMemoriesLoading: Bool = false
+        var isWeekMemoryCreating: Bool = false
         var selectedYear: Int
         var selectedMonth: Int
+        var detailMemory: String?
         
         init() {
             let now = Date()
@@ -54,25 +60,24 @@ final class MemoryReactor: Reactor {
     func mutate(action: Action) -> Observable<Mutation> {
         switch action {
         case .viewWillAppear:
-            // 현재 State의 선택된 년월로 로드
             return loadMemories(year: currentState.selectedYear, month: currentState.selectedMonth)
             
         case .selectDate(let year, let month):
-            // 날짜 선택 후 메모리 로드
             return .concat([
                 .just(.setSelectedDate(year: year, month: month)),
                 loadMemories(year: year, month: month)
             ])
             
         case .refreshMemories:
-            // 현재 선택된 년월로 새로고침
             return loadMemories(year: currentState.selectedYear, month: currentState.selectedMonth)
             
         case .uploadImage(let image, let title):
             return uploadImageAsync(image: image, title: title)
             
-        case .createWeekMemory(let image, let weekEndDate):
-            return createWeekMemoryAsync(image: image, weekEndDate: weekEndDate)
+        case .createWeekMemory(let imageUrls, let weekEndDate):
+            return createWeekMemoryFromUrls(imageUrls: imageUrls, weekEndDate: weekEndDate)
+        case .fetchDetailMemory(memoryType: let memoryType, weekEndDate: let weekEndDate, targetId: let targetId):
+            return loadDetailSummary(memoryType: memoryType, weekEndDate: weekEndDate, targetId: targetId)
         }
     }
     
@@ -101,6 +106,15 @@ final class MemoryReactor: Reactor {
         case .setSelectedDate(let year, let month):
             newState.selectedYear = year
             newState.selectedMonth = month
+            
+        case .setWeekMemoryCreating(let isCreating):
+            newState.isWeekMemoryCreating = isCreating
+            
+        case .setDetailMemory(let memory):
+            newState.detailMemory = memory
+            
+        case .clearDetailMemory:
+            newState.detailMemory = nil
         }
         return newState
     }
@@ -128,6 +142,7 @@ final class MemoryReactor: Reactor {
             }
         ])
     }
+    
     private func loadMemories(year: Int, month: Int) -> Observable<Mutation> {
         let startLoading: Observable<Mutation> = .just(.setMemoriesLoading(true))
         
@@ -135,19 +150,12 @@ final class MemoryReactor: Reactor {
             guard let self = self else { return Disposables.create() }
             
             Task {
-                do {
-                    let data = try await self.memoryContentUsecase.execute(year: year, month: month)
-                    await MainActor.run {
-                        observer.onNext(.setMemorySummary(data))
-                        observer.onNext(.setMemoriesLoading(false))
-                        observer.onCompleted()
-                    }
-                } catch {
-                    await MainActor.run {
-                        observer.onNext(.setError(error.localizedDescription))
-                        observer.onNext(.setMemoriesLoading(false))
-                        observer.onCompleted()
-                    }
+                 let data = try await self.memoryContentUsecase.execute(year: year, month: month)
+//                let data = self.createTestData()
+                await MainActor.run {
+                    observer.onNext(.setMemorySummary(data))
+                    observer.onNext(.setMemoriesLoading(false))
+                    observer.onCompleted()
                 }
             }
             
@@ -157,9 +165,10 @@ final class MemoryReactor: Reactor {
         return .concat([startLoading, fetchMemories])
     }
     
-    private func createWeekMemoryAsync(image: UIImage, weekEndDate: String) -> Observable<Mutation> {
-        return Observable.concat([
-            .just(.setLoading(true)),
+    private func loadDetailSummary(memoryType: MemoryType, weekEndDate: String?, targetId: Int?) -> Observable<Mutation> {
+        return Observable.concat(
+[
+            .just(.setMemoriesLoading(true)),
             Observable.create { [weak self] observer in
                 guard let self else {
                     observer.onCompleted()
@@ -168,16 +177,146 @@ final class MemoryReactor: Reactor {
                 
                 Task {
                     do {
-                        let imageKey = try await self.memoryContentUsecase.execute(weekEndDate: weekEndDate, image: image)
-                        observer.onNext(.setLoading(false))
-                        observer.onCompleted()
+                        let imageUrl = try await self.memoryContentUsecase.execute(
+                            memoryType: memoryType,
+                            weekEndDate: weekEndDate,
+                            targetId: targetId
+                        )
+                        
+                        await MainActor.run {
+                            observer.onNext(.setDetailMemory(imageUrl))
+                            observer.onNext(.setMemoriesLoading(false))
+                            observer.onNext(.clearDetailMemory)
+                            observer.onCompleted()
+                        }
+                        
                     } catch {
-                        observer.onNext(.setError(error.localizedDescription))
-                        observer.onCompleted()
+                        await MainActor.run {
+                            observer.onNext(.setError(error.localizedDescription))
+                            observer.onNext(.setMemoriesLoading(false))
+                            observer.onCompleted()
+                        }
                     }
                 }
+                
+                return Disposables.create()
+            }
+        ]
+)
+    }
+    
+    private func createWeekMemoryFromUrls(imageUrls: [String], weekEndDate: String) -> Observable<Mutation> {
+        return Observable.concat([
+            .just(.setWeekMemoryCreating(true)),
+            Observable.create { [weak self] observer in
+                guard let self else {
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                
+                Task {
+                    do {
+                        let fourCutImage = try await ImageGenerator.generateImage(
+                            imageUrls: imageUrls,
+                            dateText: weekEndDate,
+                            frameColor: .white
+                        )
+                        
+                        let _ = try await self.memoryContentUsecase.execute(
+                            weekEndDate: weekEndDate,
+                            image: fourCutImage
+                        )
+                        
+                        let refreshedData = try await self.memoryContentUsecase.execute(
+                            year: self.currentState.selectedYear,
+                            month: self.currentState.selectedMonth
+                        )
+                        
+                        await MainActor.run {
+                            observer.onNext(.setMemorySummary(refreshedData))
+                            observer.onNext(.setWeekMemoryCreating(false))
+                            observer.onCompleted()
+                        }
+                        
+                    } catch {
+                        await MainActor.run {
+                            observer.onNext(.setError(error.localizedDescription))
+                            observer.onNext(.setWeekMemoryCreating(false))
+                            observer.onCompleted()
+                        }
+                    }
+                }
+                
                 return Disposables.create()
             }
         ])
+    }
+    
+    private func createTestData() -> MemorySummaryResponse {
+        let needCreateMemory = WeekMemorySummary(
+            memoryType: .weekMemory,
+            title: "4월 2주 (03.29~04.04)",
+            customMemoryId: nil,
+            weekEndDate: "2026-01-31",
+            status: .needCreate,
+            needCreateImageUrls: [
+                "https://picsum.photos/500/500?random=1",
+                "https://picsum.photos/500/500?random=2",
+                "https://picsum.photos/500/500?random=3",
+                "https://picsum.photos/500/500?random=4",
+                "https://picsum.photos/500/500?random=5",
+                "https://picsum.photos/500/500?random=6",
+                "https://picsum.photos/500/500?random=7",
+                "https://picsum.photos/500/500?random=8",
+                "https://picsum.photos/500/500?random=9",
+                "https://picsum.photos/500/500?random=10",
+                "https://picsum.photos/500/500?random=11",
+                "https://picsum.photos/500/500?random=12"
+            ],
+            createdImageUrl: nil,
+            createdAt: "2026-04-04T23:59:99.999Z"
+        )
+        
+        let unavailableMemory = WeekMemorySummary(
+            memoryType: .weekMemory,
+            title: "4월 1주 (03.22~03.28)",
+            customMemoryId: nil,
+            weekEndDate: "2026-03-28",
+            status: .unavailable,
+            needCreateImageUrls: nil,
+            createdImageUrl: nil,
+            createdAt: "2026-03-28T23:59:99.999Z"
+        )
+        
+        let createdWeekMemory = WeekMemorySummary(
+            memoryType: .weekMemory,
+            title: "3월 4주 (03.15~03.21)",
+            customMemoryId: nil,
+            weekEndDate: "2026-03-21",
+            status: .created,
+            needCreateImageUrls: nil,
+            createdImageUrl: "https://picsum.photos/500/500?random=12",
+            createdAt: "2026-03-21T23:59:99.999Z"
+        )
+        
+        let createdCustomMemory = WeekMemorySummary(
+            memoryType: .customMemory,
+            title: "제주도 여행",
+            customMemoryId: 13,
+            weekEndDate: "2026-03-14",
+            status: .created,
+            needCreateImageUrls: nil,
+            createdImageUrl: "https://s3.withus.com/guides/pose3.png",
+            createdAt: "2026-03-14T23:59:99.999Z"
+        )
+        
+        return MemorySummaryResponse(
+            monthKey: 202602, weekMemorySummaries: [
+                needCreateMemory,
+                unavailableMemory,
+                createdWeekMemory,
+                createdCustomMemory
+            ]
+        )
     }
 }

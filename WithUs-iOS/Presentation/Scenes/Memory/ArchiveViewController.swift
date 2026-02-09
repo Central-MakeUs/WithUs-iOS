@@ -336,8 +336,6 @@ extension ArchiveViewController: QuestionListViewDelegate {
     }
 }
 
-// MARK: - ArchiveRecentViewDelegate
-
 extension ArchiveViewController: ArchiveRecentViewDelegate {
     func didSelectPhoto(_ photo: ArchivePhotoViewModel) {
         reactor?.action.onNext(.fetchPhotoDetail(date: photo.date, targetId: photo.id, targetType: photo.archiveType))

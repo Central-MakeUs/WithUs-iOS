@@ -12,6 +12,7 @@ protocol MemoryContentUseCaseProtocol {
     func execute(image: UIImage, title: String) async throws -> String
     func execute(year: Int, month: Int) async throws -> MemorySummaryResponse
     func execute(weekEndDate: String, image: UIImage) async throws -> String
+    func execute(memoryType: MemoryType, weekEndDate: String?, targetId: Int?) async throws -> String
 }
 
 final class MemoryContentUseCase: MemoryContentUseCaseProtocol {
@@ -69,5 +70,15 @@ final class MemoryContentUseCase: MemoryContentUseCaseProtocol {
         
         print("🎉 키워드 이미지 업로드 완료!")
         return uploadResult.imageKey
+    }
+    
+    func execute(memoryType: MemoryType, weekEndDate: String?, targetId: Int?) async throws -> String {
+        let result = try await repository.fetchDetailImage(
+            memoryType: memoryType,
+            weekEndDate: weekEndDate,
+            targetId: targetId
+        ).imageUrl
+        
+        return result
     }
 }

@@ -11,6 +11,7 @@ protocol MemoryContentRepositoryProtocol {
     func uploadImage(imageKey: String, title: String) async throws
     func fetchImage(year: Int, month: Int) async throws -> MemorySummaryResponse
     func makeMemory(weekEndDate: String, imageKey: String) async throws
+    func fetchDetailImage(memoryType: MemoryType, weekEndDate: String?, targetId: Int?) async throws -> MemoryDetailSummaryResponse
 }
 
 final class MemoryContentRepository: MemoryContentRepositoryProtocol {
@@ -34,5 +35,12 @@ final class MemoryContentRepository: MemoryContentRepositoryProtocol {
     func makeMemory(weekEndDate: String, imageKey: String) async throws {
         let endpoint = MemoryContentEndpoint.makeMemory(weekEndDate: weekEndDate, imageKey: imageKey)
         try await networkService.requestWithoutData(endpoint: endpoint)
+    }
+    
+    func fetchDetailImage(memoryType: MemoryType, weekEndDate: String?, targetId: Int?) async throws -> MemoryDetailSummaryResponse {
+        let endpoint = MemoryContentEndpoint.fetchDetailImage(memoryType: memoryType, weekEndDate: weekEndDate, targetId: targetId)
+        
+        let response = try await networkService.request(endpoint: endpoint, responseType: MemoryDetailSummaryResponse.self)
+        return response
     }
 }

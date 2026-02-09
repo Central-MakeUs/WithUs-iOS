@@ -49,37 +49,50 @@ struct MemoryFullCellView: View {
                     }
                     
                 case .needCreate:
-                    ZStack {
-                        Color.black.opacity(0.7)
-                        
-                        VStack(spacing: 8) {
-                            Text(getWeekText())
-                                .font(Font(UIFont.pretendard16SemiBold))
-                                .foregroundColor(.white)
-                                .multilineTextAlignment(.center)
+                    GeometryReader { geometry in
+                        ZStack {
+                            Image("blur_image")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                                .clipped()
                             
-                            Text("추억이 만들어졌어요.\n화면을 터치해 확인해 보세요!")
-                                .font(Font(UIFont.pretendard14Regular))
-                                .foregroundColor(.white.opacity(0.9))
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
+                            VStack(spacing: 8) {
+                                Text(getWeekText())
+                                    .font(Font(UIFont.pretendard16SemiBold))
+                                    .foregroundColor(.white)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text("추억이 만들어졌어요.\n화면을 터치해 확인해 보세요!")
+                                    .font(Font(UIFont.pretendard14Regular))
+                                    .foregroundColor(.white.opacity(0.9))
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(4)
+                            }
+                            .padding(.horizontal, 20)
                         }
-                        .padding(.horizontal, 20)
                     }
                     
                 case .unavailable:
-                    ZStack {
-                        Color.black.opacity(0.7)
-                        
-                        VStack(spacing: 8) {
-                            Text("두 명 모두 6장 이상\n사진을 올려서\n추억이 자동 생성돼요.")
-                                .font(Font(UIFont.pretendard14Regular))
-                                .foregroundColor(.white.opacity(0.9))
-                                .multilineTextAlignment(.center)
-                                .lineSpacing(4)
+                    GeometryReader { geometry in
+                        ZStack {
+                            Image("blur_image")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: geometry.size.width, height: geometry.size.height)
+                                .clipped()
+                            
+                            VStack(spacing: 8) {
+                                Text("두 명 모두 6장 이상\n사진을 올려서\n추억이 자동 생성돼요.")
+                                    .font(Font(UIFont.pretendard14Regular))
+                                    .foregroundColor(.white.opacity(0.9))
+                                    .multilineTextAlignment(.center)
+                                    .lineSpacing(4)
+                            }
+                            .padding(.horizontal, 20)
                         }
-                        .padding(.horizontal, 20)
                     }
+                    
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

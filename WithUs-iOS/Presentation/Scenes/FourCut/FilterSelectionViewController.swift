@@ -117,6 +117,7 @@ class FilterSelectionViewController: BaseViewController {
         view.backgroundColor  = UIColor.gray50
         setupGridWithStackView()
         displayPhotos()
+        updateButtonStates()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -134,6 +135,7 @@ class FilterSelectionViewController: BaseViewController {
         let image = UIImage(systemName: "xmark", withConfiguration: config)
         setRightBarButton(
             image: image,
+            action: #selector(closeButtonTapped),
             tintColor: .black
         )
         let titleLabel = UILabel()
@@ -144,6 +146,7 @@ class FilterSelectionViewController: BaseViewController {
         titleLabel.attributedText = NSAttributedString(string: "색상 선택", attributes: attributes)
         titleLabel.sizeToFit()
         navigationItem.titleView = titleLabel
+        setLeftBarButton(image: UIImage(systemName: "chevron.left", withConfiguration: config))
     }
     
     override func setupUI() {
@@ -232,7 +235,6 @@ class FilterSelectionViewController: BaseViewController {
     
     override func setupActions() {
         super.setupActions()
-        
         blackFrameButton.addTarget(self, action: #selector(blackFrameButtonTapped), for: .touchUpInside)
         whiteFrameButton.addTarget(self, action: #selector(whiteFrameButtonTapped), for: .touchUpInside)
         doneButton.addTarget(self, action: #selector(checkButtonTapped), for: .touchUpInside)
@@ -307,7 +309,7 @@ class FilterSelectionViewController: BaseViewController {
     // MARK: - Actions
     
     @objc private func closeButtonTapped() {
-        navigationController?.popViewController(animated: true)
+        coordinator?.showUploadSuccessAndPopToRoot()
     }
     
     @objc private func checkButtonTapped() {

@@ -101,6 +101,14 @@ class MonthCollectionView: UIView {
         
         return layout
     }
+    
+    func updateMonthAvailability(for year: Int, maxMonth: Int) {
+        monthData = monthData.map { item in
+            var updatedItem = item
+            updatedItem.isEnabled = item.month <= maxMonth
+            return updatedItem
+        }
+    }
 }
 
 extension MonthCollectionView: UICollectionViewDataSource {
@@ -125,7 +133,10 @@ extension MonthCollectionView: UICollectionViewDataSource {
 
 extension MonthCollectionView: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let month = monthData[indexPath.item].month
+        let item = monthData[indexPath.item]
+        guard item.isEnabled else { return }
+        
+        let month = item.month
         selectedMonth = month
         delegate?.monthCollectionView(self, didSelectMonth: month)
     }
@@ -136,8 +147,8 @@ extension MonthCollectionView: UICollectionViewDelegate {
 struct MonthItem {
     let month: Int
     let name: String
+    var isEnabled: Bool = true  // 추가
     
-    // 1월부터 12월까지 생성
     static func allMonths() -> [MonthItem] {
         let monthNames = ["1월", "2월", "3월", "4월", "5월", "6월",
                           "7월", "8월", "9월", "10월", "11월", "12월"]
@@ -145,7 +156,8 @@ struct MonthItem {
         return monthNames.enumerated().map { index, name in
             MonthItem(
                 month: index + 1,
-                name: name
+                name: name,
+                isEnabled: true
             )
         }
     }

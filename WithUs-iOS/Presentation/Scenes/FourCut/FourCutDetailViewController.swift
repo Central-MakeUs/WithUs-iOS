@@ -15,14 +15,12 @@ final class FourCutDetailViewController: BaseViewController {
     private let backgroundImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.clipsToBounds = true
-        $0.backgroundColor = UIColor.gray300
     }
     
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
     
     private let mainImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFit
-        $0.backgroundColor = UIColor.gray300
     }
     
     private let pageControl = UIPageControl().then {
@@ -119,6 +117,29 @@ final class FourCutDetailViewController: BaseViewController {
     
     override func setupActions() {
         closeButton.addTarget(self, action: #selector(didTapCloseButton), for: .touchUpInside)
+        downloadButton.addTarget(self, action: #selector(didTapDownloadButton), for: .touchUpInside)
+    }
+    
+    @objc private func didTapDownloadButton() {
+        guard let image = mainImageView.image else {
+            ToastView.show(message: "저장 실패")
+            return
+        }
+        
+        UIImageWriteToSavedPhotosAlbum(
+            image,
+            self,
+            #selector(image(_:didFinishSavingWithError:contextInfo:)),
+            nil
+        )
+    }
+    
+    @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        if let error = error {
+            ToastView.show(message: "저장 실패")
+        } else {
+            ToastView.show(message: "사진이 앨범에 저장되었습니다.")
+        }
     }
     
     @objc private func didTapCloseButton() {

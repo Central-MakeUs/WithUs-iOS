@@ -7,6 +7,11 @@
 
 import Foundation
 
+struct MemoryDetailSummaryResponse: Codable {
+    let title: String
+    let imageUrl: String
+}
+
 struct MemorySummaryResponse: Codable {
     let monthKey: Int
     let weekMemorySummaries: [WeekMemorySummary]

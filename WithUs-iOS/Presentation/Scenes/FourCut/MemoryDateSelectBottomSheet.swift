@@ -73,6 +73,7 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
         selectedYear = currentYear
         selectedMonth = currentMonth
         updateSelectedLabel()
+        updateMonthAvailability()
         containerView.transform = CGAffineTransform(translationX: 0, y: view.frame.height)
         localBlackView.alpha = 0
     }
@@ -147,14 +148,31 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
     @objc private func leftArrowTapped() {
         selectedYear -= 1
         updateSelectedLabel()
+        updateMonthAvailability()
+        
+        if selectedYear != currentYear || selectedMonth > 12 {
+            selectedMonth = 0
+            monthCollectionView.selectedMonth = nil
+        }
     }
+
     
     @objc private func rightArrowTapped() {
         selectedYear += 1
         updateSelectedLabel()
+        updateMonthAvailability()
+        
+        if selectedYear != currentYear {
+            selectedMonth = 0
+            monthCollectionView.selectedMonth = nil
+        }
     }
     
     @objc private func selectButtonTapped() {
+        guard selectedMonth > 0, selectedMonth <= 12 else {
+            return
+        }
+        
         onDateSelected?(selectedYear, selectedMonth)
         dismissWithAnimation()
     }
@@ -165,6 +183,63 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
     
     private func updateSelectedLabel() {
         selectedLabel.text = "\(selectedYear)년"
+    }
+    
+    private func updateMonthAvailability() {
+        let maxMonth = calculateMaxSelectableMonth(for: selectedYear)
+        
+        if selectedYear == currentYear {
+            monthCollectionView.selectedMonth = selectedMonth
+        } else {
+            monthCollectionView.selectedMonth = nil
+        }
+        
+        monthCollectionView.updateMonthAvailability(for: selectedYear, maxMonth: maxMonth)
+    }
+    
+    private func calculateMaxSelectableMonth(for year: Int) -> Int {
+        let today = Date()
+        let calendar = Calendar.current
+        let currentYear = calendar.component(.year, from: today)
+        let currentMonth = calendar.component(.month, from: today)
+        if year > currentYear {
+            return 0
+        }
+        if year < currentYear {
+            return 12
+        }
+        
+        let lastDayOfCurrentMonth = getLastDayOfMonth(year: currentYear, month: currentMonth)
+        
+        var dateComponents = DateComponents()
+        dateComponents.year = currentYear
+        dateComponents.month = currentMonth
+        dateComponents.day = lastDayOfCurrentMonth
+        
+        guard let lastDate = calendar.date(from: dateComponents) else {
+            return currentMonth
+        }
+        
+        let weekday = calendar.component(.weekday, from: lastDate)
+        if weekday == 7 {
+            return currentMonth
+        } else {
+            return min(currentMonth + 1, 12)
+        }
+    }
+    
+    private func getLastDayOfMonth(year: Int, month: Int) -> Int {
+        let calendar = Calendar.current
+        var dateComponents = DateComponents()
+        dateComponents.year = year
+        dateComponents.month = month + 1
+        dateComponents.day = 0
+        
+        guard let date = calendar.date(from: dateComponents) else {
+            return 31
+        }
+        
+        return calendar.component(.day, from: date)
     }
     
     private func dismissWithAnimation() {
@@ -218,8 +293,8 @@ final class MemoryDateSelectBottomSheetViewController: BaseViewController {
 
 extension MemoryDateSelectBottomSheetViewController: MonthCollectionViewDelegate {
     func monthCollectionView(_ view: MonthCollectionView, didSelectMonth month: Int) {
-         selectedMonth = month
-         print("Selected: \(selectedYear)년 \(selectedMonth)월")
-     }
+        selectedMonth = month
+        print("Selected: \(selectedYear)년 \(selectedMonth)월")
+    }
 }
 
