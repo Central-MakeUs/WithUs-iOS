@@ -60,7 +60,7 @@ class BaseViewController: UIViewController {
         let barButtonItem = UIBarButtonItem(customView: button)
         navigationItem.leftBarButtonItem = barButtonItem
         if #available(iOS 26.0, *) {
-          navigationItem.leftBarButtonItem?.hidesSharedBackground = true
+            navigationItem.leftBarButtonItem?.hidesSharedBackground = true
         }
     }
     
@@ -104,28 +104,37 @@ class BaseViewController: UIViewController {
         let barButtonItem = UIBarButtonItem(customView: button)
         navigationItem.rightBarButtonItem = barButtonItem
         if #available(iOS 26.0, *) {
-          navigationItem.rightBarButtonItem?.hidesSharedBackground = true
+            navigationItem.rightBarButtonItem?.hidesSharedBackground = true
         }
     }
     
     func setCenterLogo(image: UIImage?, width: CGFloat? = nil, height: CGFloat = 20) {
-            guard let logoImage = image else { return }
-            
-            let imageView = UIImageView(image: logoImage)
-            imageView.contentMode = .scaleAspectFit
-            
-            // 이미지의 비율을 유지하면서 높이를 기준으로 너비를 계산합니다.
-            let imageRatio = logoImage.size.width / logoImage.size.height
-            let finalWidth = width ?? (height * imageRatio)
-            
-            let containerView = UIView(frame: CGRect(x: 0, y: 0, width: finalWidth, height: height))
-            imageView.frame = containerView.bounds
-            containerView.addSubview(imageView)
-            
-            self.navigationItem.titleView = containerView
-        }
+        guard let logoImage = image else { return }
+        
+        let imageView = UIImageView(image: logoImage)
+        imageView.contentMode = .scaleAspectFit
+        
+        // 이미지의 비율을 유지하면서 높이를 기준으로 너비를 계산합니다.
+        let imageRatio = logoImage.size.width / logoImage.size.height
+        let finalWidth = width ?? (height * imageRatio)
+        
+        let containerView = UIView(frame: CGRect(x: 0, y: 0, width: finalWidth, height: height))
+        imageView.frame = containerView.bounds
+        containerView.addSubview(imageView)
+        
+        self.navigationItem.titleView = containerView
+    }
     
     @objc private func defaultBackAction() {
         navigationController?.popViewController(animated: true)
+    }
+    
+    func openExternalBrowser(urlStr: String) {
+        guard let url = URL(string: urlStr) else { return }
+        
+        // 해당 URL을 열 수 있는지 먼저 확인한 후 오픈합니다.
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
     }
 }

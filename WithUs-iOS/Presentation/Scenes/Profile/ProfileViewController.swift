@@ -332,6 +332,12 @@ extension ProfileViewController: UICollectionViewDelegate {
             } else {
                 ToastView.show(message: "회원가입을 진행해주세요.", icon: nil, position: .bottom)
             }
+        case .kakao:
+            openExternalBrowser(urlStr: "https://open.kakao.com/o/svs9Bjfi")
+        case .privacy:
+            openExternalBrowser(urlStr: "https://mesquite-castanet-719.notion.site/WITHUS-2e44b00730818039a6d0cf0adf89168c?source=copy_link")
+        case .terms:
+            openExternalBrowser(urlStr: "https://mesquite-castanet-719.notion.site/WITHUS-2e44b0073081804bb7b8dbc7e4899bc4?source=copy_link")
         default:
             break
         }
