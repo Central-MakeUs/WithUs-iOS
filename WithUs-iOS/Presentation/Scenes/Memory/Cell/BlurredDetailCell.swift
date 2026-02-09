@@ -35,4 +35,8 @@ final class BlurredDetailCell: UICollectionViewCell {
             time: data.time ?? ""
         )
     }
+    
+    func getMainImage() -> UIImage? {
+        return blurredView.mainImageView.image
+    }
 }

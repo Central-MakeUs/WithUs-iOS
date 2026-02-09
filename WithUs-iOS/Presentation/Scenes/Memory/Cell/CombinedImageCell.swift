@@ -40,4 +40,12 @@ final class CombinedImageCell: UICollectionViewCell {
                 bottomProfileURL: data.partnerProfileUrl ?? ""
             )
     }
+    
+    func getCombinedImage() -> UIImage? {
+        let renderer = UIGraphicsImageRenderer(bounds: combinedView.bounds)
+        
+        return renderer.image { context in
+            combinedView.layer.render(in: context.cgContext)
+        }
+    }
 }

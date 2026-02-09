@@ -38,6 +38,7 @@ final class ArchiveReactor: Reactor {
         case setQuestionLoading(Bool)
         case setQuestionDetail(ArchiveQuestionDetailResponse?)
         case setPhotoDetail(ArchivePhotoDetailResponse?)
+        case setInitialLoadComplete(Bool)
     }
     
     struct State {
@@ -55,6 +56,16 @@ final class ArchiveReactor: Reactor {
         var isQuestionLoading: Bool = false
         var questionDetail: ArchiveQuestionDetailResponse?
         var photoDetail: ArchivePhotoDetailResponse?
+        var isInitialLoadComplete: Bool = false
+        
+        var isInitialLoading: Bool {
+            return !isInitialLoadComplete && (isLoading || isQuestionLoading)
+        }
+        
+        // 전체 데이터가 비어있는지 확인 (초기 로딩 완료 후에만)
+        var isAllDataEmpty: Bool {
+            return isInitialLoadComplete && recentPhotos.isEmpty && questions.isEmpty
+        }
     }
     
     let initialState = State()
@@ -67,10 +78,54 @@ final class ArchiveReactor: Reactor {
     func mutate(action: Action) -> Observable<Mutation> {
         switch action {
         case .viewDidLoad:
+            let loadTasks: Observable<Mutation> = Observable.create { [weak self] observer in
+                guard let self = self else { return Disposables.create() }
+                
+                Task {
+                    let joinDate = await self.loadJoinDateAsync()
+                    await MainActor.run {
+                        observer.onNext(.setJoinDate(joinDate))
+                    }
+                    
+                    await MainActor.run {
+                        observer.onNext(.setLoading(true))
+                        observer.onNext(.setQuestionLoading(true))
+                    }
+                    
+                    async let recentResult = self.loadRecentPhotosAsync(cursor: nil)
+                    async let questionsResult = self.loadQuestionsAsync(cursor: nil)
+                    
+                    let (recentData, questionsData) = await (recentResult, questionsResult)
+                    
+                    await MainActor.run {
+                        // Recent Photos
+                        if let recentData = recentData {
+                            observer.onNext(.setRecentPhotos(recentData.photos))
+                            observer.onNext(.setNextCursor(recentData.nextCursor))
+                            observer.onNext(.setHasNext(recentData.hasNext))
+                        }
+                        observer.onNext(.setLoading(false))
+                        
+                        // Questions
+                        if let questionsData = questionsData {
+                            observer.onNext(.setQuestions(questionsData.questions))
+                            observer.onNext(.setQuestionNextCursor(questionsData.nextCursor))
+                            observer.onNext(.setQuestionHasNext(questionsData.hasNext))
+                        }
+                        observer.onNext(.setQuestionLoading(false))
+                        
+                        // 4. 초기 로딩 완료
+                        observer.onNext(.setInitialLoadComplete(true))
+                        observer.onCompleted()
+                    }
+                }
+                
+                return Disposables.create()
+            }
+            
             return .concat([
-                loadJoinDate(),
-                loadRecentPhotos(cursor: nil, isRefresh: true),
-                loadQuestionList(cursor: nil, isRefresh: true)
+                .just(.setInitialLoadComplete(false)),
+                loadTasks
             ])
             
         case .selectTab(let index):
@@ -90,8 +145,10 @@ final class ArchiveReactor: Reactor {
                 return .empty()
             }
             return loadQuestionList(cursor: currentState.questionNextCursor, isRefresh: false)
+            
         case .fetchQuestionDetail(let coupleQuestionId):
             return fetchQuestionDetail(coupleQuestionId: coupleQuestionId)
+            
         case .fetchPhotoDetail(date: let date, targetId: let targetId, targetType: let targetType):
             return fetchPhotoDetail(date: date, targetId: targetId, targetType: targetType)
         }
@@ -146,12 +203,15 @@ final class ArchiveReactor: Reactor {
             
         case .setQuestionLoading(let isLoading):
             newState.isQuestionLoading = isLoading
-        
+            
         case .setQuestionDetail(let response):
             newState.questionDetail = response
             
         case .setPhotoDetail(let response):
             newState.photoDetail = response
+            
+        case .setInitialLoadComplete(let isComplete):
+            newState.isInitialLoadComplete = isComplete
         }
         
         return newState
@@ -162,7 +222,6 @@ final class ArchiveReactor: Reactor {
             .flatMap { mutation -> Observable<Mutation> in
                 switch mutation {
                 case .setQuestionDetail(let detail):
-                    // questionDetail이 설정되면 즉시 nil로 초기화
                     if detail != nil {
                         return .concat(
                             .just(mutation),
@@ -170,7 +229,6 @@ final class ArchiveReactor: Reactor {
                         )
                     }
                 case .setPhotoDetail(let detail):
-                    // photoDetail이 설정되면 즉시 nil로 초기화
                     if detail != nil {
                         return .concat(
                             .just(mutation),
@@ -186,6 +244,36 @@ final class ArchiveReactor: Reactor {
         return clearDetailMutations
     }
     
+    // MARK: - Async Helpers
+    
+    private func loadJoinDateAsync() async -> Date? {
+        // TODO: 실제 UseCase에서 가입일 가져오기
+        return nil
+    }
+    
+    private func loadRecentPhotosAsync(cursor: String?) async -> (photos: [ArchivePhotoViewModel], nextCursor: String?, hasNext: Bool)? {
+        do {
+            let data = try await fetchArchiveListUseCase.execute(size: 20, cursor: cursor)
+            let viewModels = data.archiveList.flatMap { ArchivePhotoViewModel.from($0) }
+            return (viewModels, data.nextCursor, data.hasNext)
+        } catch {
+            print("❌ Recent Photos 로드 실패: \(error)")
+            return nil
+        }
+    }
+    
+    private func loadQuestionsAsync(cursor: String?) async -> (questions: [ArchiveQuestionItem], nextCursor: String?, hasNext: Bool)? {
+        do {
+            let data = try await fetchArchiveListUseCase.executeList(size: 20, cursor: cursor)
+            return (data.questionList, data.nextCursor, data.hasNext)
+        } catch {
+            print("❌ Questions 로드 실패: \(error)")
+            return nil
+        }
+    }
+    
+    // MARK: - Existing Methods (for pagination)
+    
     private func loadRecentPhotos(cursor: String?, isRefresh: Bool) -> Observable<Mutation> {
         let startLoading: Observable<Mutation> = .just(.setLoading(true))
         
@@ -195,7 +283,6 @@ final class ArchiveReactor: Reactor {
             Task {
                 do {
                     let data = try await self.fetchArchiveListUseCase.execute(size: 20, cursor: cursor)
-                    
                     let viewModels = data.archiveList.flatMap { ArchivePhotoViewModel.from($0) }
                     
                     await MainActor.run {
@@ -222,12 +309,6 @@ final class ArchiveReactor: Reactor {
         }
         
         return .concat([startLoading, fetchPhotos])
-    }
-    
-    private func loadJoinDate() -> Observable<Mutation> {
-        // TODO: 실제 UseCase에서 가입일 가져오기
-        // let joinDate = try await fetchUserInfoUseCase.getJoinDate()
-        return .just(.setJoinDate(nil)) // 임시로 nil 반환
     }
     
     private func loadCalendarData(year: Int, month: Int) -> Observable<Mutation> {
@@ -262,10 +343,7 @@ final class ArchiveReactor: Reactor {
             
             Task {
                 do {
-                    let data = try await self.fetchArchiveListUseCase.executeList(
-                        size: 20,
-                        cursor: cursor
-                    )
+                    let data = try await self.fetchArchiveListUseCase.executeList(size: 20, cursor: cursor)
                     
                     await MainActor.run {
                         if isRefresh {

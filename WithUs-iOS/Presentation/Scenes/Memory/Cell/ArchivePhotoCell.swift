@@ -117,9 +117,9 @@ class ArchivePhotoCell: UICollectionViewCell {
         
         if isSelectionMode {
             if isSelected {
-                checkboxImageView.image = UIImage(named: "ic_archive_checked")
+                checkboxImageView.image = UIImage(named: "ic_ok")
             } else {
-                checkboxImageView.image = UIImage(named: "ic_archive_no_checked")
+                checkboxImageView.image = UIImage(named: "ic_reason_no_checked")
             }
         }
     }

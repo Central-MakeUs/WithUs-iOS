@@ -18,7 +18,7 @@ final class BlurredDetailImageView: UIView {
     
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
     
-    private let mainImageView = UIImageView().then {
+    let mainImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFit
         $0.layer.cornerRadius = 16
     }

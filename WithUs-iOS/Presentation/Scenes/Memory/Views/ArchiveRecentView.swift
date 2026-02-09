@@ -158,18 +158,16 @@ extension ArchiveRecentView: UICollectionViewDataSource {
 
 extension ArchiveRecentView: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-            if isSelectionMode {
-                if selectedIndexes.contains(indexPath.item) {
-                    selectedIndexes.remove(indexPath.item)
-                } else {
-                    selectedIndexes.insert(indexPath.item)
-                }
-                collectionView.reloadItems(at: [indexPath])
+        if isSelectionMode {
+            if selectedIndexes.contains(indexPath.item) {
+                selectedIndexes.remove(indexPath.item)
             } else {
-                let photo = photos[indexPath.item]
-                delegate?.didSelectPhoto(photo)
+                selectedIndexes.insert(indexPath.item)
             }
+            collectionView.reloadItems(at: [indexPath])
+        } else {
+            let photo = photos[indexPath.item]
+            delegate?.didSelectPhoto(photo)
         }
     }
     

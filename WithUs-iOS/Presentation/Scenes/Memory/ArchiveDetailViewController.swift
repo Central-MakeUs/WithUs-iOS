@@ -133,6 +133,7 @@ class ArchiveDetailViewController: BaseViewController {
         
         collectionView.register(BlurredDetailCell.self, forCellWithReuseIdentifier: BlurredDetailCell.reuseId)
         collectionView.register(CombinedImageCell.self, forCellWithReuseIdentifier: CombinedImageCell.reuseId)
+        collectionView.register(EmptyDetailCell.self, forCellWithReuseIdentifier: EmptyDetailCell.reuseId)
         
         collectionView.dataSource = self
         collectionView.delegate = self
@@ -198,6 +199,12 @@ class ArchiveDetailViewController: BaseViewController {
         let hasMyPhoto = response.myInfo.answerImageUrl != nil
         let hasPartnerPhoto = response.partnerInfo.answerImageUrl != nil
         
+        if !hasMyPhoto && !hasPartnerPhoto {
+            items.append(DetailCellData(
+                kind: .empty,
+                question: response.questionContent
+            ))
+        }
         // 둘 다 있으면 합성 사진만
         if hasMyPhoto && hasPartnerPhoto {
             items.append(DetailCellData(
@@ -245,6 +252,14 @@ class ArchiveDetailViewController: BaseViewController {
             
             let hasMyPhoto = archiveInfo.myInfo.answerImageUrl != nil
             let hasPartnerPhoto = archiveInfo.partnerInfo.answerImageUrl != nil
+            
+            if !hasMyPhoto && !hasPartnerPhoto {
+                items.append(DetailCellData(
+                    kind: .empty,
+                    question: currentQuestion,
+                    isSelected: archiveInfo.selected
+                ))
+            }
             
             // 둘 다 있으면 합성 사진만
             if hasMyPhoto && hasPartnerPhoto {
@@ -314,7 +329,6 @@ class ArchiveDetailViewController: BaseViewController {
         pageControl.isHidden = items.count <= 1
         collectionView.reloadData()
         
-        // selected 인덱스로 스크롤 (0이 아닐 때만)
         if initialIndex > 0 {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
@@ -323,10 +337,15 @@ class ArchiveDetailViewController: BaseViewController {
             }
         }
         
-        // 초기 질문 설정
         if initialIndex < items.count {
             questionLabel.text = items[initialIndex].question
             questionLabel.isHidden = items[initialIndex].question?.isEmpty ?? true
+            
+            let isEmptyPage = items[initialIndex].kind == .empty
+            [shareButton, instagramButton, downloadButton].forEach {
+                $0.isEnabled = !isEmptyPage
+                $0.alpha = isEmptyPage ? 0.5 : 1.0
+            }
         }
     }
     
@@ -378,8 +397,60 @@ class ArchiveDetailViewController: BaseViewController {
     }
     
     @objc private func downloadButtonTapped() {
-        print("다운로드")
-        // TODO: 다운로드 기능 구현
+        let currentPage = pageControl.currentPage
+        
+        guard currentPage >= 0 && currentPage < items.count else {
+            ToastView.show(message: "저장 실패")
+            return
+        } 
+        
+        let currentItem = items[currentPage]
+        let indexPath = IndexPath(item: currentPage, section: 0)
+        guard let cell = collectionView.cellForItem(at: indexPath) else {
+            ToastView.show(message: "저장 실패")
+            return
+        }
+        
+        let imageToSave: UIImage?
+        
+        switch currentItem.kind {
+        case .single:
+            if let blurredCell = cell as? BlurredDetailCell {
+                imageToSave = blurredCell.getMainImage()
+            } else {
+                imageToSave = nil
+            }
+            
+        case .combined:
+            if let combinedCell = cell as? CombinedImageCell {
+                imageToSave = combinedCell.getCombinedImage()
+            } else {
+                imageToSave = nil
+            }
+            
+        case .empty:
+            imageToSave = nil
+        }
+        
+        guard let finalImage = imageToSave else {
+            ToastView.show(message: "저장 실패")
+            return
+        }
+        
+        UIImageWriteToSavedPhotosAlbum(
+            finalImage,
+            self,
+            #selector(image(_:didFinishSavingWithError:contextInfo:)),
+            nil
+        )
+    }
+
+    @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        if let error = error {
+            ToastView.show(message: "저장 실패")
+        } else {
+            ToastView.show(message: "사진이 앨범에 저장되었습니다.")
+        }
     }
 }
 
@@ -415,6 +486,15 @@ extension ArchiveDetailViewController: UICollectionViewDataSource {
                 return UICollectionViewCell()
             }
             cell.configure(with: data)
+            return cell
+            
+        case .empty:
+            guard let cell = collectionView.dequeueReusableCell(
+                withReuseIdentifier: EmptyDetailCell.reuseId,
+                for: indexPath
+            ) as? EmptyDetailCell else {
+                return UICollectionViewCell()
+            }
             return cell
         }
     }
@@ -459,6 +539,12 @@ extension ArchiveDetailViewController: UICollectionViewDelegateFlowLayout {
         } else {
             questionLabel.isHidden = true
         }
+        
+        let isEmptyPage = currentItem.kind == .empty
+        [shareButton, instagramButton, downloadButton].forEach {
+            $0.isEnabled = !isEmptyPage
+            $0.alpha = isEmptyPage ? 0.5 : 1.0
+        }
     }
 }
 
@@ -491,4 +577,5 @@ struct DetailCellData {
 enum DetailKind {
     case single
     case combined
+    case empty
 }

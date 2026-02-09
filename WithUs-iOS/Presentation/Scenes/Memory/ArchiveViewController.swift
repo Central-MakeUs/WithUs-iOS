@@ -21,6 +21,10 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
     
     private let containerView = UIView()
     
+    private let emptyView = EmptyArchiveView().then {
+        $0.isHidden = true
+    }
+    
     private lazy var recentView = ArchiveRecentView().then {
         $0.delegate = self
     }
@@ -35,13 +39,16 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         $0.delegate = self
     }
     
-    private var photos: [SinglePhotoData] = []
-    
     private var cellRegistration: UICollectionView.CellRegistration<UICollectionViewCell, ArchivePhoto>!
     
     private let deleteContainer = UIView().then {
         $0.backgroundColor = .white
         $0.isHidden = true
+    }
+    
+    private let buttonStackView = UIStackView().then {
+        $0.axis = .vertical
+        $0.spacing = 9
     }
     
     private let deleteButton = UIButton().then {
@@ -53,19 +60,28 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         $0.isEnabled = false
     }
     
+    private let cancelButton = UIButton().then {
+        $0.setTitle("돌아가기", for: .normal)
+        $0.setTitleColor(UIColor.init(hex: "#565962"), for: .normal)
+        $0.titleLabel?.font = UIFont.pretendard14Regular
+    }
+    
     override func setupUI() {
         super.setupUI()
         segmentedControl.delegate = self
         
         view.addSubview(segmentedControl)
         view.addSubview(containerView)
+        view.addSubview(emptyView)
         view.addSubview(deleteContainer)
         
         containerView.addSubview(recentView)
         containerView.addSubview(calendarView)
         containerView.addSubview(questionView)
         
-        deleteContainer.addSubview(deleteButton)
+        deleteContainer.addSubview(buttonStackView)
+        buttonStackView.addArrangedSubview(deleteButton)
+        buttonStackView.addArrangedSubview(cancelButton)
     }
     
     override func setupConstraints() {
@@ -77,6 +93,11 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         
         containerView.snp.makeConstraints {
             $0.top.equalTo(segmentedControl.snp.bottom).offset(16)
+            $0.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide)
+        }
+        
+        emptyView.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide)
             $0.leading.trailing.bottom.equalTo(view.safeAreaLayoutGuide)
         }
         
@@ -95,13 +116,20 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         deleteContainer.snp.makeConstraints {
             $0.horizontalEdges.equalToSuperview()
             $0.bottom.equalToSuperview()
-            $0.height.equalTo(100)
+            $0.height.equalTo(150)
+        }
+        
+        buttonStackView.snp.makeConstraints {
+            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.top.equalToSuperview().offset(9)
         }
         
         deleteButton.snp.makeConstraints {
-            $0.horizontalEdges.equalToSuperview().inset(16)
             $0.height.equalTo(56)
-            $0.top.equalToSuperview().offset(9)
+        }
+        
+        cancelButton.snp.makeConstraints {
+            $0.height.equalTo(41)
         }
     }
     
@@ -112,13 +140,12 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         )
         setLeftBarButton(attributedTitle: attributedText)
         
-        let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
-        let image = UIImage(systemName: "ellipsis", withConfiguration: config)
-        setRightBarButton(image: image, action: #selector(navigationBarTapped), tintColor: .black)
+        updateNavigationBar(for: 0)
     }
     
     override func setupActions() {
         deleteButton.addTarget(self, action: #selector(deleteButtonTapped), for: .touchUpInside)
+        cancelButton.addTarget(self, action: #selector(cancelButtonTapped), for: .touchUpInside)
     }
     
     @objc private func navigationBarTapped() {
@@ -144,6 +171,10 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
     
     @objc private func deleteButtonTapped() {
         deleteSelectedPhotos()
+    }
+    
+    @objc private func cancelButtonTapped() {
+        cancelSelectionMode()
     }
     
     func bind(reactor: ArchiveReactor) {
@@ -223,22 +254,65 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
                 self?.coordinator?.showQuestionDetail(.photo(detail))
             })
             .disposed(by: disposeBag)
+        
+        reactor.state.map { $0.isAllDataEmpty }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] isEmpty in
+                if isEmpty {
+                    self?.showEmptyState()
+                } else {
+                    self?.hideEmptyState()
+                }
+            })
+            .disposed(by: disposeBag)
+    }
+    
+    private func showEmptyState() {
+        emptyView.isHidden = false
+        segmentedControl.isHidden = true
+        containerView.isHidden = true
+        navigationItem.rightBarButtonItem = nil
+    }
+    
+    private func hideEmptyState() {
+        emptyView.isHidden = true
+        segmentedControl.isHidden = false
+        containerView.isHidden = false
+        updateNavigationBar(for: reactor?.currentState.selectedTab ?? 0)
+    }
+    
+    private func updateNavigationBar(for tabIndex: Int) {
+        if tabIndex == 0 {
+            let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
+            let image = UIImage(systemName: "ellipsis", withConfiguration: config)
+            setRightBarButton(image: image, action: #selector(navigationBarTapped), tintColor: .black)
+        } else {
+            navigationItem.rightBarButtonItem = nil
+        }
     }
     
     private func enableSelectionMode() {
         recentView.isSelectionMode = true
         deleteContainer.isHidden = false
         updateDeleteButton(selectedCount: 0)
-        self.tabBarController?.tabBar.isHidden = true 
+        self.tabBarController?.tabBar.isHidden = true
+        navigationItem.rightBarButtonItem = nil
     }
     
     private func cancelSelectionMode() {
         recentView.isSelectionMode = false
         deleteContainer.isHidden = true
         self.tabBarController?.tabBar.isHidden = false
+        
+        updateNavigationBar(for: 0)
     }
     
     private func showView(at index: Int) {
+        if index != 0 && !deleteContainer.isHidden {
+            cancelSelectionMode()
+        }
+        
         recentView.isHidden = true
         calendarView.isHidden = true
         questionView.isHidden = true
@@ -253,12 +327,15 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         default:
             break
         }
+        
+        // 탭 변경 시 네비게이션 바 업데이트
+        updateNavigationBar(for: index)
     }
     
     private func updateDeleteButton(selectedCount: Int) {
         if selectedCount > 0 {
             deleteButton.isEnabled = true
-            deleteButton.setTitle("\(selectedCount)장 삭제하기", for: .normal)
+            deleteButton.setTitle("\(selectedCount)장의 사진 삭제하기", for: .normal)
             deleteButton.setTitleColor(.white, for: .normal)
             deleteButton.backgroundColor = .black
         } else {
@@ -290,7 +367,6 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
             // TODO: Reactor에 삭제 액션 전달
             print("삭제된 사진 개수: \(selectedPhotos.count)")
             
-            // 삭제 완료 후 선택 모드 해제
             self?.cancelSelectionMode()
         })
         
