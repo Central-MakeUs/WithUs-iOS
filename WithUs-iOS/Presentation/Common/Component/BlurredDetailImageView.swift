@@ -8,6 +8,7 @@
 import UIKit
 import SnapKit
 import Then
+import Kingfisher
 
 final class BlurredDetailImageView: UIView {
     
@@ -24,7 +25,10 @@ final class BlurredDetailImageView: UIView {
     }
     
     private let profileImageView = UIImageView().then {
-        $0.contentMode = .scaleAspectFill
+        let config = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
+        $0.image = UIImage(systemName: "person.fill", withConfiguration: config)
+        $0.tintColor = .white
+        $0.contentMode = .center
         $0.backgroundColor = .white
         $0.layer.cornerRadius = 12
         $0.clipsToBounds = true
@@ -126,21 +130,40 @@ final class BlurredDetailImageView: UIView {
         timeLabel.text = time
     }
     
-    func configure(
-        imageURL: String,
-        name: String,
-        time: String,
-    ) {
-        nameLabel.text = name
-        timeLabel.text = time
+    func configure(_ data: DetailCellData) {
+        nameLabel.text = data.name
+        timeLabel.text = data.time
         
-        // TODO: URLSession 또는 Kingfisher로 이미지 로드
-        if let url = URL(string: imageURL) {
-            // 임시: 테스트용 이미지 로드
-            loadImage(from: url) { [weak self] image in
-                self?.backgroundImageView.image = image
-                self?.mainImageView.image = image
-            }
+        if let url = URL(string: data.imageUrl ?? "") {
+            backgroundImageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
+            
+            mainImageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
+        }
+        
+        if let profileUrl = data.profileUrl,
+           let url = URL(string: profileUrl) {
+            profileImageView.kf.setImage(
+                with: url,
+                placeholder: nil,
+                options: [
+                    .transition(.fade(0.2)),
+                    .cacheOriginalImage
+                ]
+            )
         }
     }
     

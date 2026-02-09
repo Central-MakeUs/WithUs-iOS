@@ -29,11 +29,7 @@ final class BlurredDetailCell: UICollectionViewCell {
     }
     
     func configure(with data: DetailCellData) {
-        blurredView.configure(
-            imageURL: data.imageUrl ?? "",
-            name: data.name ?? "",
-            time: data.time ?? ""
-        )
+        blurredView.configure(data)
     }
     
     func getMainImage() -> UIImage? {

@@ -11,6 +11,7 @@ import Then
 import SwiftUI
 import ReactorKit
 import RxSwift
+import Kingfisher
 
 final class ProfileViewController: BaseViewController, ReactorKit.View {
     weak var coordinator: ProfileCoordinator?
@@ -21,8 +22,10 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
     }
     
     private let profileImageView = UIImageView().then {
-        $0.image = UIImage(named: "jpg")
-        $0.contentMode = .scaleAspectFill
+        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
+        $0.image = UIImage(systemName: "person.fill", withConfiguration: config)
+        $0.tintColor = .white
+        $0.contentMode = .center
         $0.clipsToBounds = true
         $0.layer.cornerRadius = 20
         $0.backgroundColor = .gray200
@@ -86,6 +89,32 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
         rx.viewWillAppear
             .map { _ in Reactor.Action.viewWillAppear }
             .bind(to: reactor.action)
+            .disposed(by: disposeBag)
+
+        reactor.state
+            .compactMap { $0.user }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, user in
+                strongSelf.nicknameLabel.text = user.nickname
+                
+                if let profileUrlString = user.profileImageUrl,
+                   let url = URL(string: profileUrlString) {
+                    strongSelf.profileImageView.kf.setImage(
+                        with: url,
+                        placeholder: nil,
+                        options: [
+                            .transition(.fade(0.2)),
+                            .cacheOriginalImage
+                        ]
+                    )
+                }
+            }
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.userStatus }
+            .distinctUntilChanged { $0 == $1 }
+            .subscribe()
             .disposed(by: disposeBag)
     }
     
@@ -245,6 +274,18 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
     
     @objc private func modifyProfile() {
         coordinator?.showProfileModification()
+    }
+    
+    private func formattedJoinedText(from user: User) -> String? {
+        // If User has a proper Date property, format it here. Placeholder implementation:
+        // Attempt to read a createdAt string like "2024-10-06" and render "2024년 10월 6일 가입"
+        if let createdAt = (user as AnyObject).value(forKey: "createdAt") as? String {
+            let comps = createdAt.split(separator: "-").compactMap { Int($0) }
+            if comps.count == 3 {
+                return "\(comps[0])년 \(comps[1])월 \(comps[2])일 가입"
+            }
+        }
+        return nil
     }
 }
 

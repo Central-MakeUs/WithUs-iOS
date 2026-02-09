@@ -23,9 +23,12 @@ class ProfileImageView: UIView {
     }
     
     let profileImageView = UIImageView().then {
-        $0.contentMode = .scaleAspectFill
-        $0.backgroundColor = .white
+        let config = UIImage.SymbolConfiguration(pointSize: 67, weight: .regular)
+        $0.image = UIImage(systemName: "person.fill", withConfiguration: config)
+        $0.tintColor = .white
+        $0.contentMode = .center
         $0.clipsToBounds = true
+        $0.backgroundColor = .gray200
     }
     
     let cameraButton = UIButton().then {
@@ -87,14 +90,12 @@ class ProfileImageView: UIView {
         let profile = URL(string: profileUrl) {
             profileImageView.kf.setImage(
                 with: profile,
-                placeholder: UIImage(systemName: "person.fill"),
+                placeholder: nil,
                 options: [
                     .transition(.fade(0.2)),
                     .cacheOriginalImage
                 ]
             )
-        } else {
-            profileImageView.image = UIImage(systemName: "person.fill")
         }
     }
     

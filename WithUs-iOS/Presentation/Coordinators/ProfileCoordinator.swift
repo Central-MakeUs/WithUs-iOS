@@ -18,6 +18,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     private let userStateUseCase: FetchUserStatusUseCaseProtocol
     private let cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
     private let selectedKeywordUseCase: FetchSelectedKeywordUseCaseProtocol
+    private let fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
     
     private let profileReactor: ProfileReactor
     
@@ -32,7 +33,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         let updateRepository = UpdateUserRepository(networdService: networkService)
         let imageRepository = ImageRepository(networkService: networkService)
         let userStateRepository = HomeRepository(networkService: networkService)
-        let cancleRepositoyr = CoupleCancleConnectRepository(networkService: networkService)
+        let cancleRepository = CoupleCancleConnectRepository(networkService: networkService)
 
         //usecase
         self.uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
@@ -43,8 +44,9 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
             updateUserRepository: updateRepository
         )
         self.userStateUseCase = FetchUserStatusUseCase(repository: userStateRepository)
-        self.cancleConnectUseCase = CoupleCancleConnectUseCase(repository: cancleRepositoyr)
+        self.cancleConnectUseCase = CoupleCancleConnectUseCase(repository: cancleRepository)
         self.selectedKeywordUseCase = FetchSelectedKeywordUseCase(keywordRepository: keywordRepository)
+        self.fetchUserInfoUseCase = FetchUserInfoUseCase(userRepository: updateRepository)
         
         //transform
         self.keywordService = keywordService
@@ -53,7 +55,8 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         self.profileReactor = ProfileReactor(
             completeProfileUseCase: updateProfileuseCase,
             fetchUserStatusUseCase: userStateUseCase,
-            cancleConnectUseCase: cancleConnectUseCase
+            cancleConnectUseCase: cancleConnectUseCase,
+            fetchUserInfoUseCase: fetchUserInfoUseCase
         )
     }
     
@@ -166,6 +169,10 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         let vc = KeywordSettingViewController(fetchKeywordsUseCase: fetchKeywordsUseCase)
         vc.reactor = reactor
         navigationController.pushViewController(vc, animated: true)
+    }
+    
+    func pop() {
+        navigationController.popViewController(animated: true)
     }
     
     func finish() {

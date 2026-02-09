@@ -21,7 +21,10 @@ final class BlurredImageCardView: UIView {
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
     
     private let profileImageView = UIImageView().then {
-        $0.contentMode = .scaleAspectFill
+        let config = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
+        $0.image = UIImage(systemName: "person.fill", withConfiguration: config)
+        $0.tintColor = .white
+        $0.contentMode = .center
         $0.backgroundColor = .white
         $0.layer.cornerRadius = 17
         $0.clipsToBounds = true

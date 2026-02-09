@@ -13,6 +13,7 @@ import AVFoundation
 import ReactorKit
 import RxSwift
 import RxCocoa
+import Kingfisher
 
 final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
     
@@ -60,7 +61,6 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
         $0.isHidden = true
     }
     
-    // 생년월일 섹션
     private let birthDayLabel = UILabel().then {
         $0.text = "생년월일"
         $0.font = UIFont.pretendard16SemiBold
@@ -102,8 +102,8 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
     
     // MARK: - Properties
     private var selectedImage: UIImage?
-    private var isNicknameValid = false
-    private var isBirthDateValid = false
+    private var isNicknameValid = true
+    private var isBirthDateValid = true
     
     deinit {
         NotificationCenter.default.removeObserver(self)
@@ -237,23 +237,26 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
     }
     
     func bind(reactor: ProfileReactor) {
-        reactor.state.map { $0.nickname }
-            .distinctUntilChanged()
-            .bind(to: nicknameTextField.rx.text)
-            .disposed(by: disposeBag)
-        
-        reactor.state.map { $0.birthDate }
-            .distinctUntilChanged()
-            .bind(to: birthDayTextField.rx.text)
-            .disposed(by: disposeBag)
-        
-        reactor.state.map { $0.profileImage }
-            .distinctUntilChanged()
-            .subscribe(onNext: { [weak self] imageData in
-                if let data = imageData, let image = UIImage(data: data) {
-                    self?.profileView.profileImageView.image = image
+        reactor.state
+            .compactMap { $0.user }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, user in
+                strongSelf.nicknameTextField.text = user.nickname
+                strongSelf.profileView.setProfileImage(user.profileImageUrl)
+                if let birthDate = user.birthDate {
+                    strongSelf.birthDayTextField.text = birthDate
                 }
-            })
+            }
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isCompleted }
+            .distinctUntilChanged()
+            .filter { $0 }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, _ in
+                strongSelf.coordinator?.pop()
+            }
             .disposed(by: disposeBag)
     }
     

@@ -31,6 +31,7 @@ final class ProfileReactor: Reactor {
         case setSuccess
         case setError(String)
         case cancleSuccess
+        case resetCompleted
     }
     
     struct State {
@@ -49,15 +50,18 @@ final class ProfileReactor: Reactor {
     private let completeProfileUseCase: CompleteProfileUseCaseProtocol
     private let fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol
     private let cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
+    private let fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
     
     init(
         completeProfileUseCase: CompleteProfileUseCaseProtocol,
         fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol,
-        cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
+        cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol,
+        fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
     ) {
         self.completeProfileUseCase = completeProfileUseCase
         self.fetchUserStatusUseCase = fetchUserStatusUseCase
         self.cancleConnectUseCase = cancleConnectUseCase
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
@@ -65,10 +69,7 @@ final class ProfileReactor: Reactor {
         case .saveProfile(let nickname, let birthDate, let image):
             let imageData = image?.jpegData(compressionQuality: 0.7)
             return Observable.concat(
-                .just(.setNickname(nickname)),
-                .just(.setBirthDate(birthDate)),
-                .just(.setProfileImage(imageData)),
-                completeProfileFlow()
+                completeProfileFlow(nickname: nickname, birthDate: birthDate, image: imageData)
             )
             
         case .selectImage(let imageData):
@@ -78,12 +79,12 @@ final class ProfileReactor: Reactor {
             return .just(.setNickname(nickname))
             
         case .completeProfile:
-            return completeProfileFlow()
+            return completeProfileFlow(nickname: "", birthDate: "", image: nil)
             
         case .updateBirthDate(let birthDate):
             return .just(.setBirthDate(birthDate))
         case .viewWillAppear:
-            return fetchUserStatus()
+            return fetchStatusAndUser()
         case .cancleConnect:
             return cancleConnect()
         }
@@ -121,12 +122,14 @@ final class ProfileReactor: Reactor {
             
         case .cancleSuccess:
             newState.cancleSuccess = true
+        case .resetCompleted:
+            newState.isCompleted = false
         }
         
         return newState
     }
     
-    private func completeProfileFlow() -> Observable<Mutation> {
+    private func completeProfileFlow(nickname: String, birthDate: String, image: Data?) -> Observable<Mutation> {
         return Observable.concat(
             .just(.setLoading(true)),
             
@@ -135,18 +138,20 @@ final class ProfileReactor: Reactor {
                     observer.onCompleted()
                     return Disposables.create()
                 }
-                
+#warning("imagekey를 필수로 보내야해서 이미지 수정을 하지 않으면 404에러뜸 -> 서버 수정필요")
                 Task { @MainActor in
                     do {
-                        let result = try await self.completeProfileUseCase.execute(nickname: self.currentState.nickname, birthday: self.currentState.birthDate, profileImage: self.currentState.profileImage)
-                        print("   nickname: \(result.nickname)")
-                        print("   userId: \(result.userId)")
-                        print("   profileImageUrl: \(result.profileImageUrl ?? "없음")")
+                        let result = try await self.completeProfileUseCase.execute(
+                            nickname: nickname,
+                            birthday: birthDate,
+                            profileImage: image
+                        )
                         UserManager.shared.userId = result.userId
                         UserManager.shared.nickName = result.nickname
                         UserManager.shared.profileImageUrl = result.profileImageUrl
                         observer.onNext(.setUser(result))
                         observer.onNext(.setSuccess)
+                        observer.onNext(.resetCompleted)
                         observer.onCompleted()
                         
                     } catch let error as UploadImageError {
@@ -168,35 +173,37 @@ final class ProfileReactor: Reactor {
         )
     }
     
-    private func fetchUserStatus() -> Observable<Mutation> {
+    private func fetchStatusAndUser() -> Observable<Mutation> {
         return Observable.concat(
             .just(.setLoading(true)),
-            
             Observable.create { [weak self] observer in
                 guard let self = self else {
                     observer.onCompleted()
                     return Disposables.create()
                 }
-                
+
                 Task { @MainActor in
                     do {
-                        let result = try await self.fetchUserStatusUseCase.execute()
-                        observer.onNext(.setUserStatus(result))
+                        async let statusTask = self.fetchUserStatusUseCase.execute()
+                        async let userTask = self.fetchUserInfoUseCase.execute()
+
+                        let (status, user) = try await (statusTask, userTask)
+
+                        observer.onNext(.setUserStatus(status))
+                        observer.onNext(.setUser(user))
                         observer.onCompleted()
                     } catch let error as UploadImageError {
                         observer.onNext(.setError(error.message))
                         observer.onCompleted()
-                        
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))
                         observer.onCompleted()
-                        
                     } catch {
-                        observer.onNext(.setError("프로필 설정에 실패했습니다."))
+                        observer.onNext(.setError("프로필 정보를 불러오는데 실패했습니다."))
                         observer.onCompleted()
                     }
                 }
-                
+
                 return Disposables.create()
             }
         )
@@ -236,3 +243,4 @@ final class ProfileReactor: Reactor {
         )
     }
 }
+
