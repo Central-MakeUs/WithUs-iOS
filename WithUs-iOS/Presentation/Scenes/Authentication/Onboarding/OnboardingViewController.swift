@@ -16,19 +16,16 @@ final class OnboardingViewController: BaseViewController {
     
     private let onboardingPages: [OnboardingPage] = [
         OnboardingPage(
-            image: "heart.fill",
-            title: "매일 발송되는 랜덤 질문",
-            description: "주어진 질문에 사진 한 장으로\n서로의 마음을 확인해요"
+            image: "first",
+            description: "매일 제시되는 질문에 사진으로 답하면,\n상대의 생각을 자연스럽게 엿볼 수 있어요."
         ),
         OnboardingPage(
-            image: "photo.fill",
-            title: "사진으로 일상을 함께",
-            description: "쌓여가는 둘만의 사진 기록을\n한눈에 확인해요"
+            image: "second",
+            description: "함께 정한 키워드로 사진 한 장씩,\n부담 없이 가볍고 다정한 일상 공유가 시작돼요."
         ),
         OnboardingPage(
-            image: "hand.wave.fill",
-            title: "우리 취향대로 커플네컷",
-            description: "원하는 사진으로\n둘만의 인생 네컷을 만들어봐요"
+            image: "third",
+            description: "일주일의 일상 사진이 자동으로 추억이 되고,\n원하는 순간을 직접 담을 수도 있어요."
         )
     ]
      
@@ -71,25 +68,25 @@ final class OnboardingViewController: BaseViewController {
     
     override func setupUI() {
         super.setupUI()
-        view.addSubview(collectionView)
         view.addSubview(pageControl)
+        view.addSubview(collectionView)
         view.addSubview(nextButton)
         
-        collectionView.snp.makeConstraints {
-            $0.top.equalToSuperview().offset(166)
-            $0.leading.trailing.equalToSuperview()
-            $0.bottom.equalTo(pageControl.snp.top).offset(-140)
-        }
-        
         pageControl.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(28)
             $0.centerX.equalToSuperview()
-            $0.bottom.equalTo(nextButton.snp.top).offset(-50)
         }
         
         nextButton.snp.makeConstraints {
             $0.leading.trailing.equalToSuperview().inset(16)
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-20)
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-12)
             $0.height.equalTo(56)
+        }
+        
+        collectionView.snp.makeConstraints {
+            $0.top.equalTo(pageControl.snp.bottom).offset(28)
+            $0.leading.trailing.equalToSuperview()
+            $0.bottom.equalTo(nextButton.snp.top).offset(-46)
         }
     }
     

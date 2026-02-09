@@ -11,27 +11,20 @@ struct OnboardingPageView: View {
     let page: OnboardingPage
     
     var body: some View {
-        VStack(spacing: 0) {
-            Image(systemName: page.image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width:200, height: 200)
-                .foregroundStyle(Color(UIColor.gray400))
-            
-            VStack(spacing: 12) {
-                Text(page.title)
-                    .font(Font(UIFont.pretendard(.semiBold, size: 32)))
-                    .foregroundStyle(Color(UIColor.gray900))
-                    .multilineTextAlignment(.center)
-                
-                Text(page.description)
-                    .font(Font(UIFont.pretendard14Regular))
-                    .foregroundStyle(Color(UIColor.gray900))
-                    .multilineTextAlignment(.center)
+        VStack(spacing: 24) {
+            if let uiImage = UIImage(named: page.image) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
             }
-            .padding(.top, 32)
-            .padding(.horizontal, 43)
+            
+            Text(page.description)
+                .font(Font(UIFont.pretendard16Regular))
+                .foregroundStyle(Color(UIColor.gray900))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 43)
         }
     }
 }
-

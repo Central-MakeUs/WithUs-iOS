@@ -19,13 +19,12 @@ final class LoginViewController: BaseViewController, View {
     
     weak var coordinator: AuthCoordinator?
     
-    private let logoImageView = UIImageView().then {
-        $0.image = UIImage(named: "withup_logo")
-        $0.contentMode = .scaleAspectFit
+    private let imageView = UIImageView().then {
+        $0.image = UIImage(named: "login")
     }
     
     private let titleLabel = UILabel().then {
-        $0.text = "사진으로 이어지는,\n우리 둘만의 기록"
+        $0.text = "사진으로 이어지는,\n우리 둘만의 커플 이야기"
         $0.numberOfLines = 2
         $0.textAlignment = .left
         $0.textColor = UIColor.gray900
@@ -70,7 +69,7 @@ final class LoginViewController: BaseViewController, View {
     
     override func setupUI() {
         super.setupUI()
-        view.addSubview(logoImageView)
+        view.addSubview(imageView)
         view.addSubview(buttonStackView)
         view.addSubview(titleLabel)
         
@@ -79,20 +78,20 @@ final class LoginViewController: BaseViewController, View {
     }
     
     override func setupConstraints() {
-        logoImageView.snp.makeConstraints {
-            $0.top.equalTo(view.safeAreaLayoutGuide).offset(24)
-            $0.size.equalTo(CGSize(width: 100, height: 20))
+        imageView.snp.makeConstraints {
+            $0.top.equalTo(view.safeAreaLayoutGuide).offset(77)
+            $0.size.equalTo(343)
             $0.centerX.equalToSuperview()
+        }
+        
+        buttonStackView.snp.makeConstraints {
+            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-54)
+            $0.horizontalEdges.equalToSuperview().inset(16)
         }
         
         titleLabel.snp.makeConstraints {
             $0.left.equalToSuperview().offset(16)
-            $0.bottom.equalTo(buttonStackView.snp.top).offset(-16)
-        }
-        
-        buttonStackView.snp.makeConstraints {
-            $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-24)
-            $0.horizontalEdges.equalToSuperview().inset(16)
+            $0.bottom.equalTo(buttonStackView.snp.top).offset(-24)
         }
         
         kakaoButton.snp.makeConstraints {

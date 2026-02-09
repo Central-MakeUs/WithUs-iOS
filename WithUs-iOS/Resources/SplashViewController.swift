@@ -16,7 +16,7 @@ final class SplashViewController: UIViewController {
     }
     
     private let logoTitleLabel = UILabel().then {
-        $0.text = "사진으로 힙하게 쌓이는 커플 추억"
+        $0.text = "사진으로 쌓이는 우리의 일상"
         $0.font = UIFont.pretendard20Regular
         $0.textColor = .white
     }

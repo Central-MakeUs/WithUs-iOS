@@ -36,7 +36,7 @@ final class WaitingBothView: UIView {
     }
     
     private let heartImageView = UIImageView().then {
-        $0.image = UIImage(systemName: "heart.fill")
+        $0.image = UIImage(named: "waitingBoth")
         $0.contentMode = .scaleAspectFit
         $0.tintColor = .systemPink
         $0.layer.cornerRadius = 20
