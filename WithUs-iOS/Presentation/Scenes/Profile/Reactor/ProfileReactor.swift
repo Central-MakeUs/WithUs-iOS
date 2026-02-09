@@ -19,6 +19,7 @@ final class ProfileReactor: Reactor {
         case saveProfile(nickname: String, birthDate: String, image: UIImage?)
         case completeProfile
         case cancleConnect
+        case deleteAccount
     }
     
     enum Mutation {
@@ -31,6 +32,7 @@ final class ProfileReactor: Reactor {
         case setSuccess
         case setError(String)
         case cancleSuccess
+        case deleteSuccess
         case resetCompleted
     }
     
@@ -44,6 +46,7 @@ final class ProfileReactor: Reactor {
         var errorMessage: String?
         var userStatus: OnboardingStatus?
         var cancleSuccess: Bool = false
+        var deleteSuccess: Bool = false
     }
     
     var initialState: State = .init()
@@ -51,17 +54,20 @@ final class ProfileReactor: Reactor {
     private let fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol
     private let cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
     private let fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
+    private let deleteUserUseCase: UserDeleteUsecaseProtocol
     
     init(
         completeProfileUseCase: CompleteProfileUseCaseProtocol,
         fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol,
         cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol,
-        fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
+        fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol,
+        deleteUserUseCase: UserDeleteUsecaseProtocol
     ) {
         self.completeProfileUseCase = completeProfileUseCase
         self.fetchUserStatusUseCase = fetchUserStatusUseCase
         self.cancleConnectUseCase = cancleConnectUseCase
         self.fetchUserInfoUseCase = fetchUserInfoUseCase
+        self.deleteUserUseCase = deleteUserUseCase
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
@@ -87,6 +93,8 @@ final class ProfileReactor: Reactor {
             return fetchStatusAndUser()
         case .cancleConnect:
             return cancleConnect()
+        case .deleteAccount:
+            return deleteAccount()
         }
     }
     
@@ -124,6 +132,9 @@ final class ProfileReactor: Reactor {
             newState.cancleSuccess = true
         case .resetCompleted:
             newState.isCompleted = false
+            
+        case .deleteSuccess:
+            newState.deleteSuccess = true
         }
         
         return newState
@@ -234,6 +245,36 @@ final class ProfileReactor: Reactor {
                         
                     } catch {
                         observer.onNext(.setError("연결 해제에 실패했습니다."))
+                        observer.onCompleted()
+                    }
+                }
+                
+                return Disposables.create()
+            }
+        )
+    }
+    
+    private func deleteAccount() -> Observable<Mutation> {
+        return Observable.concat(
+            .just(.setLoading(true)),
+            
+            Observable.create { [weak self] observer in
+                guard let self = self else {
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                
+                Task { @MainActor in
+                    do {
+                        try await self.deleteUserUseCase.execute()
+                        observer.onNext(.deleteSuccess)
+                        observer.onCompleted()
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
+                        observer.onCompleted()
+                        
+                    } catch {
+                        observer.onNext(.setError("탈퇴에 실패했습니다."))
                         observer.onCompleted()
                     }
                 }

@@ -41,7 +41,7 @@ extension EndpointProtocol {
     
     public var encoding: ParameterEncoding {
         switch method {
-        case .get:
+        case .get, .delete:
             return URLEncoding.default
         default:
             return JSONEncoding.default

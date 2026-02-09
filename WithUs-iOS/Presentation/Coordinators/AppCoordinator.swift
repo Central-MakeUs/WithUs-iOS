@@ -43,6 +43,15 @@ class AppCoordinator: Coordinator {
         authCoordinator.start()
     }
     
+    private func showLoginFlow() {
+        childCoordinators.removeAll()
+        
+        let authCoordinator = AuthCoordinator(navigationController: navigationController)
+        authCoordinator.delegate = self
+        childCoordinators.append(authCoordinator)
+        authCoordinator.showLogin()
+    }
+    
     func showSignUpFlowOnly() {
         childCoordinators.removeAll()
         
@@ -83,5 +92,19 @@ extension AppCoordinator: MainCoordinatorDelegate {
         coordinator.finish()
         
         showSignUpFlowOnly()
+    }
+    
+    func mainCoordinatorDidRequestLogout(_ coordinator: MainCoordinator) {
+        childCoordinators.removeAll { $0 === coordinator }
+        coordinator.finish()
+
+        showLoginFlow()
+    }
+    
+    func mainCoordinatorDidRequestWithdrawal(_ coordinator: MainCoordinator) {
+        childCoordinators.removeAll { $0 === coordinator }
+        coordinator.finish()
+        
+        showAuthFlow()
     }
 }

@@ -277,8 +277,6 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
     }
     
     private func formattedJoinedText(from user: User) -> String? {
-        // If User has a proper Date property, format it here. Placeholder implementation:
-        // Attempt to read a createdAt string like "2024-10-06" and render "2024년 10월 6일 가입"
         if let createdAt = (user as AnyObject).value(forKey: "createdAt") as? String {
             let comps = createdAt.split(separator: "-").compactMap { Int($0) }
             if comps.count == 3 {

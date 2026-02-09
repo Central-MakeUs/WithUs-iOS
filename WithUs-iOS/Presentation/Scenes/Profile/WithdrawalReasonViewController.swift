@@ -8,10 +8,13 @@
 import UIKit
 import SnapKit
 import Then
+import ReactorKit
+import RxSwift
 
-final class WithdrawalReasonViewController: BaseViewController {
+final class WithdrawalReasonViewController: BaseViewController, View {
     
     weak var coordinator: ProfileCoordinator?
+    var disposeBag: DisposeBag = DisposeBag()
     
     private let titleLabel = UILabel().then {
         $0.text = "떠나는 이유를 선택해 주세요"
@@ -152,19 +155,27 @@ final class WithdrawalReasonViewController: BaseViewController {
         withdrawalButton.addTarget(self, action: #selector(withdrawalButtonTapped), for: .touchUpInside)
     }
     
+    func bind(reactor: ProfileReactor) {
+        reactor.state.map{ $0.deleteSuccess }
+            .distinctUntilChanged()
+            .filter { $0 }
+            .subscribe(on: MainScheduler.instance)
+            .bind(with: self, onNext: { strongSelf, _ in
+                strongSelf.coordinator?.handleWithdrawal()
+            })
+            .disposed(by: disposeBag)
+    }
+    
     // MARK: - Actions
     @objc private func reasonButtonTapped(_ sender: ReasonButton) {
-        // 이전에 선택된 버튼 해제
         selectedReason?.isSelected = false
         
-        // 같은 버튼을 다시 눌렀을 경우
         if selectedReason == sender {
             selectedReason = nil
             updateWithdrawalButtonState()
             return
         }
         
-        // 새로운 버튼 선택
         sender.isSelected = true
         selectedReason = sender
         
@@ -179,9 +190,7 @@ final class WithdrawalReasonViewController: BaseViewController {
         guard let selectedReason = selectedReason else { return }
         
         print("선택된 탈퇴 사유: \(selectedReason.titleLabel?.text ?? "")")
-        
-        // TODO: 실제 탈퇴 처리
-        // coordinator?.performWithdrawal(reason: selectedReason.titleLabel?.text ?? "")
+        reactor?.action.onNext(.deleteAccount)
     }
     
     // MARK: - Private Methods

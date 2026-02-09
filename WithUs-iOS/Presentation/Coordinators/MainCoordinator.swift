@@ -14,6 +14,8 @@ enum CodeType {
 
 protocol MainCoordinatorDelegate: AnyObject {
     func mainCoordinatorDidFinish(_ coordinator: MainCoordinator)
+    func mainCoordinatorDidRequestLogout(_ coordinator: MainCoordinator)
+    func mainCoordinatorDidRequestWithdrawal(_ coordinator: MainCoordinator)
 }
 
 final class MainCoordinator: Coordinator {
@@ -113,6 +115,7 @@ final class MainCoordinator: Coordinator {
         let profileNavigationController = UINavigationController()
         let profileCoord = ProfileCoordinator(navigationController: profileNavigationController, keywordService: keywordService)
         self.profileCoordinator = profileCoord // 프로퍼티에 저장 ✅
+        profileCoord.mainCoordinator = self
         childCoordinators.append(profileCoord)
         profileCoord.start()
         
@@ -142,5 +145,15 @@ final class MainCoordinator: Coordinator {
         memoryCoordinator = nil
         fourCutCoordinator = nil
         profileCoordinator = nil
+    }
+    
+    func handleLogout() {
+        finish()
+        delegate?.mainCoordinatorDidRequestLogout(self)
+    }
+    
+    func handleWithdrawal() {
+        finish()
+        delegate?.mainCoordinatorDidRequestWithdrawal(self)
     }
 }

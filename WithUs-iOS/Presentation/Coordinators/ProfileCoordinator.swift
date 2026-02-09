@@ -19,6 +19,8 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     private let cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
     private let selectedKeywordUseCase: FetchSelectedKeywordUseCaseProtocol
     private let fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
+    private let deleteUserUseCase: UserDeleteUsecaseProtocol
+    weak var mainCoordinator: MainCoordinator?
     
     private let profileReactor: ProfileReactor
     
@@ -34,6 +36,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         let imageRepository = ImageRepository(networkService: networkService)
         let userStateRepository = HomeRepository(networkService: networkService)
         let cancleRepository = CoupleCancleConnectRepository(networkService: networkService)
+        let deleteRepository = UserDeleteRepository(networkService: networkService)
 
         //usecase
         self.uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
@@ -47,6 +50,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         self.cancleConnectUseCase = CoupleCancleConnectUseCase(repository: cancleRepository)
         self.selectedKeywordUseCase = FetchSelectedKeywordUseCase(keywordRepository: keywordRepository)
         self.fetchUserInfoUseCase = FetchUserInfoUseCase(userRepository: updateRepository)
+        self.deleteUserUseCase = UserDeleteUsecase(repository: deleteRepository)
         
         //transform
         self.keywordService = keywordService
@@ -56,7 +60,8 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
             completeProfileUseCase: updateProfileuseCase,
             fetchUserStatusUseCase: userStateUseCase,
             cancleConnectUseCase: cancleConnectUseCase,
-            fetchUserInfoUseCase: fetchUserInfoUseCase
+            fetchUserInfoUseCase: fetchUserInfoUseCase,
+            deleteUserUseCase: deleteUserUseCase
         )
     }
     
@@ -83,12 +88,14 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     func showWithdrawal() {
         let withdrawalVC = WithdrawalViewController()
         withdrawalVC.coordinator = self
+        withdrawalVC.reactor = self.profileReactor
         navigationController.pushViewController(withdrawalVC, animated: true)
     }
     
     func showConnectSettings() {
         let reasonVC = WithdrawalReasonViewController()
         reasonVC.coordinator = self
+        reasonVC.reactor = self.profileReactor
         navigationController.pushViewController(reasonVC, animated: true)
     }
     
@@ -173,6 +180,16 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     
     func pop() {
         navigationController.popViewController(animated: true)
+    }
+    
+    func handleLogout() {
+        UserDefaultsManager.shared.clearAllDataForLogout()
+        mainCoordinator?.handleLogout()
+    }
+    
+    func handleWithdrawal() {
+       UserDefaultsManager.shared.clearAllDataForWithdrawal()
+        mainCoordinator?.handleWithdrawal()
     }
     
     func finish() {

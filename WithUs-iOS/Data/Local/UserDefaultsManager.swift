@@ -26,6 +26,9 @@ final class UserDefaultsManager {
 
         static let appleUserIdentifier = "appleUserIdentifier"
         static let email = "email"
+        
+        static let shouldShowLogin = "shouldShowLogin"
+        static let shouldShowOnboarding = "shouldShowOnboarding"
     }
 
     var fullName: String? {
@@ -155,4 +158,62 @@ final class UserDefaultsManager {
     func clearFCMToken() {
         fcmToken = nil
     }
+    
+    var shouldShowLogin: Bool {
+        get {
+            return userDefaults.bool(forKey: Keys.shouldShowLogin)
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.shouldShowLogin)
+        }
+    }
+    
+    var shouldShowOnboarding: Bool {
+        get {
+            return userDefaults.bool(forKey: Keys.shouldShowOnboarding)
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.shouldShowOnboarding)
+        }
+    }
+    
+    func clearAllDataForLogout() {
+            shouldShowLogin = true
+            accessToken = nil
+            refreshToken = nil
+            fcmToken = nil
+            nickname = nil
+            fullName = nil
+            userId = nil
+            profileImageUrl = nil
+            appleUserIdentifier = nil
+            email = nil
+            URLCache.shared.removeAllCachedResponses()
+            
+            HTTPCookieStorage.shared.cookies?.forEach {
+                HTTPCookieStorage.shared.deleteCookie($0)
+            }
+            
+            userDefaults.synchronize()
+        }
+        
+        func clearAllDataForWithdrawal() {
+            shouldShowOnboarding = true
+            accessToken = nil
+            refreshToken = nil
+            fcmToken = nil
+            nickname = nil
+            fullName = nil
+            userId = nil
+            profileImageUrl = nil
+            appleUserIdentifier = nil
+            email = nil
+            
+            URLCache.shared.removeAllCachedResponses()
+            HTTPCookieStorage.shared.cookies?.forEach {
+                HTTPCookieStorage.shared.deleteCookie($0)
+            }
+            
+            userDefaults.synchronize()
+        }
 }

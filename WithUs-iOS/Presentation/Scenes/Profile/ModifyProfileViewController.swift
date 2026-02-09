@@ -105,6 +105,11 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
     private var isNicknameValid = true
     private var isBirthDateValid = true
     
+    // 추가: 초기 값 저장
+    private var initialNickname: String = ""
+    private var initialBirthDate: String = ""
+    private var initialProfileImageUrl: String?
+    
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -241,11 +246,19 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
             .compactMap { $0.user }
             .observe(on: MainScheduler.instance)
             .bind(with: self) { strongSelf, user in
+                strongSelf.initialNickname = user.nickname
+                strongSelf.initialBirthDate = user.birthDate ?? ""
+                strongSelf.initialProfileImageUrl = user.profileImageUrl
+                
                 strongSelf.nicknameTextField.text = user.nickname
                 strongSelf.profileView.setProfileImage(user.profileImageUrl)
                 if let birthDate = user.birthDate {
                     strongSelf.birthDayTextField.text = birthDate
                 }
+                
+                strongSelf.isNicknameValid = true
+                strongSelf.isBirthDateValid = true
+                strongSelf.updateSaveButtonState()
             }
             .disposed(by: disposeBag)
         
@@ -283,11 +296,19 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
         
         updateSaveButtonState()
     }
-    
+
     @objc private func birthDateTextFieldDidChange() {
-        guard let text = birthDayTextField.text else { return }
+        guard let text = birthDayTextField.text else {
+            isBirthDateValid = false  // 추가
+            birthDayWarningLabel.isHidden = true
+            updateSaveButtonState()
+            return
+        }
         
-        if text.count == 10 {
+        if text.isEmpty {
+            isBirthDateValid = initialBirthDate.isEmpty
+            birthDayWarningLabel.isHidden = true
+        } else if text.count == 10 {
             isBirthDateValid = validateBirthDate(text)
             birthDayWarningLabel.isHidden = isBirthDateValid
         } else {
@@ -299,8 +320,18 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
     }
     
     private func updateSaveButtonState() {
-        let isValid = isNicknameValid && isBirthDateValid
-        navigationItem.rightBarButtonItem?.isEnabled = isValid
+        let currentNickname = nicknameTextField.text ?? ""
+        let currentBirthDate = birthDayTextField.text ?? ""
+        let isNicknameChanged = currentNickname != initialNickname
+        let isBirthDateChanged = currentBirthDate != initialBirthDate
+        let isProfileImageChanged = selectedImage != nil
+        let hasAnyChange = isNicknameChanged || isBirthDateChanged || isProfileImageChanged
+        let areAllFieldsValid = isNicknameValid && isBirthDateValid
+        let isValid = hasAnyChange && areAllFieldsValid
+        
+        if let saveButton = navigationItem.rightBarButtonItem?.customView as? UIButton {
+            saveButton.isEnabled = isValid
+        }
     }
     
     // MARK: - Keyboard Handling
@@ -563,7 +594,7 @@ extension ModifyProfileViewController: UIImagePickerControllerDelegate, UINaviga
         
         selectedImage = image
         profileView.profileImageView.image = image
-        // reactor?.action.onNext(.selectImage(image))
+        updateSaveButtonState()  // 추가: 이미지 선택 후 버튼 상태 업데이트
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {

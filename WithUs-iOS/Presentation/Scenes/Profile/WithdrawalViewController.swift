@@ -7,12 +7,15 @@
 import UIKit
 import SnapKit
 import Then
+import ReactorKit
+import RxSwift
 
-final class WithdrawalViewController: BaseViewController {
+final class WithdrawalViewController: BaseViewController, View {
     
+    var disposeBag: DisposeBag = DisposeBag()
     weak var coordinator: ProfileCoordinator?
-    let isConnected = true
-    // MARK: - UI Components
+    var isConnected: Bool = true
+    
     private let titleLabel = UILabel().then {
         $0.text = "정말 WITHUS를 떠나시나요?"
         $0.font = UIFont.pretendard24Bold
@@ -21,7 +24,8 @@ final class WithdrawalViewController: BaseViewController {
     }
     
     private let imageView = UIImageView().then {
-        $0.backgroundColor = UIColor.gray200
+        $0.backgroundColor = .white
+        $0.image = UIImage(named: "empty_archive")
         $0.contentMode = .scaleAspectFit
         $0.layer.cornerRadius = 20
         $0.clipsToBounds = true
@@ -311,6 +315,15 @@ final class WithdrawalViewController: BaseViewController {
         withdrawalButton.addTarget(self, action: #selector(withdrawalButtonTapped), for: .touchUpInside)
     }
     
+    func bind(reactor: ProfileReactor) {
+        reactor.state.compactMap { $0.userStatus }
+            .subscribe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, status in
+                strongSelf.isConnected = status == .completed
+            }
+            .disposed(by: disposeBag)
+    }
+    
     // MARK: - Actions
     @objc private func agreementButtonTapped() {
         isAgreed.toggle()
@@ -339,7 +352,6 @@ final class WithdrawalViewController: BaseViewController {
                     }
                 )
         } else {
-            // 연결되지 않은 상태면 바로 탈퇴 사유 선택 화면으로 이동
             coordinator?.showConnectSettings()
         }
     }
