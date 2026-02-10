@@ -10,6 +10,7 @@ import Then
 import UIKit
 import ReactorKit
 import RxSwift
+import Kingfisher
 
 protocol TextInputViewControllerDelegate: AnyObject {
     func didUploadSuccess()
@@ -79,6 +80,34 @@ class TextInputViewController: BaseViewController, View {
     
     private var photoImageViews: [UIImageView] = []
     
+    private let profileLabel = UILabel().then {
+        $0.text = "by"
+        $0.textColor = .black
+        $0.font = UIFont.didot(size: 14.63, isRegular: true)
+    }
+    
+    private let myProfileImageView = UIImageView().then {
+        $0.layer.cornerRadius = 11
+        $0.clipsToBounds = true
+        $0.image = UIImage(systemName: "person.fill")
+        $0.tintColor = .white
+        $0.backgroundColor = UIColor.gray200
+    }
+    
+    private let partnerProfileImageView = UIImageView().then {
+        $0.layer.cornerRadius = 11
+        $0.clipsToBounds = true
+        $0.image = UIImage(systemName: "person.fill")
+        $0.tintColor = .white
+        $0.backgroundColor = UIColor.gray200
+    }
+    
+    private let coupleStackView = UIStackView().then {
+        $0.axis = .horizontal
+        $0.spacing = 1.83
+        $0.alignment = .center
+    }
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -126,6 +155,11 @@ class TextInputViewController: BaseViewController, View {
         frameContainerView.addSubview(gridStackView)
         frameContainerView.addSubview(bottomBar)
         bottomBar.addSubview(dateLabel)
+        bottomBar.addSubview(profileLabel)
+        bottomBar.addSubview(coupleStackView)
+        
+        coupleStackView.addArrangedSubview(myProfileImageView)
+        coupleStackView.addArrangedSubview(partnerProfileImageView)
         
         containerView.addSubview(buttonStackView)
         
@@ -174,6 +208,24 @@ class TextInputViewController: BaseViewController, View {
         dateLabel.snp.makeConstraints {
             $0.top.left.equalToSuperview().inset(9.15)
         }
+        
+        coupleStackView.snp.makeConstraints {
+            $0.right.equalToSuperview().inset(9.15)
+            $0.bottom.equalToSuperview().inset(18.29)
+        }
+        
+        myProfileImageView.snp.makeConstraints {
+            $0.size.equalTo(25.61)
+        }
+        
+        partnerProfileImageView.snp.makeConstraints {
+            $0.size.equalTo(25.61)
+        }
+        
+        profileLabel.snp.makeConstraints {
+            $0.right.equalTo(coupleStackView.snp.left).offset(-7.32)
+            $0.bottom.equalToSuperview().inset(18.29)
+        }
     }
     
     override func setupActions() {
@@ -190,6 +242,29 @@ class TextInputViewController: BaseViewController, View {
             .bind(onNext: { [weak self] imageUrl in
                 self?.delegate?.didUploadSuccess()
             })
+            .disposed(by: disposeBag)
+        
+        reactor.state.compactMap { $0.coupleInfo }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, data in
+                if let myProfile = data.meProfile.profileImageUrl, let url = URL(string: myProfile) {
+                    strongSelf.myProfileImageView.kf.setImage(
+                        with: url,
+                        options: [
+                        .transition(.fade(0.2)),
+                        .cacheOriginalImage
+                    ])
+                }
+                
+                if let partnerProfile = data.partnerProfile.profileImageUrl, let url = URL(string: partnerProfile) {
+                    strongSelf.partnerProfileImageView.kf.setImage(
+                        with: url,
+                        options: [
+                        .transition(.fade(0.2)),
+                        .cacheOriginalImage
+                    ])
+                }
+            }
             .disposed(by: disposeBag)
     }
     

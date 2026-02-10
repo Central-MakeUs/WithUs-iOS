@@ -15,20 +15,26 @@ final class ImageGenerator {
     static func generateImage(
         imageUrls: [String],
         dateText: String,
-        frameColor: FrameColorType = .white
+        frameColor: FrameColorType = .white,
+        myProfileImageUrl: String?,
+        partnerProfileImageUrl: String?
     ) async throws -> UIImage {
         guard imageUrls.count == 12 else {
             throw FourCutError.invalidImageCount
         }
         
         let images = try await downloadImages(urls: imageUrls)
-        
+        let myProfileImage = try? await downloadProfileImage(url: myProfileImageUrl)
+        let partnerProfileImage = try? await downloadProfileImage(url: partnerProfileImageUrl)
+
         let transFormedDateText = formatWeekDateForUI(dateText)
         
         let finalImage = await createFourCutImageWithLayout(
             images: images,
             dateText: transFormedDateText,
-            frameColor: frameColor
+            frameColor: frameColor,
+            myProfileImage: myProfileImage,
+            partnerProfileImage: partnerProfileImage
         )
         
         return finalImage
@@ -61,6 +67,13 @@ final class ImageGenerator {
         }
     }
     
+    private static func downloadProfileImage(url: String?) async throws -> UIImage? {
+        guard let urlString = url, let url = URL(string: urlString) else {
+            return nil
+        }
+        return try await retrieveImage(from: url)
+    }
+    
     private static func retrieveImage(from url: URL) async throws -> UIImage {
         try await withCheckedThrowingContinuation { continuation in
             KingfisherManager.shared.retrieveImage(with: url) { result in
@@ -78,7 +91,9 @@ final class ImageGenerator {
     private static func createFourCutImageWithLayout(
         images: [UIImage],
         dateText: String,
-        frameColor: FrameColorType
+        frameColor: FrameColorType,
+        myProfileImage: UIImage?,
+        partnerProfileImage: UIImage?
     ) -> UIImage {
         // 화면 크기
         let screenWidth = UIScreen.main.bounds.width
@@ -165,10 +180,45 @@ final class ImageGenerator {
             $0.font = UIFont.didot(size: 34.76, isRegular: false)
         }
         
+        let profileLabel = UILabel().then {
+              $0.text = "by"
+              $0.textColor = frameColor.textColor
+              $0.font = UIFont.didot(size: 14.63, isRegular: true)
+          }
+          
+          let myProfileImageView = UIImageView().then {
+              $0.layer.cornerRadius = 11
+              $0.clipsToBounds = true
+              $0.image = myProfileImage ?? UIImage(systemName: "person.fill")
+              $0.tintColor = .white
+              $0.backgroundColor = UIColor.gray200
+              $0.contentMode = .scaleAspectFill
+          }
+          
+          let partnerProfileImageView = UIImageView().then {
+              $0.layer.cornerRadius = 11
+              $0.clipsToBounds = true
+              $0.image = partnerProfileImage ?? UIImage(systemName: "person.fill")
+              $0.tintColor = .white
+              $0.backgroundColor = UIColor.gray200
+              $0.contentMode = .scaleAspectFill
+          }
+          
+          let coupleStackView = UIStackView().then {
+              $0.axis = .horizontal
+              $0.spacing = 1.83
+              $0.alignment = .center
+          }
+          
+        
         // 뷰 계층
         frameContainerView.addSubview(gridStackView)
         frameContainerView.addSubview(bottomBar)
         bottomBar.addSubview(dateLabel)
+        bottomBar.addSubview(profileLabel)
+        bottomBar.addSubview(coupleStackView)
+        coupleStackView.addArrangedSubview(myProfileImageView)
+        coupleStackView.addArrangedSubview(partnerProfileImageView)
         
         // TextInputViewController constraint 그대로 복사
         gridStackView.snp.makeConstraints {
@@ -184,6 +234,23 @@ final class ImageGenerator {
         
         dateLabel.snp.makeConstraints {
             $0.top.left.equalToSuperview().inset(9.15)
+        }
+        coupleStackView.snp.makeConstraints {
+            $0.right.equalToSuperview().inset(9.15)
+            $0.bottom.equalToSuperview().inset(18.29)
+        }
+        
+        myProfileImageView.snp.makeConstraints {
+            $0.size.equalTo(25.61)
+        }
+        
+        partnerProfileImageView.snp.makeConstraints {
+            $0.size.equalTo(25.61)
+        }
+        
+        profileLabel.snp.makeConstraints {
+            $0.right.equalTo(coupleStackView.snp.left).offset(-7.32)
+            $0.bottom.equalToSuperview().inset(18.29)
         }
         
         // 레이아웃 적용

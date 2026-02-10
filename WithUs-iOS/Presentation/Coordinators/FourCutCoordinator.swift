@@ -11,6 +11,7 @@ class FourCutCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     private let contentUsecase: MemoryContentUseCaseProtocol
+    private let coupleInfoUsecase: CoupleInfoUsecaseProtocol
     private let reactor: MemoryReactor?
     
     init(navigationController: UINavigationController) {
@@ -21,11 +22,13 @@ class FourCutCoordinator: Coordinator {
         //Repositories
         let repository = MemoryContentRepository(networkService: networkService)
         let imageRepository = ImageRepository(networkService: networkService)
+        let infoRepository = CoupleInfoRespository(networkService: networkService)
         
         //Usecases
         self.contentUsecase = MemoryContentUseCase(repository: repository, uploadImageUseCase: UploadImageUseCase(imageRepository: imageRepository))
+        self.coupleInfoUsecase = CoupleInfoUsecase(repository: infoRepository)
         
-        self.reactor = MemoryReactor(memoryContentUsecase: contentUsecase)
+        self.reactor = MemoryReactor(memoryContentUsecase: contentUsecase, coupleInfoUseCase: coupleInfoUsecase)
     }
     
     func start() {

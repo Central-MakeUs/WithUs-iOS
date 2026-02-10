@@ -29,6 +29,7 @@ final class MemoryReactor: Reactor {
         case setWeekMemoryCreating(Bool)
         case setDetailMemory(String)
         case clearDetailMemory
+        case setCoupleInfo(ProfileData)
     }
     
     struct State {
@@ -41,6 +42,7 @@ final class MemoryReactor: Reactor {
         var selectedYear: Int
         var selectedMonth: Int
         var detailMemory: String?
+        var coupleInfo: ProfileData?
         
         init() {
             let now = Date()
@@ -52,15 +54,20 @@ final class MemoryReactor: Reactor {
     
     let initialState: State = .init()
     private let memoryContentUsecase: MemoryContentUseCaseProtocol
+    private let coupleInfoUsecase: CoupleInfoUsecaseProtocol
     
-    init(memoryContentUsecase: MemoryContentUseCaseProtocol) {
+    init(memoryContentUsecase: MemoryContentUseCaseProtocol, coupleInfoUseCase: CoupleInfoUsecaseProtocol) {
         self.memoryContentUsecase = memoryContentUsecase
+        self.coupleInfoUsecase = coupleInfoUseCase
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
         switch action {
         case .viewWillAppear:
-            return loadMemories(year: currentState.selectedYear, month: currentState.selectedMonth)
+            return .concat([
+                loadMemories(year: currentState.selectedYear, month: currentState.selectedMonth),
+                loadCoupleInfo()
+            ])
             
         case .selectDate(let year, let month):
             return .concat([
@@ -115,6 +122,9 @@ final class MemoryReactor: Reactor {
             
         case .clearDetailMemory:
             newState.detailMemory = nil
+            
+        case .setCoupleInfo(let data):
+            newState.coupleInfo = data
         }
         return newState
     }
@@ -150,8 +160,8 @@ final class MemoryReactor: Reactor {
             guard let self = self else { return Disposables.create() }
             
             Task {
-                 let data = try await self.memoryContentUsecase.execute(year: year, month: month)
-//                let data = self.createTestData()
+//                 let data = try await self.memoryContentUsecase.execute(year: year, month: month)
+                let data = self.createTestData()
                 await MainActor.run {
                     observer.onNext(.setMemorySummary(data))
                     observer.onNext(.setMemoriesLoading(false))
@@ -219,8 +229,11 @@ final class MemoryReactor: Reactor {
                         let fourCutImage = try await ImageGenerator.generateImage(
                             imageUrls: imageUrls,
                             dateText: weekEndDate,
-                            frameColor: .white
+                            frameColor: .white,
+                            myProfileImageUrl: self.currentState.coupleInfo?.meProfile.profileImageUrl,
+                            partnerProfileImageUrl: self.currentState.coupleInfo?.partnerProfile.profileImageUrl
                         )
+                        UIImageWriteToSavedPhotosAlbum(fourCutImage, nil, nil, nil)
                         
                         let _ = try await self.memoryContentUsecase.execute(
                             weekEndDate: weekEndDate,
@@ -250,6 +263,35 @@ final class MemoryReactor: Reactor {
                 return Disposables.create()
             }
         ])
+    }
+    
+    private func loadCoupleInfo() -> Observable<Mutation> {
+        return Observable.create { [weak self] observer in
+            guard let self else {
+                observer.onCompleted()
+                return Disposables.create()
+            }
+            
+            Task {
+                do {
+                    let coupleInfo = try await self.coupleInfoUsecase.execute()
+                    
+                    await MainActor.run {
+                        observer.onNext(.setCoupleInfo(coupleInfo))
+                        observer.onCompleted()
+                    }
+                    
+                } catch {
+                    await MainActor.run {
+                        observer.onNext(.setError(error.localizedDescription))
+                        observer.onNext(.setWeekMemoryCreating(false))
+                        observer.onCompleted()
+                    }
+                }
+            }
+            
+            return Disposables.create()
+        }
     }
     
     private func createTestData() -> MemorySummaryResponse {

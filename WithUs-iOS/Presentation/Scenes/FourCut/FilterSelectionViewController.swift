@@ -8,6 +8,9 @@
 import SnapKit
 import Then
 import UIKit
+import ReactorKit
+import RxSwift
+import Kingfisher
 
 enum FrameColorType {
     case black
@@ -32,8 +35,8 @@ enum FrameColorType {
     }
 }
 
-class FilterSelectionViewController: BaseViewController {
-    
+class FilterSelectionViewController: BaseViewController, View {
+    var disposeBag = DisposeBag()
     weak var coordinator: FourCutCoordinator?
     var selectedPhotos: [UIImage] = []
     private var selectedFrameColor: FrameColorType = .white
@@ -70,6 +73,28 @@ class FilterSelectionViewController: BaseViewController {
         $0.text = "by"
         $0.textColor = .black
         $0.font = UIFont.didot(size: 14.63, isRegular: true)
+    }
+    
+    private let myProfileImageView = UIImageView().then {
+        $0.layer.cornerRadius = 11
+        $0.clipsToBounds = true
+        $0.image = UIImage(systemName: "person.fill")
+        $0.tintColor = .white
+        $0.backgroundColor = UIColor.gray200
+    }
+    
+    private let partnerProfileImageView = UIImageView().then {
+        $0.layer.cornerRadius = 11
+        $0.clipsToBounds = true
+        $0.image = UIImage(systemName: "person.fill")
+        $0.tintColor = .white
+        $0.backgroundColor = UIColor.gray200
+    }
+    
+    private let coupleStackView = UIStackView().then {
+        $0.axis = .horizontal
+        $0.spacing = 1.83
+        $0.alignment = .center
     }
     
     private let blackFrameButton = UIButton().then {
@@ -159,6 +184,10 @@ class FilterSelectionViewController: BaseViewController {
         frameContainerView.addSubview(bottomBar)
         bottomBar.addSubview(dateLabel)
         bottomBar.addSubview(profileLabel)
+        bottomBar.addSubview(coupleStackView)
+        
+        coupleStackView.addArrangedSubview(myProfileImageView)
+        coupleStackView.addArrangedSubview(partnerProfileImageView)
         
         containerView.addSubview(indicatorContainer)
         containerView.addSubview(buttonStackView)
@@ -228,9 +257,23 @@ class FilterSelectionViewController: BaseViewController {
             $0.top.left.equalToSuperview().inset(9.15)
         }
         
-//        profileLabel.snp.makeConstraints {
-//            
-//        }
+        coupleStackView.snp.makeConstraints {
+            $0.right.equalToSuperview().inset(9.15)
+            $0.bottom.equalToSuperview().inset(18.29)
+        }
+        
+        myProfileImageView.snp.makeConstraints {
+            $0.size.equalTo(25.61)
+        }
+        
+        partnerProfileImageView.snp.makeConstraints {
+            $0.size.equalTo(25.61)
+        }
+        
+        profileLabel.snp.makeConstraints {
+            $0.right.equalTo(coupleStackView.snp.left).offset(-7.32)
+            $0.bottom.equalToSuperview().inset(18.29)
+        }
     }
     
     override func setupActions() {
@@ -238,6 +281,31 @@ class FilterSelectionViewController: BaseViewController {
         blackFrameButton.addTarget(self, action: #selector(blackFrameButtonTapped), for: .touchUpInside)
         whiteFrameButton.addTarget(self, action: #selector(whiteFrameButtonTapped), for: .touchUpInside)
         doneButton.addTarget(self, action: #selector(checkButtonTapped), for: .touchUpInside)
+    }
+    
+    func bind(reactor: MemoryReactor) {
+        reactor.state.compactMap { $0.coupleInfo }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, data in
+                if let myProfile = data.meProfile.profileImageUrl, let url = URL(string: myProfile) {
+                    strongSelf.myProfileImageView.kf.setImage(
+                        with: url,
+                        options: [
+                        .transition(.fade(0.2)),
+                        .cacheOriginalImage
+                    ])
+                }
+                
+                if let partnerProfile = data.partnerProfile.profileImageUrl, let url = URL(string: partnerProfile) {
+                    strongSelf.partnerProfileImageView.kf.setImage(
+                        with: url,
+                        options: [
+                        .transition(.fade(0.2)),
+                        .cacheOriginalImage
+                    ])
+                }
+            }
+            .disposed(by: disposeBag)
     }
     
     private func setupGridWithStackView() {
