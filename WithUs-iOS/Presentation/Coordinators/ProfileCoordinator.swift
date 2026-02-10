@@ -86,6 +86,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     func showAccountModification() {
         let accountVC = ModifyAccountViewController()
         accountVC.coordinator = self
+        accountVC.reactor = self.profileReactor
         navigationController.pushViewController(accountVC, animated: true)
     }
     

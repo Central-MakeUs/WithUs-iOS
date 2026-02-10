@@ -10,12 +10,32 @@ import Alamofire
 
 enum UserDeleteEndpoint: EndpointProtocol {
     case deleteUser
+    case logoutUser(fcmToken: String)
     
     var path: String {
-         return "/api/users/me"
+        switch self {
+        case .deleteUser:
+            return "/api/users/me"
+        case .logoutUser:
+            return "/api/auth/logout"
+        }
     }
     
     var method: HTTPMethod {
-        return .delete
+        switch self {
+        case .deleteUser:
+            return .delete
+        case .logoutUser:
+            return .post
+        }
+    }
+    
+    var parameters: Parameters? {
+        switch self {
+        case .deleteUser:
+            return nil
+        case .logoutUser(let fcmToken):
+            return ["fcmToken": fcmToken]
+        }
     }
 }

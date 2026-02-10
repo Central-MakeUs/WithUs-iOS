@@ -9,6 +9,7 @@ import Foundation
 
 protocol UserDeleteUsecaseProtocol {
     func execute() async throws
+    func execute(fcmToken: String) async throws
 }
 
 final class UserDeleteUsecase: UserDeleteUsecaseProtocol {
@@ -20,5 +21,9 @@ final class UserDeleteUsecase: UserDeleteUsecaseProtocol {
     
     func execute() async throws {
         try await repository.delete()
+    }
+    
+    func execute(fcmToken: String) async throws {
+        try await repository.logout(fcmToken: fcmToken)
     }
 }

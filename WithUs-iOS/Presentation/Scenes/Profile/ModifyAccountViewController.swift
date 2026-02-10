@@ -9,8 +9,11 @@ import UIKit
 import SnapKit
 import Then
 import SwiftUI
+import ReactorKit
+import RxSwift
 
-final class ModifyAccountViewController: BaseViewController {
+final class ModifyAccountViewController: BaseViewController, ReactorKit.View {
+    var disposeBag: DisposeBag = DisposeBag()
     weak var coordinator: ProfileCoordinator?
 
     private lazy var collectionView: UICollectionView = {
@@ -101,6 +104,17 @@ final class ModifyAccountViewController: BaseViewController {
         setLeftBarButton(image: UIImage(systemName: "chevron.left"))
         self.navigationItem.title = "계정 관리"
     }
+    
+    func bind(reactor: ProfileReactor) {
+        reactor.state.map{ $0.logoutSuccess }
+            .distinctUntilChanged()
+            .filter { $0 }
+            .subscribe(on: MainScheduler.instance)
+            .bind(with: self, onNext: { strongSelf, _ in
+                strongSelf.coordinator?.handleLogout()
+            })
+            .disposed(by: disposeBag)
+    }
 }
 
 extension ModifyAccountViewController: UICollectionViewDataSource {
@@ -137,7 +151,7 @@ extension ModifyAccountViewController: UICollectionViewDelegate {
                     confirmTitle: "로그아웃",
                     cancelTitle: "취소",
                     confirmAction: { [weak self] in
-                        self?.coordinator?.handleLogout()
+                        self?.reactor?.action.onNext(.logoutAccount)
                     }
                 )
         case .delete:

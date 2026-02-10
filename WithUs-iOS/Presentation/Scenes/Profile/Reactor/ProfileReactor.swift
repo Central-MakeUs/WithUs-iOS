@@ -20,6 +20,7 @@ final class ProfileReactor: Reactor {
         case completeProfile
         case cancleConnect
         case deleteAccount
+        case logoutAccount
     }
     
     enum Mutation {
@@ -33,6 +34,7 @@ final class ProfileReactor: Reactor {
         case setError(String)
         case cancleSuccess
         case deleteSuccess
+        case logoutSuccess
         case resetCompleted
         case setCoupleInfo(ProfileData)
     }
@@ -48,6 +50,7 @@ final class ProfileReactor: Reactor {
         var userStatus: OnboardingStatus?
         var cancleSuccess: Bool = false
         var deleteSuccess: Bool = false
+        var logoutSuccess: Bool = false
         var coupleInfo: ProfileData?
     }
     
@@ -103,6 +106,8 @@ final class ProfileReactor: Reactor {
             return cancleConnect()
         case .deleteAccount:
             return deleteAccount()
+        case .logoutAccount:
+            return logoutAccout()
         }
     }
     
@@ -145,6 +150,8 @@ final class ProfileReactor: Reactor {
             newState.deleteSuccess = true
         case .setCoupleInfo(let data):
             newState.coupleInfo = data
+        case .logoutSuccess:
+            newState.logoutSuccess = true
         }
         
         return newState
@@ -304,6 +311,37 @@ final class ProfileReactor: Reactor {
                     do {
                         try await self.deleteUserUseCase.execute()
                         observer.onNext(.deleteSuccess)
+                        observer.onCompleted()
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
+                        observer.onCompleted()
+                        
+                    } catch {
+                        observer.onNext(.setError("탈퇴에 실패했습니다."))
+                        observer.onCompleted()
+                    }
+                }
+                
+                return Disposables.create()
+            }
+        )
+    }
+    
+    private func logoutAccout() -> Observable<Mutation> {
+        return Observable.concat(
+            .just(.setLoading(true)),
+            
+            Observable.create { [weak self] observer in
+                guard let self = self else {
+                    observer.onCompleted()
+                    return Disposables.create()
+                }
+                
+                Task { @MainActor in
+                    do {
+                        let fcmToken = FCMTokenManager.shared.fcmToken ?? ""
+                        try await self.deleteUserUseCase.execute(fcmToken: fcmToken)
+                        observer.onNext(.logoutSuccess)
                         observer.onCompleted()
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))

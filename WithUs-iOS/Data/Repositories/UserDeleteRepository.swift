@@ -9,6 +9,7 @@ import Foundation
 
 protocol UserDeleteRepositoryProtocol {
     func delete() async throws
+    func logout(fcmToken: String) async throws
 }
 
 final class UserDeleteRepository: UserDeleteRepositoryProtocol {
@@ -20,6 +21,12 @@ final class UserDeleteRepository: UserDeleteRepositoryProtocol {
     
     func delete() async throws {
         let endpoint = UserDeleteEndpoint.deleteUser
+        
+        try await networkService.requestWithoutData(endpoint: endpoint)
+    }
+    
+    func logout(fcmToken: String) async throws {
+        let endpoint = UserDeleteEndpoint.logoutUser(fcmToken: fcmToken)
         
         try await networkService.requestWithoutData(endpoint: endpoint)
     }

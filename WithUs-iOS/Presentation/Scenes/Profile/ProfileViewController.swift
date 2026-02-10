@@ -305,13 +305,13 @@ extension ProfileViewController: UICollectionViewDelegate {
             self.coordinator?.showAccountModification()
         case .connect:
             guard let status = reactor?.currentState.userStatus else { return }
-//            if status == .completed {
+            if status == .completed {
                 self.coordinator?.showCancleConnect()
-//            } else if status == .needCoupleConnect {
-//                self.coordinator?.showConnectCoupleFlow()
-//            } else {
-//                ToastView.show(message: "회원가입을 진행해주세요.", icon: nil, position: .bottom)
-//            }
+            } else if status == .needCoupleConnect {
+                self.coordinator?.showConnectCoupleFlow()
+            } else {
+                ToastView.show(message: "회원가입을 진행해주세요.", icon: nil, position: .bottom)
+            }
         case .kakao:
             openExternalBrowser(urlStr: "https://open.kakao.com/o/svs9Bjfi")
         case .privacy:
