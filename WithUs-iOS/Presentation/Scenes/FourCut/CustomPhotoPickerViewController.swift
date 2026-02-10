@@ -150,7 +150,7 @@ class CustomPhotoPickerViewController: BaseViewController {
         
         let config = UIImage.SymbolConfiguration(pointSize: 24, weight: .semibold)
         let image = UIImage(systemName: "xmark", withConfiguration: config)
-        setRightBarButton(image: image, tintColor: .black)
+        setRightBarButton(image: image, action: #selector(cancelButtonTapped), tintColor: .black)
         navigationItem.hidesBackButton = true
     }
     

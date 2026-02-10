@@ -19,12 +19,7 @@ final class ImageCardView: UIView {
         $0.backgroundColor = .gray200
     }
     
-    private let profileImageView = UIImageView().then {
-        $0.contentMode = .scaleAspectFill
-        $0.backgroundColor = .white
-        $0.layer.cornerRadius = 17
-        $0.clipsToBounds = true
-    }
+    private let profileImageView = ProfileDisplayView()
     
     private let nameLabel = UILabel().then {
         $0.font = UIFont.pretendard16SemiBold
@@ -100,9 +95,6 @@ final class ImageCardView: UIView {
             )
         }
         
-        if let profileImageURL, let profileURL = URL(string: profileImageURL) {
-            profileImageView.kf
-                .setImage(with: profileURL, placeholder: nil, options: [.transition(.fade(0.2)), .cacheOriginalImage])
-        }
+        profileImageView.setProfileImage(profileImageURL)
     }
 }

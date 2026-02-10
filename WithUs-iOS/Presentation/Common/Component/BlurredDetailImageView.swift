@@ -24,15 +24,7 @@ final class BlurredDetailImageView: UIView {
         $0.layer.cornerRadius = 16
     }
     
-    private let profileImageView = UIImageView().then {
-        let config = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
-        $0.image = UIImage(systemName: "person.fill", withConfiguration: config)
-        $0.tintColor = .white
-        $0.contentMode = .center
-        $0.backgroundColor = .white
-        $0.layer.cornerRadius = 12
-        $0.clipsToBounds = true
-    }
+    private let profileImageView = ProfileDisplayView()
     
     private let imageContainerView = UIView().then {
         $0.backgroundColor = .clear
@@ -112,20 +104,15 @@ final class BlurredDetailImageView: UIView {
         }
     }
     
-    /// UIImage로 설정
     func configure(
         image: UIImage?,
         name: String,
         time: String,
         caption: String
     ) {
-        // 배경 이미지 (블러)
         backgroundImageView.image = image
-        
-        // 메인 이미지 (선명)
         mainImageView.image = image
         
-        // 텍스트 정보
         nameLabel.text = name
         timeLabel.text = time
     }
@@ -154,17 +141,7 @@ final class BlurredDetailImageView: UIView {
             )
         }
         
-        if let profileUrl = data.profileUrl,
-           let url = URL(string: profileUrl) {
-            profileImageView.kf.setImage(
-                with: url,
-                placeholder: nil,
-                options: [
-                    .transition(.fade(0.2)),
-                    .cacheOriginalImage
-                ]
-            )
-        }
+        profileImageView.setProfileImage(data.profileUrl)
     }
     
     private func loadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {

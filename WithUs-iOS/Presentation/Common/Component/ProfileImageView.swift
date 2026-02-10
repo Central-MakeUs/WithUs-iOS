@@ -15,20 +15,15 @@ protocol ProfileViewDelegate: AnyObject {
 class ProfileImageView: UIView {
     
     weak var delegate: ProfileViewDelegate?
-
+    
     private let backgroundCircleView = UIView().then {
-        $0.backgroundColor = UIColor.gray50
-        $0.layer.cornerRadius = 67
+        $0.backgroundColor = .gray400
         $0.clipsToBounds = true
     }
     
     let profileImageView = UIImageView().then {
-        let config = UIImage.SymbolConfiguration(pointSize: 67, weight: .regular)
-        $0.image = UIImage(systemName: "person.fill", withConfiguration: config)
-        $0.tintColor = .white
-        $0.contentMode = .center
-        $0.clipsToBounds = true
-        $0.backgroundColor = .gray200
+        $0.image = UIImage(named: "empty_profile")
+        $0.contentMode = .scaleAspectFit
     }
     
     let cameraButton = UIButton().then {
@@ -65,7 +60,7 @@ class ProfileImageView: UIView {
         
         profileImageView.snp.makeConstraints { make in
             make.center.equalTo(backgroundCircleView)
-            make.width.height.equalTo(80)
+            make.width.height.equalTo(67)
         }
         
         cameraButton.snp.makeConstraints { make in
@@ -79,6 +74,7 @@ class ProfileImageView: UIView {
         super.layoutSubviews()
         profileImageView.layer.cornerRadius = profileImageView.frame.width / 2
         cameraButton.layer.cornerRadius = cameraButton.frame.width / 2
+        backgroundCircleView.layer.cornerRadius = backgroundCircleView.frame.width / 2
     }
     
     @objc private func cameraButtonTapped() {
@@ -87,7 +83,7 @@ class ProfileImageView: UIView {
     
     func setProfileImage(_ url: String?) {
         if let profileUrl = url,
-        let profile = URL(string: profileUrl) {
+           let profile = URL(string: profileUrl) {
             profileImageView.kf.setImage(
                 with: profile,
                 placeholder: nil,

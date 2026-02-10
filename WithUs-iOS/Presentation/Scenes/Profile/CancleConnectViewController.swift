@@ -10,8 +10,9 @@ import SnapKit
 import Then
 import RxSwift
 import RxCocoa
+import ReactorKit
 
-final class CancleConnectViewController: BaseViewController {
+final class CancleConnectViewController: BaseViewController, View {
     
     var disposeBag = DisposeBag()
     
@@ -31,16 +32,17 @@ final class CancleConnectViewController: BaseViewController {
     
     private let nicknameValueLabel = UILabel().then {
         $0.text = "-"
-        $0.font = UIFont.pretendard18Regular
+        $0.font = UIFont.pretendard16Regular
         $0.textColor = UIColor.gray900
-        $0.backgroundColor = UIColor.gray100
         $0.layer.cornerRadius = 8
         $0.clipsToBounds = true
     }
     
     private let nicknamePaddingView = UIView().then {
-        $0.backgroundColor = UIColor.gray100
+        $0.backgroundColor = .white
         $0.layer.cornerRadius = 8
+        $0.layer.borderColor = UIColor.gray200.cgColor
+        $0.layer.borderWidth = 1
     }
     
     private let birthDayLabel = UILabel().then {
@@ -51,16 +53,17 @@ final class CancleConnectViewController: BaseViewController {
     
     private let birthDayValueLabel = UILabel().then {
         $0.text = "-"
-        $0.font = UIFont.pretendard18Regular
+        $0.font = UIFont.pretendard16Regular
         $0.textColor = UIColor.gray900
-        $0.backgroundColor = UIColor.gray100
         $0.layer.cornerRadius = 8
         $0.clipsToBounds = true
     }
     
     private let birthDayPaddingView = UIView().then {
-        $0.backgroundColor = UIColor.gray100
+        $0.backgroundColor = .white
         $0.layer.cornerRadius = 8
+        $0.layer.borderColor = UIColor.gray200.cgColor
+        $0.layer.borderWidth = 1
     }
     
     private let disconnectButton = UIButton().then {
@@ -69,14 +72,6 @@ final class CancleConnectViewController: BaseViewController {
         $0.titleLabel?.font = UIFont.pretendard18SemiBold
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
-    }
-    
-    // MARK: - Properties
-    private var partnerInfo: PartnerInfo? // 서버에서 받아올 데이터 모델
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        fetchPartnerInfo()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -173,24 +168,31 @@ final class CancleConnectViewController: BaseViewController {
         disconnectButton.addTarget(self, action: #selector(disconnectButtonTapped), for: .touchUpInside)
     }
     
-    // MARK: - Private Methods
-    private func fetchPartnerInfo() {
-        // TODO: 서버에서 연결된 파트너 정보 가져오기
-        // reactor?.action.onNext(.fetchPartnerInfo)
-        
-        // 임시 데이터 (실제로는 서버에서 받아옴)
-        updateUI(nickname: "상대방닉네임", birthDate: "1995-03-15", profileImageURL: nil)
+    func bind(reactor: ProfileReactor) {
+        reactor.state
+            .compactMap { $0.coupleInfo }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, user in
+                strongSelf
+                    .updateUI(
+                        nickname: user.partnerProfile.nickname,
+                        birthDate: user.partnerProfile.birthday,
+                        profileImageURL: user.partnerProfile.profileImageUrl
+                    )
+            }
+            .disposed(by: disposeBag)
     }
     
     private func updateUI(nickname: String, birthDate: String, profileImageURL: String?) {
-        nicknameValueLabel.text = nickname
-        birthDayValueLabel.text = birthDate
-        
-        // 프로필 이미지가 있으면 로드
-        if let urlString = profileImageURL, let url = URL(string: urlString) {
-            // 이미지 로드 로직 (Kingfisher 등 사용)
-            // profileView.profileImageView.kf.setImage(with: url)
+        if !nickname.isEmpty {
+            nicknameValueLabel.text = nickname
         }
+        
+        if !birthDate.isEmpty {
+            birthDayValueLabel.text = birthDate
+        }
+        
+        profileView.setProfileImage(profileImageURL)
     }
     
     @objc private func disconnectButtonTapped() {

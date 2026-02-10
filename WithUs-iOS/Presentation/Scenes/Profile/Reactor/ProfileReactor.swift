@@ -34,6 +34,7 @@ final class ProfileReactor: Reactor {
         case cancleSuccess
         case deleteSuccess
         case resetCompleted
+        case setCoupleInfo(ProfileData)
     }
     
     struct State {
@@ -47,6 +48,7 @@ final class ProfileReactor: Reactor {
         var userStatus: OnboardingStatus?
         var cancleSuccess: Bool = false
         var deleteSuccess: Bool = false
+        var coupleInfo: ProfileData?
     }
     
     var initialState: State = .init()
@@ -55,19 +57,22 @@ final class ProfileReactor: Reactor {
     private let cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol
     private let fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
     private let deleteUserUseCase: UserDeleteUsecaseProtocol
+    private let coupleInfoUsecase: CoupleInfoUsecaseProtocol
     
     init(
         completeProfileUseCase: CompleteProfileUseCaseProtocol,
         fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol,
         cancleConnectUseCase: CoupleCancleConnectUseCaseProtocol,
         fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol,
-        deleteUserUseCase: UserDeleteUsecaseProtocol
+        deleteUserUseCase: UserDeleteUsecaseProtocol,
+        coupleInfoUseCase: CoupleInfoUsecaseProtocol
     ) {
         self.completeProfileUseCase = completeProfileUseCase
         self.fetchUserStatusUseCase = fetchUserStatusUseCase
         self.cancleConnectUseCase = cancleConnectUseCase
         self.fetchUserInfoUseCase = fetchUserInfoUseCase
         self.deleteUserUseCase = deleteUserUseCase
+        self.coupleInfoUsecase = coupleInfoUseCase
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
@@ -90,7 +95,10 @@ final class ProfileReactor: Reactor {
         case .updateBirthDate(let birthDate):
             return .just(.setBirthDate(birthDate))
         case .viewWillAppear:
-            return fetchStatusAndUser()
+            return Observable.concat(
+                fetchStatusAndUser(),
+                fetchCoupleInfo()
+            )
         case .cancleConnect:
             return cancleConnect()
         case .deleteAccount:
@@ -135,6 +143,8 @@ final class ProfileReactor: Reactor {
             
         case .deleteSuccess:
             newState.deleteSuccess = true
+        case .setCoupleInfo(let data):
+            newState.coupleInfo = data
         }
         
         return newState
@@ -218,6 +228,32 @@ final class ProfileReactor: Reactor {
                 return Disposables.create()
             }
         )
+    }
+    
+    private func fetchCoupleInfo() -> Observable<Mutation> {
+        return Observable.create { [weak self] observer in
+            guard let self = self else {
+                observer.onCompleted()
+                return Disposables.create()
+            }
+            Task { @MainActor in
+                do {
+                    async let coupleInfoTask = self.coupleInfoUsecase.execute()
+
+                    let couple = try await coupleInfoTask
+
+                    observer.onNext(.setCoupleInfo(couple))
+                    observer.onCompleted()
+                } catch let error as NetworkError {
+                    observer.onNext(.setError(error.errorDescription))
+                    observer.onCompleted()
+                } catch {
+                    observer.onNext(.setError("커플 정보를 불러오는데 실패했습니다."))
+                    observer.onCompleted()
+                }
+            }
+            return Disposables.create()
+        }
     }
     
     private func cancleConnect() -> Observable<Mutation> {

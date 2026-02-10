@@ -20,15 +20,7 @@ final class BlurredImageCardView: UIView {
     
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
     
-    private let profileImageView = UIImageView().then {
-        let config = UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
-        $0.image = UIImage(systemName: "person.fill", withConfiguration: config)
-        $0.tintColor = .white
-        $0.contentMode = .center
-        $0.backgroundColor = .white
-        $0.layer.cornerRadius = 17
-        $0.clipsToBounds = true
-    }
+    private let profileImageView = ProfileDisplayView()
     
     private let infoStackView = UIStackView().then {
         $0.axis = .vertical
@@ -108,17 +100,6 @@ final class BlurredImageCardView: UIView {
             )
         }
         
-        if let profileImageURL,
-           let profileUrl = URL(string: profileImageURL) {
-            
-            profileImageView.kf.setImage(
-                with: profileUrl,
-                placeholder: nil,
-                options: [
-                    .transition(.fade(0.2)),
-                    .cacheOriginalImage
-                ]
-            )
-        }
+        profileImageView.setProfileImage(profileImageURL)
     }
 }

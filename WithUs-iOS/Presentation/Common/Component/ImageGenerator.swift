@@ -24,17 +24,14 @@ final class ImageGenerator {
         }
         
         let images = try await downloadImages(urls: imageUrls)
-        let myProfileImage = try? await downloadProfileImage(url: myProfileImageUrl)
-        let partnerProfileImage = try? await downloadProfileImage(url: partnerProfileImageUrl)
-
         let transFormedDateText = formatWeekDateForUI(dateText)
         
         let finalImage = await createFourCutImageWithLayout(
             images: images,
             dateText: transFormedDateText,
             frameColor: frameColor,
-            myProfileImage: myProfileImage,
-            partnerProfileImage: partnerProfileImage
+            myProfileImageUrl: myProfileImageUrl,
+            partnerProfileImageUrl: partnerProfileImageUrl
         )
         
         return finalImage
@@ -67,13 +64,6 @@ final class ImageGenerator {
         }
     }
     
-    private static func downloadProfileImage(url: String?) async throws -> UIImage? {
-        guard let urlString = url, let url = URL(string: urlString) else {
-            return nil
-        }
-        return try await retrieveImage(from: url)
-    }
-    
     private static func retrieveImage(from url: URL) async throws -> UIImage {
         try await withCheckedThrowingContinuation { continuation in
             KingfisherManager.shared.retrieveImage(with: url) { result in
@@ -92,8 +82,8 @@ final class ImageGenerator {
         images: [UIImage],
         dateText: String,
         frameColor: FrameColorType,
-        myProfileImage: UIImage?,
-        partnerProfileImage: UIImage?
+        myProfileImageUrl: String?,
+        partnerProfileImageUrl: String?
     ) -> UIImage {
         // 화면 크기
         let screenWidth = UIScreen.main.bounds.width
@@ -104,9 +94,9 @@ final class ImageGenerator {
         
         let navigationBarHeight: CGFloat = {
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                   let window = windowScene.windows.first,
-                   let rootVC = window.rootViewController,
-                   let navController = rootVC as? UINavigationController ?? rootVC.children.first as? UINavigationController {
+               let window = windowScene.windows.first,
+               let rootVC = window.rootViewController,
+               let navController = rootVC as? UINavigationController ?? rootVC.children.first as? UINavigationController {
                 return navController.navigationBar.frame.height
             }
             return 54.0
@@ -181,35 +171,22 @@ final class ImageGenerator {
         }
         
         let profileLabel = UILabel().then {
-              $0.text = "by"
-              $0.textColor = frameColor.textColor
-              $0.font = UIFont.didot(size: 14.63, isRegular: true)
-          }
-          
-          let myProfileImageView = UIImageView().then {
-              $0.layer.cornerRadius = 11
-              $0.clipsToBounds = true
-              $0.image = myProfileImage ?? UIImage(systemName: "person.fill")
-              $0.tintColor = .white
-              $0.backgroundColor = UIColor.gray200
-              $0.contentMode = .scaleAspectFill
-          }
-          
-          let partnerProfileImageView = UIImageView().then {
-              $0.layer.cornerRadius = 11
-              $0.clipsToBounds = true
-              $0.image = partnerProfileImage ?? UIImage(systemName: "person.fill")
-              $0.tintColor = .white
-              $0.backgroundColor = UIColor.gray200
-              $0.contentMode = .scaleAspectFill
-          }
-          
-          let coupleStackView = UIStackView().then {
-              $0.axis = .horizontal
-              $0.spacing = 1.83
-              $0.alignment = .center
-          }
-          
+            $0.text = "by"
+            $0.textColor = frameColor.textColor
+            $0.font = UIFont.didot(size: 14.63, isRegular: true)
+        }
+        
+        let myProfileImageView = ProfileDisplayView()
+        myProfileImageView.setProfileImage(myProfileImageUrl)
+        
+        let partnerProfileImageView = ProfileDisplayView()
+        partnerProfileImageView.setProfileImage(partnerProfileImageUrl)
+        
+        let coupleStackView = UIStackView().then {
+            $0.axis = .horizontal
+            $0.spacing = 1.83
+            $0.alignment = .center
+        }
         
         // 뷰 계층
         frameContainerView.addSubview(gridStackView)

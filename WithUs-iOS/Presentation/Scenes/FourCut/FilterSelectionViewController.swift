@@ -75,21 +75,9 @@ class FilterSelectionViewController: BaseViewController, View {
         $0.font = UIFont.didot(size: 14.63, isRegular: true)
     }
     
-    private let myProfileImageView = UIImageView().then {
-        $0.layer.cornerRadius = 11
-        $0.clipsToBounds = true
-        $0.image = UIImage(systemName: "person.fill")
-        $0.tintColor = .white
-        $0.backgroundColor = UIColor.gray200
-    }
+    private let myProfileImageView = ProfileDisplayView()
     
-    private let partnerProfileImageView = UIImageView().then {
-        $0.layer.cornerRadius = 11
-        $0.clipsToBounds = true
-        $0.image = UIImage(systemName: "person.fill")
-        $0.tintColor = .white
-        $0.backgroundColor = UIColor.gray200
-    }
+    private let partnerProfileImageView = ProfileDisplayView()
     
     private let coupleStackView = UIStackView().then {
         $0.axis = .horizontal
@@ -287,23 +275,8 @@ class FilterSelectionViewController: BaseViewController, View {
         reactor.state.compactMap { $0.coupleInfo }
             .observe(on: MainScheduler.instance)
             .bind(with: self) { strongSelf, data in
-                if let myProfile = data.meProfile.profileImageUrl, let url = URL(string: myProfile) {
-                    strongSelf.myProfileImageView.kf.setImage(
-                        with: url,
-                        options: [
-                        .transition(.fade(0.2)),
-                        .cacheOriginalImage
-                    ])
-                }
-                
-                if let partnerProfile = data.partnerProfile.profileImageUrl, let url = URL(string: partnerProfile) {
-                    strongSelf.partnerProfileImageView.kf.setImage(
-                        with: url,
-                        options: [
-                        .transition(.fade(0.2)),
-                        .cacheOriginalImage
-                    ])
-                }
+                strongSelf.myProfileImageView.setProfileImage(data.meProfile.profileImageUrl)
+                strongSelf.partnerProfileImageView.setProfileImage(data.partnerProfile.profileImageUrl)
             }
             .disposed(by: disposeBag)
     }

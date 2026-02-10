@@ -11,7 +11,6 @@ import Then
 import SwiftUI
 import ReactorKit
 import RxSwift
-import Kingfisher
 
 final class ProfileViewController: BaseViewController, ReactorKit.View {
     weak var coordinator: ProfileCoordinator?
@@ -21,15 +20,7 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
         $0.backgroundColor = .white
     }
     
-    private let profileImageView = UIImageView().then {
-        let config = UIImage.SymbolConfiguration(pointSize: 20, weight: .regular)
-        $0.image = UIImage(systemName: "person.fill", withConfiguration: config)
-        $0.tintColor = .white
-        $0.contentMode = .center
-        $0.clipsToBounds = true
-        $0.layer.cornerRadius = 20
-        $0.backgroundColor = .gray200
-    }
+    private let profileDisplayView = ProfileDisplayView()
     
     private let editButton = UIButton().then {
         var config = UIButton.Configuration.plain()
@@ -96,18 +87,7 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
             .observe(on: MainScheduler.instance)
             .bind(with: self) { strongSelf, user in
                 strongSelf.nicknameLabel.text = user.nickname
-                
-                if let profileUrlString = user.profileImageUrl,
-                   let url = URL(string: profileUrlString) {
-                    strongSelf.profileImageView.kf.setImage(
-                        with: url,
-                        placeholder: nil,
-                        options: [
-                            .transition(.fade(0.2)),
-                            .cacheOriginalImage
-                        ]
-                    )
-                }
+                strongSelf.profileDisplayView.setProfileImage(user.profileImageUrl)
             }
             .disposed(by: disposeBag)
         
@@ -218,7 +198,7 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
         profileView.addSubview(profileStackView)
         profileView.addSubview(editButton)
         
-        profileStackView.addArrangedSubview(profileImageView)
+        profileStackView.addArrangedSubview(profileDisplayView)
         profileStackView.addArrangedSubview(infoStackView)
         
         infoStackView.addArrangedSubview(nicknameLabel)
@@ -244,7 +224,7 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
             $0.height.equalTo(37)
         }
         
-        profileImageView.snp.makeConstraints {
+        profileDisplayView.snp.makeConstraints {
             $0.leading.equalToSuperview()
             $0.centerY.equalToSuperview()
             $0.size.equalTo(40)
@@ -325,13 +305,13 @@ extension ProfileViewController: UICollectionViewDelegate {
             self.coordinator?.showAccountModification()
         case .connect:
             guard let status = reactor?.currentState.userStatus else { return }
-            if status == .completed {
+//            if status == .completed {
                 self.coordinator?.showCancleConnect()
-            } else if status == .needCoupleConnect {
-                self.coordinator?.showConnectCoupleFlow()
-            } else {
-                ToastView.show(message: "회원가입을 진행해주세요.", icon: nil, position: .bottom)
-            }
+//            } else if status == .needCoupleConnect {
+//                self.coordinator?.showConnectCoupleFlow()
+//            } else {
+//                ToastView.show(message: "회원가입을 진행해주세요.", icon: nil, position: .bottom)
+//            }
         case .kakao:
             openExternalBrowser(urlStr: "https://open.kakao.com/o/svs9Bjfi")
         case .privacy:

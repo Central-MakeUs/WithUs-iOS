@@ -160,8 +160,8 @@ final class MemoryReactor: Reactor {
             guard let self = self else { return Disposables.create() }
             
             Task {
-//                 let data = try await self.memoryContentUsecase.execute(year: year, month: month)
-                let data = self.createTestData()
+                 let data = try await self.memoryContentUsecase.execute(year: year, month: month)
+//                let data = self.createTestData()
                 await MainActor.run {
                     observer.onNext(.setMemorySummary(data))
                     observer.onNext(.setMemoriesLoading(false))
@@ -233,7 +233,7 @@ final class MemoryReactor: Reactor {
                             myProfileImageUrl: self.currentState.coupleInfo?.meProfile.profileImageUrl,
                             partnerProfileImageUrl: self.currentState.coupleInfo?.partnerProfile.profileImageUrl
                         )
-                        UIImageWriteToSavedPhotosAlbum(fourCutImage, nil, nil, nil)
+//                        UIImageWriteToSavedPhotosAlbum(fourCutImage, nil, nil, nil)
                         
                         let _ = try await self.memoryContentUsecase.execute(
                             weekEndDate: weekEndDate,

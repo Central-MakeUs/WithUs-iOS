@@ -20,6 +20,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     private let selectedKeywordUseCase: FetchSelectedKeywordUseCaseProtocol
     private let fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
     private let deleteUserUseCase: UserDeleteUsecaseProtocol
+    private let coupleInfoUsecase: CoupleInfoUsecaseProtocol
     weak var mainCoordinator: MainCoordinator?
     
     private let profileReactor: ProfileReactor
@@ -37,6 +38,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         let userStateRepository = HomeRepository(networkService: networkService)
         let cancleRepository = CoupleCancleConnectRepository(networkService: networkService)
         let deleteRepository = UserDeleteRepository(networkService: networkService)
+        let infoRepository = CoupleInfoRespository(networkService: networkService)
 
         //usecase
         self.uploadImageUseCase = UploadImageUseCase(imageRepository: imageRepository)
@@ -51,6 +53,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         self.selectedKeywordUseCase = FetchSelectedKeywordUseCase(keywordRepository: keywordRepository)
         self.fetchUserInfoUseCase = FetchUserInfoUseCase(userRepository: updateRepository)
         self.deleteUserUseCase = UserDeleteUsecase(repository: deleteRepository)
+        self.coupleInfoUsecase = CoupleInfoUsecase(repository: infoRepository)
         
         //transform
         self.keywordService = keywordService
@@ -61,7 +64,8 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
             fetchUserStatusUseCase: userStateUseCase,
             cancleConnectUseCase: cancleConnectUseCase,
             fetchUserInfoUseCase: fetchUserInfoUseCase,
-            deleteUserUseCase: deleteUserUseCase
+            deleteUserUseCase: deleteUserUseCase,
+            coupleInfoUseCase: coupleInfoUsecase
         )
     }
     
@@ -102,6 +106,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
     func showCancleConnect() {
         let cancleVC = CancleConnectViewController()
         cancleVC.coordinator = self
+        cancleVC.reactor = self.profileReactor
         navigationController.pushViewController(cancleVC, animated: true)
     }
     
@@ -110,6 +115,7 @@ class ProfileCoordinator: Coordinator, ConnectCoupleCoordinatorDelegate {
         let cancleVC = CancleConnectViewController()
         cancleVC.coordinator = self
         cancleVC.onDisconnectComplete = completion
+        cancleVC.reactor = self.profileReactor
         navigationController.pushViewController(cancleVC, animated: true)
     }
     

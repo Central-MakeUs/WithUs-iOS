@@ -16,17 +16,15 @@ final class CancleNotificationViewController: BaseViewController, ReactorKit.Vie
     
     // MARK: - UI Components
     private let titleLabel = UILabel().then {
-        $0.text = "쏘피님과 연결을 해제할까요?"
+        $0.text = "-님과 연결을 해제할까요?"
         $0.font = UIFont.pretendard24Bold
         $0.textColor = UIColor.gray900
         $0.textAlignment = .center
     }
     
-    private let imageView = UIImageView().then {
-        $0.backgroundColor = UIColor.gray200
-        $0.contentMode = .scaleAspectFit
-        $0.layer.cornerRadius = 20
-        $0.clipsToBounds = true
+    private let profileView = ProfileImageView().then {
+        $0.hideCameraButton()
+        $0.isUserInteractionEnabled = false
     }
     
     private let warningTitleView = UIView()
@@ -167,7 +165,7 @@ final class CancleNotificationViewController: BaseViewController, ReactorKit.Vie
         super.setupUI()
         
         view.addSubview(titleLabel)
-        view.addSubview(imageView)
+        view.addSubview(profileView)
         view.addSubview(warningTitleView)
         
         warningTitleView.addSubview(warningIconView)
@@ -202,14 +200,14 @@ final class CancleNotificationViewController: BaseViewController, ReactorKit.Vie
             $0.centerX.equalToSuperview()
         }
         
-        imageView.snp.makeConstraints {
+        profileView.snp.makeConstraints {
             $0.top.equalTo(titleLabel.snp.bottom).offset(22)
             $0.centerX.equalToSuperview()
             $0.width.height.equalTo(167)
         }
         
         warningTitleView.snp.makeConstraints {
-            $0.top.equalTo(imageView.snp.bottom).offset(24)
+            $0.top.equalTo(profileView.snp.bottom).offset(24)
             $0.leading.trailing.equalToSuperview().inset(16)
             $0.height.equalTo(24)
         }
@@ -267,6 +265,17 @@ final class CancleNotificationViewController: BaseViewController, ReactorKit.Vie
             .subscribe(onNext: { [weak self] _ in
                 self?.showDisconnectSuccessAlert()
             })
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .compactMap { $0.coupleInfo }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, user in
+                if user.partnerProfile.nickname.isEmpty {
+                    strongSelf.titleLabel.text = "\(user.partnerProfile.nickname)님과 연결을 해제할까요?"
+                    strongSelf.profileView.setProfileImage(user.partnerProfile.profileImageUrl)
+                }
+            }
             .disposed(by: disposeBag)
     }
     

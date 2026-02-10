@@ -24,12 +24,7 @@ final class CombinedImageView: UIView {
         $0.backgroundColor = .gray200
     }
    
-    private let topProfileCircle = UIImageView().then {
-        $0.contentMode = .scaleAspectFill
-        $0.backgroundColor = .white
-        $0.layer.cornerRadius = 17
-        $0.clipsToBounds = true
-    }
+    private let topProfileCircle = ProfileDisplayView()
     
     private let topNameLabel = UILabel().then {
         $0.font = UIFont.pretendard16SemiBold
@@ -58,12 +53,7 @@ final class CombinedImageView: UIView {
         $0.backgroundColor = .gray200
     }
    
-    private let bottomProfileCircle = UIImageView().then {
-        $0.contentMode = .scaleAspectFill
-        $0.backgroundColor = .white
-        $0.layer.cornerRadius = 12
-        $0.clipsToBounds = true
-    }
+    private let bottomProfileCircle = ProfileDisplayView()
     
     private let bottomNameLabel = UILabel().then {
         $0.font = UIFont.pretendard16SemiBold
@@ -185,17 +175,7 @@ final class CombinedImageView: UIView {
             ])
         }
         
-        if let topProfileUrl = URL(string: topProfileURL),
-           let bottomProfileUrl = URL(string: bottomProfileURL) {
-            topProfileCircle.kf.setImage(with: topProfileUrl, placeholder: nil, options: [
-                .transition(.fade(0.2)),
-                .cacheOriginalImage
-            ])
-            
-            bottomProfileCircle.kf.setImage(with: bottomProfileUrl, placeholder: nil, options: [
-                .transition(.fade(0.2)),
-                .cacheOriginalImage
-            ])
-        }
+        topProfileCircle.setProfileImage(topProfileURL)
+        bottomProfileCircle.setProfileImage(bottomProfileURL)
     }
 }
