@@ -116,7 +116,7 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     }
     
     override func setNavigation() {
-        setRightBarButton(image: UIImage(named: "ic_bell"))
+        setRightBarButton(image: UIImage(named: "ic_bell"), action: #selector(buttonTapped))
         
         let titleLabel = UILabel()
         let attributes: [NSAttributedString.Key: Any] = [
@@ -204,6 +204,10 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
         
         let direction: UIPageViewController.NavigationDirection = index == 0 ? .reverse : .forward
         pageViewController.setViewControllers([pages[index]], direction: direction, animated: true)
+    }
+    
+    @objc private func buttonTapped() {
+        coordinator?.showNotiCenter()
     }
     
     private func updateSegmentUI(index: Int) {

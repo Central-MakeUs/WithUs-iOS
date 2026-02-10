@@ -154,6 +154,11 @@ class HomeCoordinator: Coordinator {
         keywordVC.reactor = reactor
         navigationController.pushViewController(keywordVC, animated: true)
     }
+    
+    func showNotiCenter() {
+        let vc = NotiCenterViewController()
+        navigationController.pushViewController(vc, animated: true)
+    }
      
     func finish() {
         childCoordinators.removeAll()
