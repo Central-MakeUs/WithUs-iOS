@@ -238,8 +238,8 @@ class PhotoPreviewViewController: BaseViewController {
         textView.startEditing()
     }
     
-    private func createDraggableSticker(emoji: String) {
-        let stickerView = DraggableStickerView(emoji: emoji)
+    private func createDraggableSticker(image: UIImage) {
+        let stickerView = DraggableStickerView(image: image)
         stickerView.center = CGPoint(x: imageView.bounds.midX, y: imageView.bounds.midY)
         stickerView.delegate = self
         
@@ -282,42 +282,34 @@ extension PhotoPreviewViewController: EditBottomSheetDelegate {
         createEditableText()
     }
     
-    func didSelectLocation() {
-        createDraggableSticker(emoji: "📍")
-    }
-    
-    func didSelectMusic() {
-        createDraggableSticker(emoji: "🎵")
-    }
-    
-    func didSelectSticker() {
-        createDraggableSticker(emoji: "😊")
-    }
-    
-    func didSelectEmoji() {
-        createDraggableSticker(emoji: "👍")
-    }
-    
-    func didSelectThumbsDown() {
-        createDraggableSticker(emoji: "👎")
-    }
-    
-    func didSelectBestHairstyle() {
-        createDraggableSticker(emoji: "🥳")
-    }
-    
-    func didSelectFire() {
-        createDraggableSticker(emoji: "🔥")
+    func didSelectSticker(image: UIImage) {
+        createDraggableSticker(image: image)
     }
 }
 
 extension PhotoPreviewViewController: DraggableViewDelegate {
     func draggableViewDidTap(_ view: UIView) {
-        // 탭했을 때 동작 (필요시 구현)
+        let alert = UIAlertController(title: nil, message: "삭제할까요?", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { _ in
+            UIView.animate(withDuration: 0.2, animations: {
+                view.alpha = 0
+                view.transform = view.transform.scaledBy(x: 0.1, y: 0.1)
+            }) { _ in
+                view.removeFromSuperview()
+                self.captureEditedImage()
+            }
+        })
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        present(alert, animated: true)
     }
-    
+
     func draggableViewDidRequestDelete(_ view: UIView) {
-        view.removeFromSuperview()
-        captureEditedImage()
+        UIView.animate(withDuration: 0.2, animations: {
+            view.alpha = 0
+            view.transform = view.transform.scaledBy(x: 0.1, y: 0.1)
+        }) { _ in
+            view.removeFromSuperview()
+            self.captureEditedImage()
+        }
     }
 }

@@ -8,132 +8,120 @@
 import UIKit
 
 class DraggableStickerView: UIView {
-    
+
     weak var delegate: DraggableViewDelegate?
-    
-    private let emojiLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 64)
-        label.textAlignment = .center
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
+
+    private let stickerImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
     }()
-    
-    private let deleteButton: UIButton = {
-        let button = UIButton()
-        button.setImage(UIImage(systemName: "xmark.circle.fill"), for: .normal)
-        button.tintColor = .white
-        button.backgroundColor = .red
-        button.layer.cornerRadius = 15
-        button.isHidden = true
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-    
+
     private var initialCenter: CGPoint = .zero
-    
-    init(emoji: String) {
+    private var currentScale: CGFloat = 1.0
+
+    init(image: UIImage) {
         super.init(frame: CGRect(x: 0, y: 0, width: 100, height: 100))
-        emojiLabel.text = emoji
+        stickerImageView.image = image
         setupUI()
         setupGestures()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     private func setupUI() {
-        addSubview(emojiLabel)
-        addSubview(deleteButton)
-        
+        addSubview(stickerImageView)
+
         NSLayoutConstraint.activate([
-            emojiLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            emojiLabel.centerYAnchor.constraint(equalTo: centerYAnchor),
-            
-            deleteButton.topAnchor.constraint(equalTo: topAnchor, constant: -5),
-            deleteButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 5),
-            deleteButton.widthAnchor.constraint(equalToConstant: 30),
-            deleteButton.heightAnchor.constraint(equalToConstant: 30)
+            stickerImageView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            stickerImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            stickerImageView.widthAnchor.constraint(equalTo: widthAnchor),
+            stickerImageView.heightAnchor.constraint(equalTo: heightAnchor)
         ])
-        
-        deleteButton.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
     }
-    
+
     private func setupGestures() {
         let panGesture = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
+        panGesture.delegate = self
         addGestureRecognizer(panGesture)
-        
+
         let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
+        pinchGesture.delegate = self
         addGestureRecognizer(pinchGesture)
-        
+
         let rotationGesture = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation(_:)))
+        rotationGesture.delegate = self
         addGestureRecognizer(rotationGesture)
-        
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap))
-        addGestureRecognizer(tapGesture)
+
+        let longPressGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        longPressGesture.minimumPressDuration = 0.5
+        longPressGesture.delegate = self
+        addGestureRecognizer(longPressGesture)
     }
-    
+
     @objc private func handlePan(_ gesture: UIPanGestureRecognizer) {
         let translation = gesture.translation(in: superview)
-        
+
         switch gesture.state {
         case .began:
             initialCenter = center
         case .changed:
             var newCenter = CGPoint(x: initialCenter.x + translation.x, y: initialCenter.y + translation.y)
-            
-            // ✅ superview 범위 내로 제한
             if let superview = superview {
                 let halfWidth = bounds.width / 2
                 let halfHeight = bounds.height / 2
-                
                 newCenter.x = max(halfWidth, min(newCenter.x, superview.bounds.width - halfWidth))
                 newCenter.y = max(halfHeight, min(newCenter.y, superview.bounds.height - halfHeight))
             }
-            
             center = newCenter
         default:
             break
         }
     }
-    
+
     @objc private func handlePinch(_ gesture: UIPinchGestureRecognizer) {
-        if gesture.state == .changed || gesture.state == .ended {
-            let newScale = gesture.scale
-            
-            // ✅ 최소/최대 크기 제한
-            let currentScale = sqrt(transform.a * transform.a + transform.c * transform.c)
-            let finalScale = currentScale * newScale
-            
-            if finalScale >= 0.5 && finalScale <= 3.0 {
-                transform = transform.scaledBy(x: newScale, y: newScale)
-                gesture.scale = 1.0
+        guard gesture.state == .changed || gesture.state == .ended else { return }
+
+        let newScale = currentScale * gesture.scale
+        guard newScale >= 0.3 && newScale <= 5.0 else {
+            gesture.scale = 1.0
+            return
+        }
+
+        currentScale = newScale
+        let rotation = atan2(transform.b, transform.a)
+        transform = CGAffineTransform(rotationAngle: rotation).scaledBy(x: currentScale, y: currentScale)
+        gesture.scale = 1.0
+    }
+
+    @objc private func handleRotation(_ gesture: UIRotationGestureRecognizer) {
+        guard gesture.state == .changed || gesture.state == .ended else { return }
+
+        let rotation = atan2(transform.b, transform.a) + gesture.rotation
+        transform = CGAffineTransform(rotationAngle: rotation).scaledBy(x: currentScale, y: currentScale)
+        gesture.rotation = 0
+    }
+
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+
+        UIView.animate(withDuration: 0.1, animations: {
+            self.transform = self.transform.scaledBy(x: 1.1, y: 1.1)
+        }) { _ in
+            UIView.animate(withDuration: 0.1) {
+                self.transform = self.transform.scaledBy(x: 1.0 / 1.1, y: 1.0 / 1.1)
             }
         }
-    }
-    
-    @objc private func handleRotation(_ gesture: UIRotationGestureRecognizer) {
-        if gesture.state == .changed || gesture.state == .ended {
-            transform = transform.rotated(by: gesture.rotation)
-            gesture.rotation = 0
-        }
-    }
-    
-    @objc private func handleTap() {
+
         delegate?.draggableViewDidTap(self)
-        showDeleteButton()
     }
-    
-    @objc private func deleteTapped() {
-        delegate?.draggableViewDidRequestDelete(self)
-    }
-    
-    func showDeleteButton() {
-        deleteButton.isHidden = false
-    }
-    
-    func hideDeleteButton() {
-        deleteButton.isHidden = true
+}
+
+extension DraggableStickerView: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        return true
     }
 }

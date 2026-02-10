@@ -207,7 +207,8 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     }
     
     @objc private func buttonTapped() {
-        coordinator?.showNotiCenter()
+//        coordinator?.showNotiCenter()
+        coordinator?.showCamera(for: .question(coupleQuestionId: 13), delegate: self)
     }
     
     private func updateSegmentUI(index: Int) {
@@ -238,5 +239,11 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
            let index = pages.firstIndex(of: current) {
             updateSegmentUI(index: index)
         }
+    }
+}
+
+extension HomePagerViewController: PhotoPreviewDelegate {
+    func photoPreview(_ viewController: PhotoPreviewViewController, didSelectImage image: UIImage) {
+        
     }
 }
