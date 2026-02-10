@@ -167,7 +167,6 @@ class PhotoPreviewViewController: BaseViewController {
     
     @objc private func sendPhoto() {
         captureEditedImage()
-        showAlert(title: "준비 완료", message: "편집된 이미지가 준비되었습니다.")
         delegate?.photoPreview(self, didSelectImage: editedImage)
     }
     
@@ -185,8 +184,7 @@ class PhotoPreviewViewController: BaseViewController {
     }
     
     func showUploadFail() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
+        DispatchQueue.main.async {
             ToastView.show(message: "업로드에 실패했어요", icon: nil, position: .bottom)
         }
     }
