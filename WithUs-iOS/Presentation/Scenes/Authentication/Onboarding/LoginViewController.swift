@@ -32,25 +32,52 @@ final class LoginViewController: BaseViewController, View {
     }
     
     private let kakaoButton = UIButton().then {
-        $0.setTitle("카카오로 시작하기", for: .normal)
-        $0.backgroundColor = UIColor.gray900
-        $0.layer.cornerRadius = 8
-        $0.isEnabled = true
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(named: "kakao")
+        config.imagePlacement = .leading
+        config.imagePadding = 8
+        config.background.backgroundColor = UIColor(hex: "#FFE812")
+        config.background.cornerRadius = 8  // ✅ layer 말고 여기서 설정
+        config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+        var titleAttr = AttributedString("카카오로 시작하기")
+        titleAttr.font = UIFont.pretendard16SemiBold
+        titleAttr.foregroundColor = UIColor.gray900
+        config.attributedTitle = titleAttr
+        $0.configuration = config
+        $0.clipsToBounds = true
     }
     
-//    private let appleButton = UIButton().then {
-//        authorizationButtonType: .signIn,
-//        authorizationButtonStyle: .black
-//        $0.setTitle("Apple로 시작하기", for: .normal)
-//        $0.backgroundColor = UIColor.gray900
-//        $0.layer.cornerRadius = 8
-//        $0.isEnabled = true
-//    }
-    
-    let appleButton = ASAuthorizationAppleIDButton(
+    private let appleButton = UIButton().then {
+        var config = UIButton.Configuration.filled()
+        config.baseBackgroundColor = .black
+        config.baseForegroundColor = .white
+        config.cornerStyle = .fixed
+        config.background.cornerRadius = 8
+        config.imagePlacement = .leading
+        config.imagePadding = 8
+        config.image = UIImage(systemName: "apple.logo")?
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
+        var titleAttr = AttributedString("Apple로 시작하기")
+        titleAttr.font = UIFont.systemFont(ofSize: 16, weight: .medium)
+        titleAttr.foregroundColor = UIColor.white
+        config.attributedTitle = titleAttr
+        $0.configuration = config
+        $0.isUserInteractionEnabled = false
+        $0.clipsToBounds = true  // ✅ 추가
+    }
+
+    let appleCustomButton = ASAuthorizationAppleIDButton(
         authorizationButtonType: .signIn,
         authorizationButtonStyle: .black
-    )
+    ).then {
+        $0.cornerRadius = 8
+        $0.alpha = 0.011
+    }
+
+    private let appleLoginContainer = UIView().then {
+        $0.clipsToBounds = true  // ✅ 추가
+        $0.layer.cornerRadius = 8  // ✅ 추가
+    }
     
     private let buttonStackView = UIStackView().then {
         $0.axis = .vertical
@@ -74,7 +101,10 @@ final class LoginViewController: BaseViewController, View {
         view.addSubview(titleLabel)
         
         buttonStackView.addArrangedSubview(kakaoButton)
-        buttonStackView.addArrangedSubview(appleButton)
+        buttonStackView.addArrangedSubview(appleLoginContainer)
+
+        appleLoginContainer.addSubview(appleButton)       // ✅ 커스텀 버튼 먼저 (아래)
+        appleLoginContainer.addSubview(appleCustomButton) // ✅ 투명 ASButton 위에 (터치 처리)
     }
     
     override func setupConstraints() {
@@ -99,15 +129,23 @@ final class LoginViewController: BaseViewController, View {
             $0.horizontalEdges.equalToSuperview()
         }
         
-        appleButton.snp.makeConstraints {
+        appleLoginContainer.snp.makeConstraints {
             $0.height.equalTo(56)
             $0.horizontalEdges.equalToSuperview()
+        }
+
+        appleCustomButton.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
+        appleButton.snp.makeConstraints {
+            $0.edges.equalToSuperview()
         }
     }
     
     override func setupActions() {
         kakaoButton.addTarget(self, action: #selector(kakaoButtonTapped), for: .touchUpInside)
-        appleButton.addTarget(self, action: #selector(appleButtonTapped), for: .touchUpInside)
+        appleCustomButton.addTarget(self, action: #selector(appleButtonTapped), for: .touchUpInside) // ✅ appleButton → appleCustomButton
     }
     
     func bind(reactor: LoginReactor) {
