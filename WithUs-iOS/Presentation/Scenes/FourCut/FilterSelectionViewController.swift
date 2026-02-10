@@ -279,6 +279,23 @@ class FilterSelectionViewController: BaseViewController, View {
                 strongSelf.partnerProfileImageView.setProfileImage(data.partnerProfile.profileImageUrl)
             }
             .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isLoading }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, isLoading in
+                isLoading ? owner.showLoading() : owner.hideLoading()
+            }
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .compactMap { $0.errorMessage }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, message in
+                ToastView.show(message: message)
+            }
+            .disposed(by: disposeBag)
     }
     
     private func setupGridWithStackView() {

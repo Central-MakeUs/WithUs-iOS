@@ -96,6 +96,23 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
             .distinctUntilChanged { $0 == $1 }
             .subscribe()
             .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isLoading }
+            .observe(on: MainScheduler.instance)
+            .distinctUntilChanged()
+            .bind(with: self) { strongSelf, isLoading in
+                isLoading ? strongSelf.showLoading() : strongSelf.hideLoading()
+            }
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .compactMap { $0.errorMessage }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, message in
+                ToastView.show(message: message)
+            }
+            .disposed(by: disposeBag)
     }
     
     struct SettingItem {

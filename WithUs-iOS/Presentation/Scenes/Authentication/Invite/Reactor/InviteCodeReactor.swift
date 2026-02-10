@@ -17,7 +17,7 @@ final class InviteCodeReactor: Reactor {
         case setInvitationCode(String)
         case setLoading(Bool)
         case setSuccess
-        case setError(String)
+        case setErrorMessage(String?)
     }
     
     struct State {
@@ -55,7 +55,7 @@ final class InviteCodeReactor: Reactor {
             newState.isLoading = false
             newState.isCompleted = true
             
-        case .setError(let message):
+        case .setErrorMessage(let message):
             newState.isLoading = false
             newState.errorMessage = message
         }
@@ -82,13 +82,16 @@ final class InviteCodeReactor: Reactor {
                         observer.onNext(.setSuccess)
                         observer.onCompleted()
                     } catch let error as InvitationCodeError {
-                        observer.onNext(.setError(error.message))
+                        observer.onNext(.setErrorMessage(error.message))
+                        observer.onNext(.setErrorMessage(nil))
                         observer.onCompleted()
                     } catch let error as NetworkError {
-                        observer.onNext(.setError(error.errorDescription))
+                        observer.onNext(.setErrorMessage(error.errorDescription))
+                        observer.onNext(.setErrorMessage(nil))
                         observer.onCompleted()
                     } catch {
-                        observer.onNext(.setError("초대 코드 받아오기 중 오류가 발생했습니다. 다시 시도해 주세요."))
+                        observer.onNext(.setErrorMessage("초대 코드 받아오기 중 오류가 발생했습니다. 다시 시도해 주세요."))
+                        observer.onNext(.setErrorMessage(nil))
                         observer.onCompleted()
                     }
                 }

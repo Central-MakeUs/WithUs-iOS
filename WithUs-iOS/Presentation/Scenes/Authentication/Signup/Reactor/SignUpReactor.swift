@@ -27,7 +27,7 @@ final class SignUpReactor: Reactor {
         case setLoading(Bool)
         case setUser(User)
         case setSuccess
-        case setError(String)
+        case setError(String?)
     }
     
     struct State {
@@ -87,6 +87,7 @@ final class SignUpReactor: Reactor {
         case .setError(let message):
             newState.isLoading = false
             newState.errorMessage = message
+            newState.isCompleted = false
             
         case .setBirthDate(let birthDate):
             newState.birthDate = birthDate
@@ -126,14 +127,17 @@ final class SignUpReactor: Reactor {
                         
                     } catch let error as UploadImageError {
                         observer.onNext(.setError(error.message))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                         
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                         
                     } catch {
                         observer.onNext(.setError("프로필 설정에 실패했습니다."))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                     }
                 }

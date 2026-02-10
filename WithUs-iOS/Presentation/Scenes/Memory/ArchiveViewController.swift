@@ -203,7 +203,7 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { (error: String) in
-                print("❌ Archive 에러: \(error)")
+                ToastView.show(message: error)
             })
             .disposed(by: disposeBag)
         
@@ -265,6 +265,27 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
                     self?.hideEmptyState()
                 }
             })
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isInitialLoading }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, isLoading in
+                isLoading ? owner.showLoading() : owner.hideLoading()
+            }
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isLoading || $0.isQuestionLoading }
+            .distinctUntilChanged()
+            .filter { [weak reactor] _ in
+                reactor?.currentState.isInitialLoadComplete == true
+            }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, isLoading in
+                isLoading ? owner.showLoading() : owner.hideLoading()
+            }
             .disposed(by: disposeBag)
     }
     

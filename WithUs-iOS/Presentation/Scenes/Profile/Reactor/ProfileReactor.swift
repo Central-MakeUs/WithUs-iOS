@@ -123,10 +123,13 @@ final class ProfileReactor: Reactor {
             
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
-            
+            if isLoading {
+                newState.errorMessage = nil
+            }
         case .setSuccess:
             newState.isLoading = false
             newState.isCompleted = true
+            newState.errorMessage = nil
             
         case .setError(let message):
             newState.isLoading = false

@@ -162,6 +162,15 @@ class InviteInputCodeViewController: BaseViewController, View {
                 owner.warningLabel.text = data
             }
             .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isLoading }
+            .observe(on: MainScheduler.instance)
+            .distinctUntilChanged()
+            .bind(with: self) { strongSelf, isLoading in
+                isLoading ? strongSelf.showLoading() : strongSelf.hideLoading()
+            }
+            .disposed(by: disposeBag)
     }
 
     private func setupTextField() {

@@ -20,7 +20,7 @@ final class LoginReactor: Reactor {
     enum Mutation {
         case setLoading(Bool)
         case setLoginSuccess(status: OnboardingStatus)
-        case setError(String)
+        case setError(String?)
     }
     
     struct State {
@@ -95,14 +95,17 @@ final class LoginReactor: Reactor {
                         
                     } catch let error as KakaoLoginError {
                         observer.onNext(.setError(error.message))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                         
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                         
                     } catch {
                         observer.onNext(.setError("로그인에 실패했습니다."))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                     }
                 }
@@ -137,14 +140,17 @@ final class LoginReactor: Reactor {
                         
                     } catch let error as AppleLoginError {
                         observer.onNext(.setError(error.message))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                         
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                         
                     } catch {
                         observer.onNext(.setError("로그인에 실패했습니다."))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                     }
                 }

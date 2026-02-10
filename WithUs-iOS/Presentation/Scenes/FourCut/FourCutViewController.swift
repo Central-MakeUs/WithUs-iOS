@@ -118,32 +118,22 @@ class FourCutViewController: BaseViewController, View {
             .bind(to: dateLabel.rx.text)
             .disposed(by: disposeBag)
         
-        reactor.state.map { $0.isMemoriesLoading }
+        
+        reactor.state
+            .map { $0.isLoading }
             .distinctUntilChanged()
-            .bind(onNext: { [weak self] isLoading in
-                if isLoading {
-                    print("로딩중")
-                } else {
-                    print("로딩끝")
-                }
-            })
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, isLoading in
+                isLoading ? owner.showLoading() : owner.hideLoading()
+            }
             .disposed(by: disposeBag)
         
-        reactor.state.map { $0.isWeekMemoryCreating }
-            .distinctUntilChanged()
-            .bind(onNext: { [weak self] isLoading in
-                if isLoading {
-                    print("로딩중")
-                } else {
-                    print("로딩끝")
-                }
-            })
-            .disposed(by: disposeBag)
-        
-        reactor.state.compactMap { $0.errorMessage }
-            .bind(onNext: { [weak self] errorMessage in
-                self?.showErrorAlert(message: errorMessage)
-            })
+        reactor.state
+            .compactMap { $0.errorMessage }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, message in
+                ToastView.show(message: message)
+            }
             .disposed(by: disposeBag)
         
         

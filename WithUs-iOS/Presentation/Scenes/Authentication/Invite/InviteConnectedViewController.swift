@@ -105,6 +105,23 @@ final class InviteConnectedViewController: BaseViewController, View {
             .bind(with: self) { owner, data in
             }
             .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isLoading }
+            .observe(on: MainScheduler.instance)
+            .distinctUntilChanged()
+            .bind(with: self) { strongSelf, isLoading in
+                isLoading ? strongSelf.showLoading() : strongSelf.hideLoading()
+            }
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .compactMap { $0.errorMessage }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, message in
+                ToastView.show(message: message)
+            }
+            .disposed(by: disposeBag)
     }
     
     @objc private func startTapped() {

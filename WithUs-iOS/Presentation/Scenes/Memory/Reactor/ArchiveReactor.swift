@@ -62,7 +62,6 @@ final class ArchiveReactor: Reactor {
             return !isInitialLoadComplete && (isLoading || isQuestionLoading)
         }
         
-        // 전체 데이터가 비어있는지 확인 (초기 로딩 완료 후에만)
         var isAllDataEmpty: Bool {
             return isInitialLoadComplete && recentPhotos.isEmpty && questions.isEmpty
         }
@@ -85,9 +84,6 @@ final class ArchiveReactor: Reactor {
                     let joinDate = await self.loadJoinDateAsync()
                     await MainActor.run {
                         observer.onNext(.setJoinDate(joinDate))
-                    }
-                    
-                    await MainActor.run {
                         observer.onNext(.setLoading(true))
                         observer.onNext(.setQuestionLoading(true))
                     }
@@ -98,7 +94,6 @@ final class ArchiveReactor: Reactor {
                     let (recentData, questionsData) = await (recentResult, questionsResult)
                     
                     await MainActor.run {
-                        // Recent Photos
                         if let recentData = recentData {
                             observer.onNext(.setRecentPhotos(recentData.photos))
                             observer.onNext(.setNextCursor(recentData.nextCursor))
@@ -106,15 +101,12 @@ final class ArchiveReactor: Reactor {
                         }
                         observer.onNext(.setLoading(false))
                         
-                        // Questions
                         if let questionsData = questionsData {
                             observer.onNext(.setQuestions(questionsData.questions))
                             observer.onNext(.setQuestionNextCursor(questionsData.nextCursor))
                             observer.onNext(.setQuestionHasNext(questionsData.hasNext))
                         }
                         observer.onNext(.setQuestionLoading(false))
-                        
-                        // 4. 초기 로딩 완료
                         observer.onNext(.setInitialLoadComplete(true))
                         observer.onCompleted()
                     }
@@ -132,24 +124,20 @@ final class ArchiveReactor: Reactor {
             return .just(.setSelectedTab(index))
             
         case .loadMoreRecent:
-            guard !currentState.isLoading, currentState.hasNext else {
-                return .empty()
-            }
+            guard !currentState.isLoading, currentState.hasNext else { return .empty() }
             return loadRecentPhotos(cursor: currentState.nextCursor, isRefresh: false)
             
         case .loadCalendarMonth(let year, let month):
             return loadCalendarData(year: year, month: month)
             
         case .loadMoreQuestions:
-            guard !currentState.isQuestionLoading, currentState.questionHasNext else {
-                return .empty()
-            }
+            guard !currentState.isQuestionLoading, currentState.questionHasNext else { return .empty() }
             return loadQuestionList(cursor: currentState.questionNextCursor, isRefresh: false)
             
         case .fetchQuestionDetail(let coupleQuestionId):
             return fetchQuestionDetail(coupleQuestionId: coupleQuestionId)
             
-        case .fetchPhotoDetail(date: let date, targetId: let targetId, targetType: let targetType):
+        case .fetchPhotoDetail(let date, let targetId, let targetType):
             return fetchPhotoDetail(date: date, targetId: targetId, targetType: targetType)
         }
     }
@@ -160,56 +148,41 @@ final class ArchiveReactor: Reactor {
         switch mutation {
         case .setSelectedTab(let index):
             newState.selectedTab = index
-            
         case .setRecentPhotos(let photos):
             newState.recentPhotos = photos
-            
         case .appendRecentPhotos(let photos):
             newState.recentPhotos.append(contentsOf: photos)
-            
         case .setNextCursor(let cursor):
             newState.nextCursor = cursor
-            
         case .setHasNext(let hasNext):
             newState.hasNext = hasNext
-            
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
-            
+            if isLoading {
+                newState.errorMessage = nil
+            }
         case .setError(let message):
             newState.errorMessage = message
-            
         case .appendCalendarData(let data):
-            if !newState.calendarDataList.contains(where: {
-                $0.year == data.year && $0.month == data.month
-            }) {
+            if !newState.calendarDataList.contains(where: { $0.year == data.year && $0.month == data.month }) {
                 newState.calendarDataList.append(data)
             }
-            
         case .setJoinDate(let date):
             newState.joinDate = date
-            
         case .setQuestions(let questions):
             newState.questions = questions
-            
         case .appendQuestions(let questions):
             newState.questions.append(contentsOf: questions)
-            
         case .setQuestionNextCursor(let cursor):
             newState.questionNextCursor = cursor
-            
         case .setQuestionHasNext(let hasNext):
             newState.questionHasNext = hasNext
-            
         case .setQuestionLoading(let isLoading):
             newState.isQuestionLoading = isLoading
-            
         case .setQuestionDetail(let response):
             newState.questionDetail = response
-            
         case .setPhotoDetail(let response):
             newState.photoDetail = response
-            
         case .setInitialLoadComplete(let isComplete):
             newState.isInitialLoadComplete = isComplete
         }
@@ -218,36 +191,26 @@ final class ArchiveReactor: Reactor {
     }
     
     func transform(mutation: Observable<Mutation>) -> Observable<Mutation> {
-        let clearDetailMutations = mutation
-            .flatMap { mutation -> Observable<Mutation> in
-                switch mutation {
-                case .setQuestionDetail(let detail):
-                    if detail != nil {
-                        return .concat(
-                            .just(mutation),
-                            .just(.setQuestionDetail(nil))
-                        )
-                    }
-                case .setPhotoDetail(let detail):
-                    if detail != nil {
-                        return .concat(
-                            .just(mutation),
-                            .just(.setPhotoDetail(nil))
-                        )
-                    }
-                default:
-                    break
-                }
+        return mutation.flatMap { mutation -> Observable<Mutation> in
+            switch mutation {
+            case .setQuestionDetail(let detail) where detail != nil:
+                return .concat(.just(mutation), .just(.setQuestionDetail(nil)))
+            case .setPhotoDetail(let detail) where detail != nil:
+                return .concat(.just(mutation), .just(.setPhotoDetail(nil)))
+            default:
                 return .just(mutation)
             }
-        
-        return clearDetailMutations
+        }
     }
     
-    // MARK: - Async Helpers
+    private func errorMessage(from error: Error) -> String {
+        if let networkError = error as? NetworkError {
+            return networkError.errorDescription
+        }
+        return error.localizedDescription
+    }
     
     private func loadJoinDateAsync() async -> Date? {
-        // TODO: 실제 UseCase에서 가입일 가져오기
         return nil
     }
     
@@ -257,7 +220,7 @@ final class ArchiveReactor: Reactor {
             let viewModels = data.archiveList.flatMap { ArchivePhotoViewModel.from($0) }
             return (viewModels, data.nextCursor, data.hasNext)
         } catch {
-            print("❌ Recent Photos 로드 실패: \(error)")
+            print("❌ Recent Photos 로드 실패: \(errorMessage(from: error))")
             return nil
         }
     }
@@ -267,146 +230,113 @@ final class ArchiveReactor: Reactor {
             let data = try await fetchArchiveListUseCase.executeList(size: 20, cursor: cursor)
             return (data.questionList, data.nextCursor, data.hasNext)
         } catch {
-            print("❌ Questions 로드 실패: \(error)")
+            print("❌ Questions 로드 실패: \(errorMessage(from: error))")
             return nil
         }
     }
     
-    // MARK: - Existing Methods (for pagination)
-    
     private func loadRecentPhotos(cursor: String?, isRefresh: Bool) -> Observable<Mutation> {
-        let startLoading: Observable<Mutation> = .just(.setLoading(true))
-        
-        let fetchPhotos: Observable<Mutation> = Observable.create { [weak self] observer in
-            guard let self = self else { return Disposables.create() }
-            
-            Task {
-                do {
-                    let data = try await self.fetchArchiveListUseCase.execute(size: 20, cursor: cursor)
-                    let viewModels = data.archiveList.flatMap { ArchivePhotoViewModel.from($0) }
-                    
-                    await MainActor.run {
-                        if isRefresh {
-                            observer.onNext(.setRecentPhotos(viewModels))
-                        } else {
-                            observer.onNext(.appendRecentPhotos(viewModels))
+        return .concat([
+            .just(.setLoading(true)),
+            Observable.create { [weak self] observer in
+                guard let self else { observer.onCompleted(); return Disposables.create() }
+                Task {
+                    do {
+                        let data = try await self.fetchArchiveListUseCase.execute(size: 20, cursor: cursor)
+                        let viewModels = data.archiveList.flatMap { ArchivePhotoViewModel.from($0) }
+                        await MainActor.run {
+                            observer.onNext(isRefresh ? .setRecentPhotos(viewModels) : .appendRecentPhotos(viewModels))
+                            observer.onNext(.setNextCursor(data.nextCursor))
+                            observer.onNext(.setHasNext(data.hasNext))
+                            observer.onNext(.setLoading(false))
+                            observer.onCompleted()
                         }
-                        observer.onNext(.setNextCursor(data.nextCursor))
-                        observer.onNext(.setHasNext(data.hasNext))
-                        observer.onNext(.setLoading(false))
-                        observer.onCompleted()
-                    }
-                } catch {
-                    await MainActor.run {
-                        observer.onNext(.setError(error.localizedDescription))
-                        observer.onNext(.setLoading(false))
-                        observer.onCompleted()
+                    } catch {
+                        await MainActor.run {
+                            observer.onNext(.setError(self.errorMessage(from: error)))
+                            observer.onNext(.setLoading(false))
+                            observer.onCompleted()
+                        }
                     }
                 }
+                return Disposables.create()
             }
-            
-            return Disposables.create()
-        }
-        
-        return .concat([startLoading, fetchPhotos])
+        ])
     }
     
     private func loadCalendarData(year: Int, month: Int) -> Observable<Mutation> {
         return Observable.create { [weak self] observer in
-            guard let self = self else { return Disposables.create() }
-            
+            guard let self else { observer.onCompleted(); return Disposables.create() }
             Task {
                 do {
                     let data = try await self.fetchArchiveListUseCase.execute(year: year, month: month)
-                    
                     await MainActor.run {
                         observer.onNext(.appendCalendarData(data))
                         observer.onCompleted()
                     }
                 } catch {
                     await MainActor.run {
-                        observer.onNext(.setError(error.localizedDescription))
+                        observer.onNext(.setError(self.errorMessage(from: error)))
                         observer.onCompleted()
                     }
                 }
             }
-            
             return Disposables.create()
         }
     }
     
     private func loadQuestionList(cursor: String?, isRefresh: Bool) -> Observable<Mutation> {
-        let startLoading: Observable<Mutation> = .just(.setQuestionLoading(true))
-        
-        let fetchQuestions: Observable<Mutation> = Observable.create { [weak self] observer in
-            guard let self = self else { return Disposables.create() }
-            
-            Task {
-                do {
-                    let data = try await self.fetchArchiveListUseCase.executeList(size: 20, cursor: cursor)
-                    
-                    await MainActor.run {
-                        if isRefresh {
-                            observer.onNext(.setQuestions(data.questionList))
-                        } else {
-                            observer.onNext(.appendQuestions(data.questionList))
+        return .concat([
+            .just(.setQuestionLoading(true)),
+            Observable.create { [weak self] observer in
+                guard let self else { observer.onCompleted(); return Disposables.create() }
+                Task {
+                    do {
+                        let data = try await self.fetchArchiveListUseCase.executeList(size: 20, cursor: cursor)
+                        await MainActor.run {
+                            observer.onNext(isRefresh ? .setQuestions(data.questionList) : .appendQuestions(data.questionList))
+                            observer.onNext(.setQuestionNextCursor(data.nextCursor))
+                            observer.onNext(.setQuestionHasNext(data.hasNext))
+                            observer.onNext(.setQuestionLoading(false))
+                            observer.onCompleted()
                         }
-                        observer.onNext(.setQuestionNextCursor(data.nextCursor))
-                        observer.onNext(.setQuestionHasNext(data.hasNext))
-                        observer.onNext(.setQuestionLoading(false))
-                        observer.onCompleted()
-                    }
-                } catch {
-                    await MainActor.run {
-                        observer.onNext(.setError(error.localizedDescription))
-                        observer.onNext(.setQuestionLoading(false))
-                        observer.onCompleted()
+                    } catch {
+                        await MainActor.run {
+                            observer.onNext(.setError(self.errorMessage(from: error)))
+                            observer.onNext(.setQuestionLoading(false))
+                            observer.onCompleted()
+                        }
                     }
                 }
+                return Disposables.create()
             }
-            
-            return Disposables.create()
-        }
-        
-        return .concat([startLoading, fetchQuestions])
+        ])
     }
     
     private func fetchQuestionDetail(coupleQuestionId: Int) -> Observable<Mutation> {
-        let startLoading: Observable<Mutation> = .just(.setQuestionLoading(true))
-        
-        let fetchQuestionDetail: Observable<Mutation> = Observable.create { [weak self] observer in
-            guard let self = self else { return Disposables.create() }
-            
+        return Observable.create { [weak self] observer in
+            guard let self else { observer.onCompleted(); return Disposables.create() }
             Task {
                 do {
                     let data = try await self.fetchArchiveListUseCase.executeQuestionDetail(coupleQuestionId: coupleQuestionId)
-                    
                     await MainActor.run {
                         observer.onNext(.setQuestionDetail(data))
-                        observer.onNext(.setQuestionLoading(false))
                         observer.onCompleted()
                     }
                 } catch {
                     await MainActor.run {
-                        observer.onNext(.setError(error.localizedDescription))
-                        observer.onNext(.setQuestionLoading(false))
+                        observer.onNext(.setError(self.errorMessage(from: error)))
                         observer.onCompleted()
                     }
                 }
             }
-            
             return Disposables.create()
         }
-        
-        return .concat([startLoading, fetchQuestionDetail])
     }
     
     private func fetchPhotoDetail(date: String, targetId: Int?, targetType: String?) -> Observable<Mutation> {
-        let startLoading: Observable<Mutation> = .just(.setQuestionLoading(true))
-        
-        let fetchPhotoDetail: Observable<Mutation> = Observable.create { [weak self] observer in
-            guard let self = self else { return Disposables.create() }
-            
+        return Observable.create { [weak self] observer in
+            guard let self else { observer.onCompleted(); return Disposables.create() }
             Task {
                 do {
                     let data = try await self.fetchArchiveListUseCase.executePhotoDetail(
@@ -414,24 +344,18 @@ final class ArchiveReactor: Reactor {
                         targetId: targetId,
                         targetType: targetType
                     )
-                    
                     await MainActor.run {
                         observer.onNext(.setPhotoDetail(data))
-                        observer.onNext(.setQuestionLoading(false))
                         observer.onCompleted()
                     }
                 } catch {
                     await MainActor.run {
-                        observer.onNext(.setError(error.localizedDescription))
-                        observer.onNext(.setQuestionLoading(false))
+                        observer.onNext(.setError(self.errorMessage(from: error)))
                         observer.onCompleted()
                     }
                 }
             }
-            
             return Disposables.create()
         }
-        
-        return .concat([startLoading, fetchPhotoDetail])
     }
 }

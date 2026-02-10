@@ -22,6 +22,7 @@ final class TodayQuestionReactor: Reactor {
         case setTodayQuestion(TodayQuestionResponse)
         case setImageUploadSuccess(String)
         case setError(String)
+        case uploadError(String)
         case pokeSuccess(Bool)
     }
     
@@ -30,6 +31,7 @@ final class TodayQuestionReactor: Reactor {
         var currentQuestionData: TodayQuestionResponse?
         var uploadedImageUrl: String?
         var errorMessage: String?
+        var uploadErrorMessage: String?
         var partnerUserId: Int?
         var pokeSuccess: Bool = false
     }
@@ -69,6 +71,7 @@ final class TodayQuestionReactor: Reactor {
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
             newState.errorMessage = nil
+            newState.uploadErrorMessage = nil
             
         case .setTodayQuestion(let data):
             newState.isLoading = false
@@ -80,6 +83,7 @@ final class TodayQuestionReactor: Reactor {
         case .setImageUploadSuccess(let imageKey):
             newState.uploadedImageUrl = imageKey
             newState.isLoading = false
+            newState.uploadErrorMessage = nil
             
         case .setError(let message):
             newState.isLoading = false
@@ -87,6 +91,10 @@ final class TodayQuestionReactor: Reactor {
             
         case .pokeSuccess(let result):
             newState.pokeSuccess = result
+            
+        case .uploadError(let message):
+            newState.isLoading = false
+            newState.uploadErrorMessage = message
         }
         
         return newState
@@ -105,6 +113,9 @@ final class TodayQuestionReactor: Reactor {
                     do {
                         let data = try await self.fetchTodayQuestionUseCase.execute()
                         observer.onNext(.setTodayQuestion(data))
+                        observer.onCompleted()
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
                         observer.onCompleted()
                     } catch {
                         observer.onNext(.setError(error.localizedDescription))
@@ -133,12 +144,14 @@ final class TodayQuestionReactor: Reactor {
                         )
                         observer.onNext(.setImageUploadSuccess(imageKey))
                         
-                        // 업로드 후 새로고침
                         let data = try await self.fetchTodayQuestionUseCase.execute()
                         observer.onNext(.setTodayQuestion(data))
                         observer.onCompleted()
+                    }  catch let error as NetworkError {
+                        observer.onNext(.uploadError(error.errorDescription))
+                        observer.onCompleted()
                     } catch {
-                        observer.onNext(.setError(error.localizedDescription))
+                        observer.onNext(.uploadError(error.localizedDescription))
                         observer.onCompleted()
                     }
                 }
@@ -164,7 +177,10 @@ final class TodayQuestionReactor: Reactor {
                         }
                         observer.onNext(.pokeSuccess(false))
                         observer.onCompleted()
-                    } catch {
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
+                        observer.onCompleted()
+                    }  catch {
                         observer.onNext(.setError(error.localizedDescription))
                         observer.onCompleted()
                     }

@@ -207,8 +207,7 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     }
     
     @objc private func buttonTapped() {
-//        coordinator?.showNotiCenter()
-        coordinator?.showCamera(for: .question(coupleQuestionId: 13), delegate: self)
+        coordinator?.showNotiCenter()
     }
     
     private func updateSegmentUI(index: Int) {

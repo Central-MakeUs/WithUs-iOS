@@ -25,6 +25,7 @@ final class TodayDailyReactor: Reactor {
         case setTodayKeyword(TodayKeywordResponse)
         case setImageUploadSuccess(String)
         case setError(String)
+        case uploadError(String)
         case pokeSuccess(Bool)
     }
     
@@ -36,6 +37,7 @@ final class TodayDailyReactor: Reactor {
         var partnerUserId: Int?
         var uploadedImageUrl: String?
         var errorMessage: String?
+        var uploadErrorMessage: String?
         var pokeSuccess: Bool = false
     }
     
@@ -87,6 +89,7 @@ final class TodayDailyReactor: Reactor {
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
             newState.errorMessage = nil
+            newState.uploadErrorMessage = nil
             
         case .setCoupleKeywords(let keywords):
             newState.keywords = keywords
@@ -105,6 +108,7 @@ final class TodayDailyReactor: Reactor {
         case .setImageUploadSuccess(let imageKey):
             newState.uploadedImageUrl = imageKey
             newState.isLoading = false
+            newState.uploadErrorMessage = nil
             
         case .setError(let message):
             newState.isLoading = false
@@ -112,6 +116,10 @@ final class TodayDailyReactor: Reactor {
             
         case .pokeSuccess(let result):
             newState.pokeSuccess = result
+            
+        case .uploadError(let message):
+            newState.isLoading = false
+            newState.uploadErrorMessage = message
         }
         
         return newState
@@ -152,6 +160,9 @@ final class TodayDailyReactor: Reactor {
                         }
                         
                         observer.onCompleted()
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
+                        observer.onCompleted()
                     } catch {
                         observer.onNext(.setError(error.localizedDescription))
                         observer.onCompleted()
@@ -181,6 +192,9 @@ final class TodayDailyReactor: Reactor {
                     do {
                         let data = try await self.fetchTodayKeywordUseCase.execute(coupleKeywordId: coupleKeywordId)
                         observer.onNext(.setTodayKeyword(data))
+                        observer.onCompleted()
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
                         observer.onCompleted()
                     } catch {
                         observer.onNext(.setError(error.localizedDescription))
@@ -213,8 +227,11 @@ final class TodayDailyReactor: Reactor {
                         let data = try await self.fetchTodayKeywordUseCase.execute(coupleKeywordId: coupleKeywordId)
                         observer.onNext(.setTodayKeyword(data))
                         observer.onCompleted()
+                    }  catch let error as NetworkError {
+                        observer.onNext(.uploadError(error.errorDescription))
+                        observer.onCompleted()
                     } catch {
-                        observer.onNext(.setError(error.localizedDescription))
+                        observer.onNext(.uploadError(error.localizedDescription))
                         observer.onCompleted()
                     }
                 }
@@ -239,6 +256,9 @@ final class TodayDailyReactor: Reactor {
                             observer.onNext(.pokeSuccess(true))
                             observer.onNext(.pokeSuccess(false))
                         }
+                        observer.onCompleted()
+                    } catch let error as NetworkError {
+                        observer.onNext(.setError(error.errorDescription))
                         observer.onCompleted()
                     } catch {
                         observer.onNext(.setError(error.localizedDescription))

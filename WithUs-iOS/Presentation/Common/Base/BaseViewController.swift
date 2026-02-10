@@ -1,20 +1,57 @@
 import UIKit
 
 class BaseViewController: UIViewController {
+    
+    // MARK: - Loading
+    private lazy var loadingDimView = UIView().then {
+        $0.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        $0.isHidden = true
+    }
+    
+    private lazy var loadingIndicator = UIActivityIndicatorView(style: .large).then {
+        $0.color = .white
+        $0.hidesWhenStopped = true
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupConstraints()
         setupActions()
         setNavigation()
+        setupLoadingView()
     }
     
+    private func setupLoadingView() {
+        view.addSubview(loadingDimView)
+        loadingDimView.addSubview(loadingIndicator)
+        
+        loadingDimView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+        
+        loadingIndicator.snp.makeConstraints {
+            $0.center.equalToSuperview()
+        }
+    }
+    
+    func showLoading() {
+        view.bringSubviewToFront(loadingDimView)
+        loadingDimView.isHidden = false
+        loadingIndicator.startAnimating()
+    }
+    
+    func hideLoading() {
+        loadingDimView.isHidden = true
+        loadingIndicator.stopAnimating()
+    }
+    
+    // MARK: - Setup
     func setupUI() {
         view.backgroundColor = .white
     }
     
-    func setupConstraints() {
-    }
+    func setupConstraints() {}
     
     func setupActions() {}
     
@@ -34,7 +71,6 @@ class BaseViewController: UIViewController {
         action: Selector? = nil,
         tintColor: UIColor? = nil
     ) {
-        // .custom 타입을 사용하면 Glass UI 효과가 없음
         let button = UIButton(type: .custom)
         
         if let attributedTitle = attributedTitle {
@@ -78,7 +114,6 @@ class BaseViewController: UIViewController {
         action: Selector? = nil,
         tintColor: UIColor? = nil
     ) {
-        // .custom 타입을 사용하면 Glass UI 효과가 없음
         let button = UIButton(type: .custom)
         
         if let attributedTitle = attributedTitle {
@@ -114,7 +149,6 @@ class BaseViewController: UIViewController {
         let imageView = UIImageView(image: logoImage)
         imageView.contentMode = .scaleAspectFit
         
-        // 이미지의 비율을 유지하면서 높이를 기준으로 너비를 계산합니다.
         let imageRatio = logoImage.size.width / logoImage.size.height
         let finalWidth = width ?? (height * imageRatio)
         
@@ -131,8 +165,6 @@ class BaseViewController: UIViewController {
     
     func openExternalBrowser(urlStr: String) {
         guard let url = URL(string: urlStr) else { return }
-        
-        // 해당 URL을 열 수 있는지 먼저 확인한 후 오픈합니다.
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }

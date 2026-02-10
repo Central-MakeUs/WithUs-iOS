@@ -18,7 +18,7 @@ final class InviteInputCodeReactor: Reactor {
     enum Mutation {
         case setLoading(Bool)
         case setSuccess
-        case setError(String)
+        case setError(String?)
         case verifiedCode(VerifyCodePreviewResult)
         case acceptedInvite(String)
     }
@@ -88,9 +88,11 @@ final class InviteInputCodeReactor: Reactor {
                         observer.onCompleted()
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                     } catch {
                         observer.onNext(.setError("연결에 실패했습니다."))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                     }
                 }
@@ -124,13 +126,16 @@ final class InviteInputCodeReactor: Reactor {
                             observer.onNext(.verifiedCode(result))
                         } else {
                             observer.onNext(.setError("초대코드를 다시 확인해주세요."))
+                            observer.onNext(.setError(nil))
                         }
                         observer.onCompleted()
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                     } catch {
                         observer.onNext(.setError("인증실패했습니다. 다시 시도해 주세요."))
+                        observer.onNext(.setError(nil))
                         observer.onCompleted()
                     }
                 }

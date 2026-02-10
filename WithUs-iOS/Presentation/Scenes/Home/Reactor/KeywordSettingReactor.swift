@@ -67,7 +67,9 @@ final class KeywordSettingReactor: Reactor {
         switch mutation {
         case .setLoading(let isLoading):
             newState.isLoading = isLoading
-            
+            if isLoading {
+                newState.errorMessage = nil
+            }
         case .setSuccess:
             newState.isLoading = false
             newState.isCompleted = true

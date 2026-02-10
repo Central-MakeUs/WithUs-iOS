@@ -141,9 +141,26 @@ final class KeywordSettingViewController: BaseViewController, ReactorKit.View{
     func bind(reactor: KeywordSettingReactor) {
         reactor.state.map { $0.isCompleted }
             .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] isCompleted in
-                
+            .subscribe(onNext: { [weak self] _ in
+                ToastView.show(message: "키워드 설정이 저장되었습니다.")
             })
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isLoading }
+            .observe(on: MainScheduler.instance)
+            .distinctUntilChanged()
+            .bind(with: self) { strongSelf, isLoading in
+                isLoading ? strongSelf.showLoading() : strongSelf.hideLoading()
+            }
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .compactMap { $0.errorMessage }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, message in
+                ToastView.show(message: message)
+            }
             .disposed(by: disposeBag)
     }
     
