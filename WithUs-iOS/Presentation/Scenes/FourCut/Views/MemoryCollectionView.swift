@@ -54,7 +54,6 @@ class MemoryCollectionView: UIView {
                 MemoryFullCellView(item: item)
             }
             .margins(.all, 0)
-            cell.contentView.clipsToBounds = true
         }
     }
     
@@ -85,7 +84,7 @@ class MemoryCollectionView: UIView {
             let group = NSCollectionLayoutGroup.horizontal(layoutSize: groupSize, subitems: [item])
             
             let section = NSCollectionLayoutSection(group: group)
-            section.interGroupSpacing = 8
+            section.interGroupSpacing = 12
             section.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
             section.orthogonalScrollingBehavior = .none
             

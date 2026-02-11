@@ -182,7 +182,6 @@ final class UserDefaultsManager {
         shouldShowOnboarding = false
         accessToken = nil
         refreshToken = nil
-        fcmToken = nil
         nickname = nil
         fullName = nil
         userId = nil
@@ -203,7 +202,6 @@ final class UserDefaultsManager {
         shouldShowOnboarding = true
         accessToken = nil
         refreshToken = nil
-        fcmToken = nil
         nickname = nil
         fullName = nil
         userId = nil

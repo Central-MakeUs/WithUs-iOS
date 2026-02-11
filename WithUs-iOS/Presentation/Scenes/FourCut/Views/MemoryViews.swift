@@ -97,7 +97,12 @@ struct MemoryFullCellView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .cornerRadius(12)
-            .clipped()
+            .shadow(
+                color: .black.opacity(0.12),
+                radius: 6,
+                x: 4,
+                y: 4
+            )
         }
         .padding(.horizontal, 0)
         .background(Color.white)
