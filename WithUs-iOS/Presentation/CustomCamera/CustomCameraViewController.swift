@@ -111,7 +111,7 @@ class CustomCameraViewController: BaseViewController {
         previewView.snp.makeConstraints {
             $0.top.equalTo(containerView.safeAreaLayoutGuide).offset(124)
             $0.left.right.equalToSuperview()
-            $0.height.equalTo(previewView.snp.width) // 1:1 비율
+            $0.height.equalTo(previewView.snp.width)
         }
         
         captureButton.snp.makeConstraints {

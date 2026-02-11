@@ -214,8 +214,8 @@ class ArchiveDetailViewController: BaseViewController {
                 partnerImageUrl: response.partnerInfo.answerImageUrl,
                 myName: response.myInfo.name,
                 partnerName: response.partnerInfo.name,
-                myTime: formatTime(response.myInfo.answeredAt),
-                partnerTime: formatTime(response.partnerInfo.answeredAt),
+                myTime: response.myInfo.answeredAt,
+                partnerTime: response.partnerInfo.answeredAt,
                 myProfileUrl: response.myInfo.profileThumbnailImageUrl,
                 partnerProfileUrl: response.partnerInfo.profileThumbnailImageUrl
             ))
@@ -227,7 +227,7 @@ class ArchiveDetailViewController: BaseViewController {
                 question: response.questionContent,
                 imageUrl: myImageUrl,
                 name: response.myInfo.name,
-                time: formatTime(response.myInfo.answeredAt),
+                time: response.myInfo.answeredAt,
                 profileUrl: response.myInfo.profileThumbnailImageUrl
             ))
         }
@@ -238,7 +238,7 @@ class ArchiveDetailViewController: BaseViewController {
                 question: response.questionContent,
                 imageUrl: partnerImageUrl,
                 name: response.partnerInfo.name,
-                time: formatTime(response.partnerInfo.answeredAt),
+                time: response.partnerInfo.answeredAt,
                 profileUrl: response.partnerInfo.profileThumbnailImageUrl
             ))
         }
@@ -271,8 +271,8 @@ class ArchiveDetailViewController: BaseViewController {
                     partnerImageUrl: archiveInfo.partnerInfo.answerImageUrl,
                     myName: archiveInfo.myInfo.name,
                     partnerName: archiveInfo.partnerInfo.name,
-                    myTime: formatTime(archiveInfo.myInfo.answeredAt),
-                    partnerTime: formatTime(archiveInfo.partnerInfo.answeredAt),
+                    myTime: archiveInfo.myInfo.answeredAt,
+                    partnerTime: archiveInfo.partnerInfo.answeredAt,
                     myProfileUrl: archiveInfo.myInfo.profileThumbnailImageUrl,
                     partnerProfileUrl: archiveInfo.partnerInfo.profileThumbnailImageUrl
                 ))
@@ -285,7 +285,7 @@ class ArchiveDetailViewController: BaseViewController {
                     isSelected: archiveInfo.selected,
                     imageUrl: myImageUrl,
                     name: archiveInfo.myInfo.name,
-                    time: formatTime(archiveInfo.myInfo.answeredAt),
+                    time: archiveInfo.myInfo.answeredAt,
                     profileUrl: archiveInfo.myInfo.profileThumbnailImageUrl
                 ))
             }
@@ -297,7 +297,7 @@ class ArchiveDetailViewController: BaseViewController {
                     isSelected: archiveInfo.selected,
                     imageUrl: partnerImageUrl,
                     name: archiveInfo.partnerInfo.name,
-                    time: formatTime(archiveInfo.partnerInfo.answeredAt),
+                    time: archiveInfo.partnerInfo.answeredAt,
                     profileUrl: archiveInfo.partnerInfo.profileThumbnailImageUrl
                 ))
             }

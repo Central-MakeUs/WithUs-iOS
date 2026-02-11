@@ -49,6 +49,17 @@ class PhotoPreviewViewController: BaseViewController {
         $0.setImage(UIImage(named: "ic_camera_back"), for: .normal)
     }
     
+    private let loadingIndicator = UIActivityIndicatorView().then {
+        $0.style = .large
+        $0.color = .white
+        $0.hidesWhenStopped = true
+    }
+
+    private let loadingDimView = UIView().then {
+        $0.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+        $0.isHidden = true
+    }
+    
     init(image: UIImage) {
         self.originalImage = image
         self.editedImage = image
@@ -72,6 +83,8 @@ class PhotoPreviewViewController: BaseViewController {
         view.addSubview(closeButton)
         view.addSubview(sendButton)
         view.addSubview(retakeButton)
+        view.addSubview(loadingDimView)
+        loadingDimView.addSubview(loadingIndicator)
     }
     
     override func setupConstraints() {
@@ -107,6 +120,14 @@ class PhotoPreviewViewController: BaseViewController {
             $0.size.equalTo(42)
             $0.right.equalTo(view.safeAreaLayoutGuide).inset(34)
             $0.bottom.equalTo(view.safeAreaLayoutGuide).inset(49)
+        }
+        
+        loadingDimView.snp.makeConstraints {
+            $0.edges.equalToSuperview()
+        }
+
+        loadingIndicator.snp.makeConstraints {
+            $0.center.equalToSuperview()
         }
     }
     
@@ -168,11 +189,18 @@ class PhotoPreviewViewController: BaseViewController {
     @objc private func sendPhoto() {
         captureEditedImage()
         delegate?.photoPreview(self, didSelectImage: editedImage)
+        loadingDimView.isHidden = false
+        loadingIndicator.startAnimating()
+        sendButton.isEnabled = false
     }
     
     func showUploadSuccess() {
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
+            loadingDimView.isHidden = true
+            loadingIndicator.stopAnimating()
+            sendButton.isEnabled = true
+            
             self.sendButton.setImage(UIImage(named: "ic_sendOkButton"), for: .normal)
             
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
@@ -184,7 +212,11 @@ class PhotoPreviewViewController: BaseViewController {
     }
     
     func showUploadFail() {
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.loadingDimView.isHidden = true
+            self.loadingIndicator.stopAnimating()
+            self.sendButton.isEnabled = true
             ToastView.show(message: "업로드에 실패했어요", icon: nil, position: .bottom)
         }
     }
