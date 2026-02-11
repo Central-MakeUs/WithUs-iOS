@@ -169,7 +169,7 @@ final class ProfileReactor: Reactor {
                     observer.onCompleted()
                     return Disposables.create()
                 }
-#warning("imagekey를 필수로 보내야해서 이미지 수정을 하지 않으면 404에러뜸 -> 서버 수정필요")
+#warning("api 수정 및 로직 수정 필요")
                 Task { @MainActor in
                     do {
                         let result = try await self.completeProfileUseCase.execute(
@@ -212,7 +212,7 @@ final class ProfileReactor: Reactor {
                     observer.onCompleted()
                     return Disposables.create()
                 }
-
+#warning("유저 가입일 변수 추가 및 ui 수정")
                 Task { @MainActor in
                     do {
                         async let statusTask = self.fetchUserStatusUseCase.execute()

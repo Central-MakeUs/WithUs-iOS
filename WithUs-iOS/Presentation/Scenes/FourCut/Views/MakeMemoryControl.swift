@@ -54,7 +54,7 @@ final class MakeMemoryControl: UIControl {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configure() {
-        
+    func configure(myName: String, partnerName: String) {
+        controlLabel.text = "\(myName)님과 \(partnerName)님이 함께한\n추억을 직접 만들어 보세요!"
     }
 }

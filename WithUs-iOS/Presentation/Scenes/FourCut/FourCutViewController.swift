@@ -144,6 +144,16 @@ class FourCutViewController: BaseViewController, View {
                 self?.coordinator?.showMemoryDetail(url)
             })
             .disposed(by: disposeBag)
+        
+        reactor.state.compactMap { $0.coupleInfo }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, data in
+                let myName = data.meProfile.nickname
+                let partnerName = data.partnerProfile.nickname
+                
+                strongSelf.makeControl.configure(myName: myName, partnerName: partnerName)
+            }
+            .disposed(by: disposeBag)
     }
     
     private func updateDateLabel() {
