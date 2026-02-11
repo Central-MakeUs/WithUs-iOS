@@ -163,7 +163,7 @@ class TextInputViewController: BaseViewController, View {
         }
         
         buttonStackView.snp.makeConstraints {
-            $0.top.bottom.equalToSuperview()
+            $0.top.equalToSuperview()
             $0.horizontalEdges.equalToSuperview().inset(16)
         }
         
@@ -310,6 +310,7 @@ class TextInputViewController: BaseViewController, View {
             self.frameContainerView.backgroundColor = backgroundColor
             self.bottomBar.backgroundColor = backgroundColor
             self.dateLabel.textColor = textColor
+            self.profileLabel.textColor = textColor
         }
     }
     

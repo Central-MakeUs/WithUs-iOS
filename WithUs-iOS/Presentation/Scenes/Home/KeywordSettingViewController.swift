@@ -140,7 +140,9 @@ final class KeywordSettingViewController: BaseViewController, ReactorKit.View{
     
     func bind(reactor: KeywordSettingReactor) {
         reactor.state.map { $0.isCompleted }
+            .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
+            .filter { $0 }
             .subscribe(onNext: { [weak self] _ in
                 ToastView.show(message: "키워드 설정이 저장되었습니다.")
             })

@@ -54,6 +54,7 @@ class FourCutCoordinator: Coordinator {
         let filterVC = FilterSelectionViewController()
         filterVC.coordinator = self
         filterVC.selectedPhotos = images
+        filterVC.reactor = self.reactor
         navigationController.pushViewController(filterVC, animated: true)
     }
     

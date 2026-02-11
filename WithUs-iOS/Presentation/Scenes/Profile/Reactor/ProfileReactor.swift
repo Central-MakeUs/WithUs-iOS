@@ -222,6 +222,8 @@ final class ProfileReactor: Reactor {
 
                         observer.onNext(.setUserStatus(status))
                         observer.onNext(.setUser(user))
+                        observer.onNext(.setSuccess)
+                        observer.onNext(.resetCompleted)
                         observer.onCompleted()
                     } catch let error as UploadImageError {
                         observer.onNext(.setError(error.message))
@@ -253,6 +255,8 @@ final class ProfileReactor: Reactor {
                     let couple = try await coupleInfoTask
 
                     observer.onNext(.setCoupleInfo(couple))
+                    observer.onNext(.setSuccess)
+                    observer.onNext(.resetCompleted)
                     observer.onCompleted()
                 } catch let error as NetworkError {
                     observer.onNext(.setError(error.errorDescription))
@@ -280,6 +284,7 @@ final class ProfileReactor: Reactor {
                     do {
                         try await self.cancleConnectUseCase.execute()
                         observer.onNext(.cancleSuccess)
+                        observer.onNext(.setSuccess)
                         observer.onCompleted()
                     } catch let error as UploadImageError {
                         observer.onNext(.setError(error.message))
@@ -314,6 +319,7 @@ final class ProfileReactor: Reactor {
                     do {
                         try await self.deleteUserUseCase.execute()
                         observer.onNext(.deleteSuccess)
+                        observer.onNext(.setSuccess)
                         observer.onCompleted()
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))
@@ -345,6 +351,7 @@ final class ProfileReactor: Reactor {
                         let fcmToken = FCMTokenManager.shared.fcmToken ?? ""
                         try await self.deleteUserUseCase.execute(fcmToken: fcmToken)
                         observer.onNext(.logoutSuccess)
+                        observer.onNext(.setSuccess)
                         observer.onCompleted()
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))

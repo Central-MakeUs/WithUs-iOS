@@ -30,7 +30,11 @@ class AppCoordinator: Coordinator {
             showMainFlow()
         } else {
             print("❌ 자동 로그인: 토큰 없음")
-            showAuthFlow()
+            if UserDefaultsManager.shared.shouldShowLogin {
+                showLoginFlow()
+            } else {
+                showAuthFlow()
+            }
         }
     }
     

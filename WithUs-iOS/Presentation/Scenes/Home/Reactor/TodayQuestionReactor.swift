@@ -90,6 +90,7 @@ final class TodayQuestionReactor: Reactor {
             newState.errorMessage = message
             
         case .pokeSuccess(let result):
+            newState.isLoading = false
             newState.pokeSuccess = result
             
         case .uploadError(let message):

@@ -37,7 +37,7 @@ final class SettingCoupleView: UIView {
     }
 
     private let imageView = UIImageView().then {
-        $0.image = UIImage(systemName: "heart.fill")
+        $0.image = UIImage(named: "inviteCodeSetting")
         $0.contentMode = .scaleAspectFit
         $0.tintColor = .systemPink
     }

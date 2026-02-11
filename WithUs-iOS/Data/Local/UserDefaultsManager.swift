@@ -23,14 +23,14 @@ final class UserDefaultsManager {
         static let fullName = "fullName"
         static let userId = "userId"
         static let profileImageUrl = "profileImageUrl"
-
+        
         static let appleUserIdentifier = "appleUserIdentifier"
         static let email = "email"
         
         static let shouldShowLogin = "shouldShowLogin"
         static let shouldShowOnboarding = "shouldShowOnboarding"
     }
-
+    
     var fullName: String? {
         get {
             return userDefaults.string(forKey: Keys.fullName)
@@ -43,7 +43,7 @@ final class UserDefaultsManager {
             }
         }
     }
-
+    
     
     var nickname: String? {
         get {
@@ -135,7 +135,7 @@ final class UserDefaultsManager {
             }
         }
     }
-
+    
     var email: String? {
         get {
             userDefaults.string(forKey: Keys.email)
@@ -148,7 +148,7 @@ final class UserDefaultsManager {
             }
         }
     }
-
+    
     
     func clearTokens() {
         accessToken = nil
@@ -178,42 +178,44 @@ final class UserDefaultsManager {
     }
     
     func clearAllDataForLogout() {
-            shouldShowLogin = true
-            accessToken = nil
-            refreshToken = nil
-            fcmToken = nil
-            nickname = nil
-            fullName = nil
-            userId = nil
-            profileImageUrl = nil
-            appleUserIdentifier = nil
-            email = nil
-            URLCache.shared.removeAllCachedResponses()
-            
-            HTTPCookieStorage.shared.cookies?.forEach {
-                HTTPCookieStorage.shared.deleteCookie($0)
-            }
-            
-            userDefaults.synchronize()
+        shouldShowLogin = true
+        shouldShowOnboarding = false
+        accessToken = nil
+        refreshToken = nil
+        fcmToken = nil
+        nickname = nil
+        fullName = nil
+        userId = nil
+        profileImageUrl = nil
+        appleUserIdentifier = nil
+        email = nil
+        URLCache.shared.removeAllCachedResponses()
+        
+        HTTPCookieStorage.shared.cookies?.forEach {
+            HTTPCookieStorage.shared.deleteCookie($0)
         }
         
-        func clearAllDataForWithdrawal() {
-            shouldShowOnboarding = true
-            accessToken = nil
-            refreshToken = nil
-            fcmToken = nil
-            nickname = nil
-            fullName = nil
-            userId = nil
-            profileImageUrl = nil
-            appleUserIdentifier = nil
-            email = nil
-            
-            URLCache.shared.removeAllCachedResponses()
-            HTTPCookieStorage.shared.cookies?.forEach {
-                HTTPCookieStorage.shared.deleteCookie($0)
-            }
-            
-            userDefaults.synchronize()
+        userDefaults.synchronize()
+    }
+    
+    func clearAllDataForWithdrawal() {
+        shouldShowLogin = false
+        shouldShowOnboarding = true
+        accessToken = nil
+        refreshToken = nil
+        fcmToken = nil
+        nickname = nil
+        fullName = nil
+        userId = nil
+        profileImageUrl = nil
+        appleUserIdentifier = nil
+        email = nil
+        
+        URLCache.shared.removeAllCachedResponses()
+        HTTPCookieStorage.shared.cookies?.forEach {
+            HTTPCookieStorage.shared.deleteCookie($0)
         }
+        
+        userDefaults.synchronize()
+    }
 }

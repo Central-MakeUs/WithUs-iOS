@@ -24,14 +24,18 @@ final class ImageGenerator {
         }
         
         let images = try await downloadImages(urls: imageUrls)
+        let (myProfileImage, partnerProfileImage) = try await downloadProfileImages(
+            myUrl: myProfileImageUrl,
+            partnerUrl: partnerProfileImageUrl
+        )
         let transFormedDateText = formatWeekDateForUI(dateText)
         
         let finalImage = await createFourCutImageWithLayout(
             images: images,
             dateText: transFormedDateText,
             frameColor: frameColor,
-            myProfileImageUrl: myProfileImageUrl,
-            partnerProfileImageUrl: partnerProfileImageUrl
+            myProfileImage: myProfileImage,
+            partnerProfileImage: partnerProfileImage
         )
         
         return finalImage
@@ -64,6 +68,23 @@ final class ImageGenerator {
         }
     }
     
+    private static func downloadProfileImages(
+        myUrl: String?,
+        partnerUrl: String?
+    ) async throws -> (my: UIImage?, partner: UIImage?) {
+        async let myImage: UIImage? = {
+            guard let urlString = myUrl, let url = URL(string: urlString) else { return nil }
+            return try? await retrieveImage(from: url)
+        }()
+        
+        async let partnerImage: UIImage? = {
+            guard let urlString = partnerUrl, let url = URL(string: urlString) else { return nil }
+            return try? await retrieveImage(from: url)
+        }()
+        
+        return try await (myImage, partnerImage)
+    }
+    
     private static func retrieveImage(from url: URL) async throws -> UIImage {
         try await withCheckedThrowingContinuation { continuation in
             KingfisherManager.shared.retrieveImage(with: url) { result in
@@ -82,8 +103,8 @@ final class ImageGenerator {
         images: [UIImage],
         dateText: String,
         frameColor: FrameColorType,
-        myProfileImageUrl: String?,
-        partnerProfileImageUrl: String?
+        myProfileImage: UIImage?,
+        partnerProfileImage: UIImage?
     ) -> UIImage {
         // 화면 크기
         let screenWidth = UIScreen.main.bounds.width
@@ -102,29 +123,20 @@ final class ImageGenerator {
             return 54.0
         }()
         
-        // TextInputViewController의 frameContainerView 크기 그대로
         let horizontalInset: CGFloat = 16
         let containerHeight: CGFloat = 120
         let gap: CGFloat = 8
-        
         let frameWidth = screenWidth - (horizontalInset * 2)
         let frameHeight = screenHeight - safeAreaTop - navigationBarHeight - safeAreaBottom - containerHeight - gap
-        
-        // gridStackView 크기 계산
         let gridSpacing: CGFloat = 1.83
         let frameInset: CGFloat = 5.49
         let availableGridWidth = frameWidth - (frameInset * 2)
         let imageWidth = (availableGridWidth - (gridSpacing * 2)) / 3
         let gridHeight = (imageWidth * 4) + (gridSpacing * 3)
         
-        print("frameHeight: \(frameHeight)")
-        print("gridHeight: \(gridHeight)")
-        
-        // frameContainerView 생성
         let frameContainerView = UIView(frame: CGRect(x: 0, y: 0, width: frameWidth, height: frameHeight))
         frameContainerView.backgroundColor = frameColor.backgroundColor
         
-        // gridStackView
         let gridStackView = UIStackView().then {
             $0.axis = .vertical
             $0.distribution = .fillEqually
@@ -153,14 +165,12 @@ final class ImageGenerator {
             gridStackView.addArrangedSubview(rowStack)
         }
         
-        // 이미지 설정
         for (index, imageView) in photoImageViews.enumerated() {
             if index < images.count {
                 imageView.image = images[index]
             }
         }
         
-        // bottomBar
         let bottomBar = UIView()
         bottomBar.backgroundColor = frameColor.backgroundColor
         
@@ -177,10 +187,10 @@ final class ImageGenerator {
         }
         
         let myProfileImageView = ProfileDisplayView()
-        myProfileImageView.setProfileImage(myProfileImageUrl)
+        myProfileImageView.configure(with: myProfileImage)
         
         let partnerProfileImageView = ProfileDisplayView()
-        partnerProfileImageView.setProfileImage(partnerProfileImageUrl)
+        partnerProfileImageView.configure(with: partnerProfileImage)
         
         let coupleStackView = UIStackView().then {
             $0.axis = .horizontal
@@ -188,7 +198,6 @@ final class ImageGenerator {
             $0.alignment = .center
         }
         
-        // 뷰 계층
         frameContainerView.addSubview(gridStackView)
         frameContainerView.addSubview(bottomBar)
         bottomBar.addSubview(dateLabel)
@@ -197,16 +206,15 @@ final class ImageGenerator {
         coupleStackView.addArrangedSubview(myProfileImageView)
         coupleStackView.addArrangedSubview(partnerProfileImageView)
         
-        // TextInputViewController constraint 그대로 복사
         gridStackView.snp.makeConstraints {
             $0.top.equalToSuperview().offset(9.15)
             $0.leading.trailing.equalToSuperview().inset(5.49)
-            $0.height.equalTo(gridHeight)  // ← gridHeight 지정
+            $0.height.equalTo(gridHeight)
         }
         
         bottomBar.snp.makeConstraints {
             $0.top.equalTo(gridStackView.snp.bottom)
-            $0.leading.trailing.bottom.equalToSuperview()  // ← 나머지 공간 차지
+            $0.leading.trailing.bottom.equalToSuperview()
         }
         
         dateLabel.snp.makeConstraints {
@@ -230,11 +238,9 @@ final class ImageGenerator {
             $0.bottom.equalToSuperview().inset(18.29)
         }
         
-        // 레이아웃 적용
         frameContainerView.setNeedsLayout()
         frameContainerView.layoutIfNeeded()
         
-        // 렌더링
         let renderer = UIGraphicsImageRenderer(bounds: frameContainerView.bounds)
         return renderer.image { context in
             frameContainerView.layer.render(in: context.cgContext)

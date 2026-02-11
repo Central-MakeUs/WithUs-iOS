@@ -10,8 +10,7 @@ import ReactorKit
 import RxSwift
 
 final class ArchiveReactor: Reactor {
-    
-    enum Action {
+    enum Action: Hashable {
         case viewDidLoad
         case selectTab(Int)
         case loadMoreRecent
@@ -27,7 +26,6 @@ final class ArchiveReactor: Reactor {
         case appendRecentPhotos([ArchivePhotoViewModel])
         case setNextCursor(String?)
         case setHasNext(Bool)
-        case setLoading(Bool)
         case setError(String)
         case appendCalendarData(ArchiveCalendarResponse)
         case setJoinDate(Date?)
@@ -35,10 +33,9 @@ final class ArchiveReactor: Reactor {
         case appendQuestions([ArchiveQuestionItem])
         case setQuestionNextCursor(String?)
         case setQuestionHasNext(Bool)
-        case setQuestionLoading(Bool)
         case setQuestionDetail(ArchiveQuestionDetailResponse?)
         case setPhotoDetail(ArchivePhotoDetailResponse?)
-        case setInitialLoadComplete(Bool)
+        case setLoading(Action, Bool)
     }
     
     struct State {
@@ -46,24 +43,22 @@ final class ArchiveReactor: Reactor {
         var recentPhotos: [ArchivePhotoViewModel] = []
         var nextCursor: String?
         var hasNext: Bool = false
-        var isLoading: Bool = false
         var errorMessage: String?
         var calendarDataList: [ArchiveCalendarResponse] = []
         var joinDate: Date?
         var questions: [ArchiveQuestionItem] = []
         var questionNextCursor: String?
         var questionHasNext: Bool = false
-        var isQuestionLoading: Bool = false
         var questionDetail: ArchiveQuestionDetailResponse?
         var photoDetail: ArchivePhotoDetailResponse?
-        var isInitialLoadComplete: Bool = false
+        var loadingActions: Set<Action> = []
         
         var isInitialLoading: Bool {
-            return !isInitialLoadComplete && (isLoading || isQuestionLoading)
+            loadingActions.contains(.viewDidLoad)
         }
         
         var isAllDataEmpty: Bool {
-            return isInitialLoadComplete && recentPhotos.isEmpty && questions.isEmpty
+            !loadingActions.contains(.viewDidLoad) && recentPhotos.isEmpty && questions.isEmpty
         }
     }
     
@@ -77,61 +72,21 @@ final class ArchiveReactor: Reactor {
     func mutate(action: Action) -> Observable<Mutation> {
         switch action {
         case .viewDidLoad:
-            let loadTasks: Observable<Mutation> = Observable.create { [weak self] observer in
-                guard let self = self else { return Disposables.create() }
-                
-                Task {
-                    let joinDate = await self.loadJoinDateAsync()
-                    await MainActor.run {
-                        observer.onNext(.setJoinDate(joinDate))
-                        observer.onNext(.setLoading(true))
-                        observer.onNext(.setQuestionLoading(true))
-                    }
-                    
-                    async let recentResult = self.loadRecentPhotosAsync(cursor: nil)
-                    async let questionsResult = self.loadQuestionsAsync(cursor: nil)
-                    
-                    let (recentData, questionsData) = await (recentResult, questionsResult)
-                    
-                    await MainActor.run {
-                        if let recentData = recentData {
-                            observer.onNext(.setRecentPhotos(recentData.photos))
-                            observer.onNext(.setNextCursor(recentData.nextCursor))
-                            observer.onNext(.setHasNext(recentData.hasNext))
-                        }
-                        observer.onNext(.setLoading(false))
-                        
-                        if let questionsData = questionsData {
-                            observer.onNext(.setQuestions(questionsData.questions))
-                            observer.onNext(.setQuestionNextCursor(questionsData.nextCursor))
-                            observer.onNext(.setQuestionHasNext(questionsData.hasNext))
-                        }
-                        observer.onNext(.setQuestionLoading(false))
-                        observer.onNext(.setInitialLoadComplete(true))
-                        observer.onCompleted()
-                    }
-                }
-                
-                return Disposables.create()
-            }
-            
-            return .concat([
-                .just(.setInitialLoadComplete(false)),
-                loadTasks
-            ])
-            
+            return loadInitialData()
         case .selectTab(let index):
             return .just(.setSelectedTab(index))
             
         case .loadMoreRecent:
-            guard !currentState.isLoading, currentState.hasNext else { return .empty() }
+            guard !currentState.loadingActions.contains(.loadMoreRecent),
+                  currentState.hasNext else { return .empty() }
             return loadRecentPhotos(cursor: currentState.nextCursor, isRefresh: false)
             
         case .loadCalendarMonth(let year, let month):
             return loadCalendarData(year: year, month: month)
             
         case .loadMoreQuestions:
-            guard !currentState.isQuestionLoading, currentState.questionHasNext else { return .empty() }
+            guard !currentState.loadingActions.contains(.loadMoreQuestions),
+                  currentState.questionHasNext else { return .empty() }
             return loadQuestionList(cursor: currentState.questionNextCursor, isRefresh: false)
             
         case .fetchQuestionDetail(let coupleQuestionId):
@@ -156,10 +111,11 @@ final class ArchiveReactor: Reactor {
             newState.nextCursor = cursor
         case .setHasNext(let hasNext):
             newState.hasNext = hasNext
-        case .setLoading(let isLoading):
-            newState.isLoading = isLoading
+        case .setLoading(let action, let isLoading):
             if isLoading {
-                newState.errorMessage = nil
+                newState.loadingActions.insert(action)
+            } else {
+                newState.loadingActions.remove(action)
             }
         case .setError(let message):
             newState.errorMessage = message
@@ -177,14 +133,10 @@ final class ArchiveReactor: Reactor {
             newState.questionNextCursor = cursor
         case .setQuestionHasNext(let hasNext):
             newState.questionHasNext = hasNext
-        case .setQuestionLoading(let isLoading):
-            newState.isQuestionLoading = isLoading
         case .setQuestionDetail(let response):
             newState.questionDetail = response
         case .setPhotoDetail(let response):
             newState.photoDetail = response
-        case .setInitialLoadComplete(let isComplete):
-            newState.isInitialLoadComplete = isComplete
         }
         
         return newState
@@ -214,6 +166,48 @@ final class ArchiveReactor: Reactor {
         return nil
     }
     
+    private func loadInitialData() -> Observable<Mutation> {
+        let loadTasks: Observable<Mutation> = Observable.create { [weak self] observer in
+            guard let self = self else { return Disposables.create() }
+            
+            Task {
+                let joinDate = await self.loadJoinDateAsync()
+                await MainActor.run {
+                    observer.onNext(.setJoinDate(joinDate))
+                }
+                
+                async let recentResult = self.loadRecentPhotosAsync(cursor: nil)
+                async let questionsResult = self.loadQuestionsAsync(cursor: nil)
+                
+                let (recentData, questionsData) = await (recentResult, questionsResult)
+                
+                await MainActor.run {
+                    if let recentData = recentData {
+                        observer.onNext(.setRecentPhotos(recentData.photos))
+                        observer.onNext(.setNextCursor(recentData.nextCursor))
+                        observer.onNext(.setHasNext(recentData.hasNext))
+                    }
+                    
+                    if let questionsData = questionsData {
+                        observer.onNext(.setQuestions(questionsData.questions))
+                        observer.onNext(.setQuestionNextCursor(questionsData.nextCursor))
+                        observer.onNext(.setQuestionHasNext(questionsData.hasNext))
+                    }
+                    
+                    observer.onNext(.setLoading(.viewDidLoad, false))
+                    observer.onCompleted()
+                }
+            }
+            
+            return Disposables.create()
+        }
+        
+        return .concat([
+            .just(.setLoading(.viewDidLoad, true)),
+            loadTasks
+        ])
+    }
+    
     private func loadRecentPhotosAsync(cursor: String?) async -> (photos: [ArchivePhotoViewModel], nextCursor: String?, hasNext: Bool)? {
         do {
             let data = try await fetchArchiveListUseCase.execute(size: 20, cursor: cursor)
@@ -237,7 +231,7 @@ final class ArchiveReactor: Reactor {
     
     private func loadRecentPhotos(cursor: String?, isRefresh: Bool) -> Observable<Mutation> {
         return .concat([
-            .just(.setLoading(true)),
+            .just(.setLoading(.loadMoreRecent, true)),
             Observable.create { [weak self] observer in
                 guard let self else { observer.onCompleted(); return Disposables.create() }
                 Task {
@@ -248,13 +242,13 @@ final class ArchiveReactor: Reactor {
                             observer.onNext(isRefresh ? .setRecentPhotos(viewModels) : .appendRecentPhotos(viewModels))
                             observer.onNext(.setNextCursor(data.nextCursor))
                             observer.onNext(.setHasNext(data.hasNext))
-                            observer.onNext(.setLoading(false))
+                            observer.onNext(.setLoading(.loadMoreRecent, false))
                             observer.onCompleted()
                         }
                     } catch {
                         await MainActor.run {
                             observer.onNext(.setError(self.errorMessage(from: error)))
-                            observer.onNext(.setLoading(false))
+                            observer.onNext(.setLoading(.loadMoreRecent, false))
                             observer.onCompleted()
                         }
                     }
@@ -287,7 +281,7 @@ final class ArchiveReactor: Reactor {
     
     private func loadQuestionList(cursor: String?, isRefresh: Bool) -> Observable<Mutation> {
         return .concat([
-            .just(.setQuestionLoading(true)),
+            .just(.setLoading(.loadMoreQuestions, true)),
             Observable.create { [weak self] observer in
                 guard let self else { observer.onCompleted(); return Disposables.create() }
                 Task {
@@ -297,13 +291,13 @@ final class ArchiveReactor: Reactor {
                             observer.onNext(isRefresh ? .setQuestions(data.questionList) : .appendQuestions(data.questionList))
                             observer.onNext(.setQuestionNextCursor(data.nextCursor))
                             observer.onNext(.setQuestionHasNext(data.hasNext))
-                            observer.onNext(.setQuestionLoading(false))
+                            observer.onNext(.setLoading(.loadMoreQuestions, false))
                             observer.onCompleted()
                         }
                     } catch {
                         await MainActor.run {
                             observer.onNext(.setError(self.errorMessage(from: error)))
-                            observer.onNext(.setQuestionLoading(false))
+                            observer.onNext(.setLoading(.loadMoreQuestions, false))
                             observer.onCompleted()
                         }
                     }

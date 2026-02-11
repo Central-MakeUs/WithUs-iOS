@@ -267,21 +267,24 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        reactor.state
-            .map { $0.isInitialLoading }
+        reactor.state.map { $0.isInitialLoading }
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
             .bind(with: self) { owner, isLoading in
                 isLoading ? owner.showLoading() : owner.hideLoading()
             }
             .disposed(by: disposeBag)
-        
-        reactor.state
-            .map { $0.isLoading || $0.isQuestionLoading }
+
+        reactor.state.map { $0.loadingActions.contains(.loadMoreRecent) }
             .distinctUntilChanged()
-            .filter { [weak reactor] _ in
-                reactor?.currentState.isInitialLoadComplete == true
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, isLoading in
+                isLoading ? owner.showLoading() : owner.hideLoading()
             }
+            .disposed(by: disposeBag)
+
+        reactor.state.map { $0.loadingActions.contains(.loadMoreQuestions) }
+            .distinctUntilChanged()
             .observe(on: MainScheduler.instance)
             .bind(with: self) { owner, isLoading in
                 isLoading ? owner.showLoading() : owner.hideLoading()

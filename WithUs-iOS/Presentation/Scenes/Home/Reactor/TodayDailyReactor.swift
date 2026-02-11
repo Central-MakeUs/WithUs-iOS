@@ -92,6 +92,7 @@ final class TodayDailyReactor: Reactor {
             newState.uploadErrorMessage = nil
             
         case .setCoupleKeywords(let keywords):
+            newState.isLoading = false
             newState.keywords = keywords
             
         case .setSelectedKeywordIndex(let index):
@@ -115,6 +116,7 @@ final class TodayDailyReactor: Reactor {
             newState.errorMessage = message
             
         case .pokeSuccess(let result):
+            newState.isLoading = false
             newState.pokeSuccess = result
             
         case .uploadError(let message):

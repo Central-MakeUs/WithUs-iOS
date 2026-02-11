@@ -164,6 +164,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     func bind(reactor: KeywordSettingReactor) {
         reactor.state.map { $0.isCompleted }
             .distinctUntilChanged()
+            .filter { $0 }
             .observe(on: MainScheduler.instance)
             .bind(with: self, onNext: { strongSelf, _ in
                 ToastView.show(message: "키워드 설정이 저장되었습니다.")

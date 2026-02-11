@@ -75,8 +75,8 @@ final class LoginViewController: BaseViewController, View {
     }
 
     private let appleLoginContainer = UIView().then {
-        $0.clipsToBounds = true  // ✅ 추가
-        $0.layer.cornerRadius = 8  // ✅ 추가
+        $0.clipsToBounds = true
+        $0.layer.cornerRadius = 8
     }
     
     private let buttonStackView = UIStackView().then {
@@ -103,8 +103,8 @@ final class LoginViewController: BaseViewController, View {
         buttonStackView.addArrangedSubview(kakaoButton)
         buttonStackView.addArrangedSubview(appleLoginContainer)
 
-        appleLoginContainer.addSubview(appleButton)       // ✅ 커스텀 버튼 먼저 (아래)
-        appleLoginContainer.addSubview(appleCustomButton) // ✅ 투명 ASButton 위에 (터치 처리)
+        appleLoginContainer.addSubview(appleButton)
+        appleLoginContainer.addSubview(appleCustomButton)
     }
     
     override func setupConstraints() {
@@ -135,7 +135,8 @@ final class LoginViewController: BaseViewController, View {
         }
 
         appleCustomButton.snp.makeConstraints {
-            $0.edges.equalToSuperview()
+            $0.left.right.equalToSuperview().priority(.high)
+            $0.centerX.equalToSuperview()
         }
 
         appleButton.snp.makeConstraints {
@@ -145,7 +146,7 @@ final class LoginViewController: BaseViewController, View {
     
     override func setupActions() {
         kakaoButton.addTarget(self, action: #selector(kakaoButtonTapped), for: .touchUpInside)
-        appleCustomButton.addTarget(self, action: #selector(appleButtonTapped), for: .touchUpInside) // ✅ appleButton → appleCustomButton
+        appleCustomButton.addTarget(self, action: #selector(appleButtonTapped), for: .touchUpInside)
     }
     
     func bind(reactor: LoginReactor) {

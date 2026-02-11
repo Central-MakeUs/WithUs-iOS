@@ -31,7 +31,8 @@ final class InviteViewController: BaseViewController {
         $0.font = UIFont.pretendard16Regular
         $0.textColor = UIColor.gray500
         $0.textAlignment = .center
-        $0.text = "???님, 가입을 축하드려요!"
+        let nickName = UserManager.shared.nickName ?? "???"
+        $0.text = "\(nickName)님, 가입을 축하드려요!"
     }
     
     private let imageView = UIImageView().then {

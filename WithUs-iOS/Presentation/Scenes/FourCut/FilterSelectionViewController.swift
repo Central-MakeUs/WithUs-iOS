@@ -352,15 +352,16 @@ class FilterSelectionViewController: BaseViewController, View {
             whiteFrameButton.setTitleColor(.gray, for: .normal)
             whiteFrameButton.layer.borderWidth = 1
             whiteFrameButton.layer.borderColor = UIColor.systemGray.withAlphaComponent(0.3).cgColor
+            profileLabel.textColor = .white
         } else {
             blackFrameButton.backgroundColor = .white
             blackFrameButton.setTitleColor(.gray, for: .normal)
             blackFrameButton.layer.borderWidth = 1
             blackFrameButton.layer.borderColor = UIColor.systemGray.withAlphaComponent(0.3).cgColor
-            
             whiteFrameButton.backgroundColor = .black
             whiteFrameButton.setTitleColor(.white, for: .normal)
             whiteFrameButton.layer.borderWidth = 0
+            profileLabel.textColor = .black
         }
     }
     
