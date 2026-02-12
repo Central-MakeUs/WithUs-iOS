@@ -7,9 +7,10 @@
 
 import UIKit
 import KakaoSDKAuth
+import RxSwift
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-    
+    var disposeBag = DisposeBag()
     var window: UIWindow?
     var appCoordinator: AppCoordinator?
     
@@ -22,12 +23,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = splashVC
         window.makeKeyAndVisible()
         
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(handleTokenExpired),
-            name: .didTokenExpired,
-            object: nil
-        )
+        NotificationCenter.default.rx.notification(.didTokenExpired)
+            .throttle(.seconds(1), latest: false, scheduler: MainScheduler.instance)
+            .take(1)
+            .subscribe(onNext: { [weak self] _ in
+                self?.handleTokenExpired()
+            })
+            .disposed(by: disposeBag)
         
         UserDefaults.standard.removeObject(forKey: "isSettingCompleted")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
@@ -75,7 +77,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
     }
     
-    @objc private func handleTokenExpired() {
+    private func handleTokenExpired() {
         appCoordinator?.handleTokenExpired()
     }
 }
