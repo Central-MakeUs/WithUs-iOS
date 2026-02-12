@@ -11,6 +11,11 @@ final class UserManager {
     static let shared = UserManager()
     private let storage = UserDefaultsManager.shared
     private init() {}
+    
+    var joinDate: Date? {
+        get { storage.joinDate }
+        set { storage.joinDate = newValue }
+    }
 
     var fullName: String? {
         get { storage.fullName }

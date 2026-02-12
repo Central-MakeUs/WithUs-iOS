@@ -1,0 +1,17 @@
+//
+//  String+Extension.swift
+//  WithUs-iOS
+//
+//  Created by Hubriz iOS on 2/12/26.
+//
+
+import Foundation
+
+extension String {
+    func toDate(format: String = "yyyy-MM-dd") -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        formatter.locale = Locale(identifier: "ko_KR")
+        return formatter.date(from: self)
+    }
+}

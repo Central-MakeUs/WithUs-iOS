@@ -218,10 +218,10 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
             })
             .disposed(by: disposeBag)
         
-        reactor.state.map { $0.joinDate }
+        reactor.state.compactMap { $0.joinDate }
             .take(1)
             .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] (joinDate: Date?) in
+            .subscribe(onNext: { [weak self] joinDate in
                 self?.calendarView.setupInitialMonths(from: joinDate)
             })
             .disposed(by: disposeBag)

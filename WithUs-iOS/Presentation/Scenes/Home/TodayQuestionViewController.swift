@@ -142,7 +142,7 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
         switch (myAnswered, partnerAnswered) {
         case (false, false):
             waitingBothView.isHidden = false
-            waitingBothView.configure(question: data.question, number: 3)
+            waitingBothView.configure(question: data.question, number: data.coupleQuestionId)
             
         case (false, true):
             questionPartnerOnlyView.isHidden = false

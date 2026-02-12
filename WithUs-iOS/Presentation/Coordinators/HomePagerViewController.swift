@@ -157,9 +157,12 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
             do {
                 let status = try await useCase.execute()
                 let user = try await infoUseCase.execute()
-                UserDefaultsManager.shared.userId = user.userId
-                UserDefaultsManager.shared.nickname = user.nickname
-                UserDefaultsManager.shared.profileImageUrl = user.profileImageUrl
+                UserManager.shared.userId = user.userId
+                UserManager.shared.nickName = user.nickname
+                UserManager.shared.profileImageUrl = user.profileImageUrl
+                if let joinDate = user.joinDate {
+                    UserManager.shared.joinDate = joinDate.toDate()
+                }
                 await MainActor.run { self.handleOnboardingStatus(status) }
             } catch let error as NetworkError {
                 print("❌ fetchUserStatus 에러: \(error.errorDescription)")

@@ -103,23 +103,14 @@ class CalendarView: UIView {
         return layout
     }
     
-    func setupInitialMonths(from joinDate: Date?) {
+    func setupInitialMonths(from joinDate: Date) {
         let calendar = Calendar.current
         let endDate = Date()
-        
-        let startDate: Date = {
-            if let joinDate = joinDate {
-                return joinDate
-            } else {
-                return calendar.date(from: DateComponents(year: 2025, month: 12, day: 1))!
-            }
-        }()
-        
+        let startComponents = calendar.dateComponents([.year, .month], from: joinDate)
+        guard let startLimit = calendar.date(from: startComponents) else { return }
         var months: [ArchiveCalendarResponse] = []
-        var currentDate = endDate
-        
-        let startComponents = calendar.dateComponents([.year, .month], from: startDate)
-        let startLimit = calendar.date(from: startComponents)!
+        let endComponents = calendar.dateComponents([.year, .month], from: endDate)
+        var currentDate = calendar.date(from: endComponents)!
         
         while currentDate >= startLimit {
             let year = calendar.component(.year, from: currentDate)
@@ -138,9 +129,10 @@ class CalendarView: UIView {
             }
             currentDate = prevMonth
         }
-        
-        monthsData = months
-        collectionView.reloadData()
+        self.monthsData = months
+        DispatchQueue.main.async {
+            self.collectionView.reloadData()
+        }
     }
     
     func applyCalendarResponse(_ response: ArchiveCalendarResponse) {

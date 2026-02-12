@@ -23,13 +23,26 @@ final class UserDefaultsManager {
         static let fullName = "fullName"
         static let userId = "userId"
         static let profileImageUrl = "profileImageUrl"
-        
         static let appleUserIdentifier = "appleUserIdentifier"
         static let email = "email"
-        
         static let shouldShowLogin = "shouldShowLogin"
         static let shouldShowOnboarding = "shouldShowOnboarding"
+        static let joinDate = "joinDate"
     }
+    
+    var joinDate: Date? {
+        get {
+            return userDefaults.object(forKey: Keys.joinDate) as? Date
+        }
+        set {
+            if let date = newValue {
+                userDefaults.set(date, forKey: Keys.joinDate)
+            } else {
+                userDefaults.removeObject(forKey: Keys.joinDate)
+            }
+        }
+    }
+    
     
     var fullName: String? {
         get {

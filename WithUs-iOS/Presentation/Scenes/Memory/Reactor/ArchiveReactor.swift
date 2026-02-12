@@ -162,8 +162,13 @@ final class ArchiveReactor: Reactor {
         return error.localizedDescription
     }
     
-    private func loadJoinDateAsync() async -> Date? {
-        return nil
+    private func loadJoinDateAsync() async -> Date {
+        if let joinDate = UserManager.shared.joinDate {
+            return joinDate
+        }
+        
+        let components = DateComponents(year: 2025, month: 12, day: 1)
+        return Calendar.current.date(from: components) ?? Date()
     }
     
     private func loadInitialData() -> Observable<Mutation> {
