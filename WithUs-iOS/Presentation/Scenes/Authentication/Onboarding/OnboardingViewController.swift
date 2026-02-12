@@ -28,6 +28,12 @@ final class OnboardingViewController: BaseViewController {
             description: "일주일의 일상 사진이 자동으로 추억이 되고,\n원하는 순간을 직접 담을 수도 있어요."
         )
     ]
+    
+    private var currentPage: Int = 0 {
+        didSet {
+            updateUI(for: currentPage)
+        }
+    }
      
     private lazy var layout = UICollectionViewFlowLayout().then {
         $0.scrollDirection = .horizontal
@@ -51,10 +57,9 @@ final class OnboardingViewController: BaseViewController {
     }
     
     private let nextButton = UIButton().then {
-        $0.setTitle("시작하기", for: .normal)
+        $0.setTitle("다음", for: .normal)
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
-        $0.isHidden = true
     }
     
     private let cellRegistration = UICollectionView.CellRegistration<UICollectionViewCell, OnboardingPage> {
@@ -94,8 +99,28 @@ final class OnboardingViewController: BaseViewController {
         nextButton.addTarget(self, action: #selector(nextBtnTapped), for: .touchUpInside)
     }
     
+    private func updateUI(for page: Int) {
+        let isLastPage = page == onboardingPages.count - 1
+        
+        nextButton.setTitle(isLastPage ? "시작하기" : "다음", for: .normal)
+        pageControl.currentPage = page
+        for i in 0..<onboardingPages.count {
+            pageControl.setIndicatorImage(UIImage(named: "page_control_inactive"), forPage: i)
+        }
+        pageControl.setIndicatorImage(UIImage(named: "page_control_active"), forPage: page)
+    }
+    
     @objc private func nextBtnTapped() {
-        coordinator?.showLogin()
+        let isLastPage = currentPage == onboardingPages.count - 1
+        
+        if isLastPage {
+            coordinator?.showLogin()
+        } else {
+            let nextPage = currentPage + 1
+            let indexPath = IndexPath(item: nextPage, section: 0)
+            collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
+            currentPage = nextPage
+        }
     }
 }
 
@@ -120,11 +145,6 @@ extension OnboardingViewController: UICollectionViewDelegateFlowLayout {
 extension OnboardingViewController: UIScrollViewDelegate {
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
         let page = Int(scrollView.contentOffset.x / scrollView.frame.width)
-        pageControl.currentPage = page
-        for i in 0..<onboardingPages.count {
-            pageControl.setIndicatorImage(UIImage(named: "page_control_inactive"), forPage: i)
-        }
-        pageControl.setIndicatorImage(UIImage(named: "page_control_active"), forPage: page)
-        nextButton.isHidden = (page != onboardingPages.count - 1)
+        currentPage = page
     }
 }
