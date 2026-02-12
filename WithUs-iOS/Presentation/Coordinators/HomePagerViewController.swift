@@ -181,11 +181,7 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
             }
             
         case .completed:
-//            showPagerView()CompleteProfileUseCaseProtocol
-            showInviteCodeView()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.coordinator?.showInviteModal()
-            }
+            showPagerView()
         }
     }
     

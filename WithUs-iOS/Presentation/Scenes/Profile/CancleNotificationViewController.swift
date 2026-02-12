@@ -271,7 +271,7 @@ final class CancleNotificationViewController: BaseViewController, ReactorKit.Vie
             .compactMap { $0.coupleInfo }
             .observe(on: MainScheduler.instance)
             .bind(with: self) { strongSelf, user in
-                if user.partnerProfile.nickname.isEmpty {
+                if !user.partnerProfile.nickname.isEmpty {
                     strongSelf.titleLabel.text = "\(user.partnerProfile.nickname)님과 연결을 해제할까요?"
                     strongSelf.profileView.setProfileImage(user.partnerProfile.profileImageUrl)
                 }

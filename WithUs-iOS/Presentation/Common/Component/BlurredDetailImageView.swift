@@ -15,6 +15,7 @@ final class BlurredDetailImageView: UIView {
     private let backgroundImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.clipsToBounds = true
+        $0.backgroundColor = .gray200
     }
     
     private let blurEffectView = UIVisualEffectView(effect: UIBlurEffect(style: .light))
