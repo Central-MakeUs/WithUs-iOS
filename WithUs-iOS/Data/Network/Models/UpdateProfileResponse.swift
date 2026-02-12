@@ -18,4 +18,5 @@ struct PutUpdateProfileResponse: Decodable {
     let nickname: String
     let birthday: String
     let profileImageUrl: String?
+    let joinDate: String
 }

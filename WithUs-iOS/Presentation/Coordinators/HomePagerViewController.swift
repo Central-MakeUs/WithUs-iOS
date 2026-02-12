@@ -12,6 +12,8 @@ import SnapKit
 final class HomePagerViewController: BaseViewController, UIPageViewControllerDelegate {
     
     private var fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol?
+    private var fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol?
+    
     var coordinator: HomeCoordinator?
     
     private lazy var pageViewController = UIPageViewController(
@@ -26,7 +28,8 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     func injectReactors(
         questionReactor: TodayQuestionReactor,
         dailyReactor: TodayDailyReactor,
-        fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol
+        fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol,
+        fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
     ) {
         todayQuestionVC.coordinator = coordinator
         todayQuestionVC.reactor = questionReactor
@@ -35,6 +38,7 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
         todayDailyVC.reactor = dailyReactor
         
         self.fetchUserStatusUseCase = fetchUserStatusUseCase
+        self.fetchUserInfoUseCase = fetchUserInfoUseCase
     }
     
     // MARK: - Before Setting (커플 연결 안됨)
@@ -146,10 +150,16 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     
     private func fetchUserStatus() {
         Task { [weak self] in
-            guard let self, let useCase = self.fetchUserStatusUseCase else { return }
+            guard let self, let useCase = self.fetchUserStatusUseCase, let infoUseCase = self.fetchUserInfoUseCase else {
+                return
+            }
             
             do {
                 let status = try await useCase.execute()
+                let user = try await infoUseCase.execute()
+                UserDefaultsManager.shared.userId = user.userId
+                UserDefaultsManager.shared.nickname = user.nickname
+                UserDefaultsManager.shared.profileImageUrl = user.profileImageUrl
                 await MainActor.run { self.handleOnboardingStatus(status) }
             } catch let error as NetworkError {
                 print("❌ fetchUserStatus 에러: \(error.errorDescription)")
@@ -171,7 +181,11 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
             }
             
         case .completed:
-            showPagerView()
+//            showPagerView()CompleteProfileUseCaseProtocol
+            showInviteCodeView()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                self?.coordinator?.showInviteModal()
+            }
         }
     }
     

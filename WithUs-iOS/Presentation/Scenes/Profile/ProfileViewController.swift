@@ -88,6 +88,7 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
             .bind(with: self) { strongSelf, user in
                 strongSelf.nicknameLabel.text = user.nickname
                 strongSelf.profileDisplayView.setProfileImage(user.profileImageUrl)
+                strongSelf.dateLabel.text = strongSelf.formatJoinDate(user.joinDate ?? "-")
             }
             .disposed(by: disposeBag)
         
@@ -273,14 +274,18 @@ final class ProfileViewController: BaseViewController, ReactorKit.View {
         coordinator?.showProfileModification()
     }
     
-    private func formattedJoinedText(from user: User) -> String? {
-        if let createdAt = (user as AnyObject).value(forKey: "createdAt") as? String {
-            let comps = createdAt.split(separator: "-").compactMap { Int($0) }
-            if comps.count == 3 {
-                return "\(comps[0])년 \(comps[1])월 \(comps[2])일 가입"
-            }
+    func formatJoinDate(_ dateString: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        guard let date = formatter.date(from: dateString) else {
+            return dateString
         }
-        return nil
+        
+        let outputFormatter = DateFormatter()
+        outputFormatter.dateFormat = "yyyy년 MM월 dd일 가입"
+        
+        return outputFormatter.string(from: date)
     }
 }
 

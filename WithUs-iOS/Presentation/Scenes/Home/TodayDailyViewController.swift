@@ -228,13 +228,13 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         switch (myAnswered, partnerAnswered) {
         case (false, false):
             waitingBothView.isHidden = false
-            waitingBothView.configure(question: data.question)
+            waitingBothView.configure(question: data.question, number: nil)
             
         case (false, true):
             keywordPartnerOnlyView.isHidden = false
             let question = data.question
             let name = data.partnerInfo?.name ?? ""
-            let profile = data.partnerInfo?.profileImageUrl ?? ""
+            let profile = data.partnerInfo?.profileThumbnailImageUrl ?? ""
             let image = data.partnerInfo?.questionImageUrl ?? ""
             let time = data.partnerInfo?.answeredAt ?? ""
             
@@ -249,7 +249,7 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         case (true, false):
             keywordMyOnlyView.isHidden = false
             let name = data.myInfo?.name ?? ""
-            let profile = data.myInfo?.profileImageUrl ?? ""
+            let profile = data.myInfo?.profileThumbnailImageUrl ?? ""
             let time = data.myInfo?.answeredAt ?? ""
             let image = data.myInfo?.questionImageUrl ?? ""
             
@@ -262,11 +262,11 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
                     myImageURL: data.myInfo?.questionImageUrl ?? "",
                     myName: data.myInfo?.name ?? "",
                     myTime: data.myInfo?.answeredAt ?? "",
-                    myProfile: data.myInfo?.profileImageUrl ?? "",
+                    myProfile: data.myInfo?.profileThumbnailImageUrl ?? "",
                     partnerImageURL: data.partnerInfo?.questionImageUrl ?? "",
                     partnerName: data.partnerInfo?.name ?? "",
                     partnerTime: data.partnerInfo?.answeredAt ?? "",
-                    parterProfile: data.partnerInfo?.profileImageUrl ?? ""
+                    parterProfile: data.partnerInfo?.profileThumbnailImageUrl ?? ""
                 )
         }
     }

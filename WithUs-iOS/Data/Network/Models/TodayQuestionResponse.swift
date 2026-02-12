@@ -17,7 +17,7 @@ struct TodayQuestionResponse: Decodable {
 struct UserAnswerInfo: Decodable {
     let userId: Int
     let name: String
-    let profileImageUrl: String?
+    let profileThumbnailImageUrl: String?
     let questionImageUrl: String?
     let answeredAt: String?
 }

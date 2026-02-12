@@ -12,12 +12,14 @@ struct User {
     let nickname: String
     let profileImageUrl: String?
     let birthDate: String?
+    let joinDate: String?
     
     init(from response: UpdateProfileResponse) {
         self.userId = String(response.userId)
         self.nickname = response.nickname
         self.profileImageUrl = response.profileImageUrl
         self.birthDate = nil
+        self.joinDate = nil
     }
     
     init(from user: PutUpdateProfileResponse) {
@@ -25,5 +27,6 @@ struct User {
         self.nickname = user.nickname
         self.profileImageUrl = user.profileImageUrl
         self.birthDate = user.birthday
+        self.joinDate = user.joinDate
     }
 }

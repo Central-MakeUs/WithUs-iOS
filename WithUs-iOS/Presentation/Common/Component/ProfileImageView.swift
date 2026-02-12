@@ -22,6 +22,11 @@ class ProfileImageView: UIView {
     }
     
     let profileImageView = UIImageView().then {
+        $0.contentMode = .scaleAspectFill
+        $0.clipsToBounds = true
+    }
+    
+    private let emptyProfileImageView = UIImageView().then {
         $0.image = UIImage(named: "empty_profile")
         $0.contentMode = .scaleAspectFit
     }
@@ -46,6 +51,7 @@ class ProfileImageView: UIView {
     private func setupUI() {
         addSubview(backgroundCircleView)
         addSubview(profileImageView)
+        addSubview(emptyProfileImageView)
         addSubview(cameraButton)
         
         setupConstraints()
@@ -54,13 +60,16 @@ class ProfileImageView: UIView {
     
     private func setupConstraints() {
         backgroundCircleView.snp.makeConstraints { make in
-            make.center.equalToSuperview()
-            make.width.height.equalTo(134)
+            make.edges.equalToSuperview()
         }
         
         profileImageView.snp.makeConstraints { make in
+            make.edges.equalTo(backgroundCircleView)
+        }
+        
+        emptyProfileImageView.snp.makeConstraints { make in
             make.center.equalTo(backgroundCircleView)
-            make.width.height.equalTo(67)
+            make.width.height.equalTo(backgroundCircleView).dividedBy(2)
         }
         
         cameraButton.snp.makeConstraints { make in
@@ -84,6 +93,8 @@ class ProfileImageView: UIView {
     func setProfileImage(_ url: String?) {
         if let profileUrl = url,
            let profile = URL(string: profileUrl) {
+            emptyProfileImageView.isHidden = true
+            profileImageView.isHidden = false
             profileImageView.kf.setImage(
                 with: profile,
                 placeholder: nil,
@@ -92,8 +103,12 @@ class ProfileImageView: UIView {
                     .cacheOriginalImage
                 ]
             )
+        } else {
+            emptyProfileImageView.isHidden = false
+            profileImageView.isHidden = true
         }
     }
+
     
     func hideCameraButton() {
         cameraButton.isHidden = true

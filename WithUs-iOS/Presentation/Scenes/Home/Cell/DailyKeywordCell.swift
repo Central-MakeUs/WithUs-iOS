@@ -67,7 +67,7 @@ class DailyKeywordCell: UICollectionViewCell {
         switch (myAnswered, partnerAnswered) {
         case (false, false):
             show(view: waitingBothView)
-            waitingBothView.configure(question: data.question)
+            waitingBothView.configure(question: data.question, number: nil)
             
         case (false, true):
             show(view: keywordPartnerOnlyView)
@@ -85,7 +85,7 @@ class DailyKeywordCell: UICollectionViewCell {
                 myImageURL: data.myInfo?.questionImageUrl ?? "",
                 myName: data.myInfo?.name ?? "",
                 myTime: data.myInfo?.answeredAt ?? "",
-                myProfileURL: data.myInfo?.profileImageUrl ?? ""
+                myProfileURL: data.myInfo?.profileThumbnailImageUrl ?? ""
             )
             
         case (true, true):

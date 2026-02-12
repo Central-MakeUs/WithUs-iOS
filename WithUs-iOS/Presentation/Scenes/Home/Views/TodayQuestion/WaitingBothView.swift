@@ -25,7 +25,7 @@ final class WaitingBothView: UIView {
         $0.textColor = UIColor.gray500
         $0.textAlignment = .center
         $0.numberOfLines = 1
-        $0.text = "#3."
+        $0.text = "오늘의 일상"
     }
     
     private let questionLabel = UILabel().then {
@@ -127,7 +127,10 @@ final class WaitingBothView: UIView {
         onSendPhotoTapped?()
     }
     
-    func configure(question: String) {
+    func configure(question: String, number: Int?) {
         questionLabel.text = question
+        if let number {
+            questionNumberLabel.text = "#\(number)"
+        }
     }
 }

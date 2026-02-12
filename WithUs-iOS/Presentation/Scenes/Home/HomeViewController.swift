@@ -363,7 +363,7 @@ final class HomeViewController: BaseViewController, ReactorKit.View {
         switch (myAnswered, partnerAnswered) {
         case (false, false):
             show(view: waitingBothView)
-            waitingBothView.configure(question: data.question)
+            waitingBothView.configure(question: data.question, number: nil)
             
         case (false, true):
             show(view: questionPartnerOnlyView)

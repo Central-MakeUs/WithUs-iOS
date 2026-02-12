@@ -34,6 +34,7 @@ class HomeCoordinator: Coordinator {
     private let pokePartnerUseCase: PokePartnerUseCaseProtocol
     private let fetchKeywordUseCase: FetchKeywordUseCaseProtocol
     private let selectedKeywordUseCase: FetchSelectedKeywordUseCaseProtocol
+    private var fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
     
     init(
         navigationController: UINavigationController,
@@ -50,6 +51,7 @@ class HomeCoordinator: Coordinator {
         self.imageRepository = ImageRepository(networkService: networkService)
         self.keywordRepository = KeywordRepository(networkService: networkService)
         self.pokeRepository = PokePartnerRepository(networkService: networkService)
+        let userRepository = UpdateUserRepository(networdService: networkService)
         
         // Use Cases 초기화
         self.fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
@@ -69,6 +71,7 @@ class HomeCoordinator: Coordinator {
         self.pokePartnerUseCase = PokePartnerUseCase(pokeRepository: pokeRepository)
         self.fetchKeywordUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
         self.selectedKeywordUseCase = FetchSelectedKeywordUseCase(keywordRepository: keywordRepository)
+        self.fetchUserInfoUseCase = FetchUserInfoUseCase(userRepository: userRepository)
     }
     
     func start() {
@@ -94,7 +97,7 @@ class HomeCoordinator: Coordinator {
         homePagerVC.injectReactors(
             questionReactor: todayQuestionReactor,
             dailyReactor: todayDailyReactor,
-            fetchUserStatusUseCase: fetchUserStatusUseCase
+            fetchUserStatusUseCase: fetchUserStatusUseCase, fetchUserInfoUseCase: fetchUserInfoUseCase
         )
         
         navigationController.setViewControllers([homePagerVC], animated: true)

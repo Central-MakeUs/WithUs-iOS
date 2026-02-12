@@ -368,10 +368,6 @@ class FilterSelectionViewController: BaseViewController, View {
     // MARK: - Actions
     
     @objc private func closeButtonTapped() {
-        coordinator?.showUploadSuccessAndPopToRoot()
-    }
-    
-    @objc private func checkButtonTapped() {
         CustomAlertViewController
             .showWithCancel(
                 on: self,
@@ -380,10 +376,15 @@ class FilterSelectionViewController: BaseViewController, View {
                 confirmTitle: "종료하기",
                 cancelTitle: "취소",
                 confirmAction: { [weak self] in
-                    guard let self, !selectedPhotos.isEmpty else { return }
-                    self.coordinator?.showTextInputSelection(self.selectedPhotos, selectedFrameColor)
+                    guard let self else { return }
+                    self.coordinator?.showUploadSuccessAndPopToRoot()
                 }
             )
+    }
+    
+    @objc private func checkButtonTapped() {
+        guard !selectedPhotos.isEmpty else { return }
+        self.coordinator?.showTextInputSelection(self.selectedPhotos, selectedFrameColor)
     }
     
     @objc private func blackFrameButtonTapped() {

@@ -11,7 +11,8 @@ protocol UpdateUserRepositoryProtocol {
     func updateProfile(
         nickname: String,
         birthday: String,
-        imageKey: String?
+        imageKey: String?,
+        isImageUpdated: Bool
     ) async throws -> PutUpdateProfileResponse
     
     func getProfile() async throws -> PutUpdateProfileResponse
@@ -24,8 +25,13 @@ final class UpdateUserRepository: UpdateUserRepositoryProtocol {
         self.networdService = networdService
     }
     
-    func updateProfile(nickname: String, birthday: String, imageKey: String?) async throws -> PutUpdateProfileResponse {
-        let endpoint = PutUserEndpoint.updateProfile(nickname: nickname, birthday: birthday, imageKey: imageKey)
+    func updateProfile(nickname: String, birthday: String, imageKey: String?, isImageUpdated: Bool) async throws -> PutUpdateProfileResponse {
+        let endpoint = PutUserEndpoint.updateProfile(
+            nickname: nickname,
+            birthday: birthday,
+            imageKey: imageKey,
+            isImageUpdated: isImageUpdated
+        )
         
         let response: PutUpdateProfileResponse = try await networdService.request(endpoint: endpoint, responseType: PutUpdateProfileResponse.self)
         

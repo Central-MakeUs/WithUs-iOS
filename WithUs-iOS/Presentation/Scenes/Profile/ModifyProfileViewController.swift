@@ -104,6 +104,7 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
     private var selectedImage: UIImage?
     private var isNicknameValid = true
     private var isBirthDateValid = true
+    private var isImageUpdated: Bool = false
     
     // 추가: 초기 값 저장
     private var initialNickname: String = ""
@@ -297,7 +298,8 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
         reactor?.action.onNext(.saveProfile(
             nickname: nickname,
             birthDate: birthDate,
-            image: selectedImage
+            image: selectedImage,
+            isImageUpdated: isImageUpdated
         ))
     }
     
@@ -610,6 +612,7 @@ extension ModifyProfileViewController: UIImagePickerControllerDelegate, UINaviga
         }
         
         selectedImage = image
+        isImageUpdated = true
         profileView.profileImageView.image = image
         updateSaveButtonState()  // 추가: 이미지 선택 후 버튼 상태 업데이트
     }

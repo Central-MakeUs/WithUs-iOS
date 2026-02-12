@@ -317,7 +317,18 @@ class TextInputViewController: BaseViewController, View {
     // MARK: - Actions
     
     @objc private func closeButtonTapped() {
-        coordinator?.showUploadSuccessAndPopToRoot()
+        CustomAlertViewController
+            .showWithCancel(
+                on: self,
+                title: "수정을 종료하시겠어요?",
+                message: "나가면 변경 내용이 사라질 수 있어요.\n저장이 되었는지 꼭 확인해 주세요.",
+                confirmTitle: "종료하기",
+                cancelTitle: "취소",
+                confirmAction: { [weak self] in
+                    guard let self else { return }
+                    self.coordinator?.showUploadSuccessAndPopToRoot()
+                }
+            )
     }
     
     @objc private func dateLabelTapped() {

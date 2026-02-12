@@ -11,7 +11,8 @@ import Alamofire
 enum PutUserEndpoint {
     case updateProfile(nickname: String,
                        birthday: String,
-                       imageKey: String?)
+                       imageKey: String?,
+                       isImageUpdated: Bool)
     case getProfile
 }
 
@@ -36,10 +37,11 @@ extension PutUserEndpoint: EndpointProtocol {
     
     var parameters: Parameters? {
         switch self {
-        case .updateProfile(let nickname, let birthday, let imageKey):
+        case .updateProfile(let nickname, let birthday, let imageKey, let isImageUpdated):
             var params: [String: Any] = [
                 "nickname": nickname,
                 "birthday": birthday,
+                "isImageUpdated": isImageUpdated
             ]
             if let imageKey = imageKey {
                 params["imageKey"] = imageKey
