@@ -21,10 +21,12 @@ enum OnboardingStatus: String, Decodable {
 
 struct SocialLoginResponse: Decodable {
     let jwt: String
+    let refreshToken: String
     let onboardingStatus: OnboardingStatus
     
     enum CodingKeys: String, CodingKey {
         case jwt
         case onboardingStatus = "onboardingStatus"
+        case refreshToken
     }
 }

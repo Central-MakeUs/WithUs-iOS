@@ -22,6 +22,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = splashVC
         window.makeKeyAndVisible()
         
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTokenExpired),
+            name: .didTokenExpired,
+            object: nil
+        )
+        
         UserDefaults.standard.removeObject(forKey: "isSettingCompleted")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self else { return }
@@ -68,6 +75,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
     }
     
-    
+    @objc private func handleTokenExpired() {
+        appCoordinator?.handleTokenExpired()
+    }
 }
 

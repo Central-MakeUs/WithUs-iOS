@@ -77,6 +77,11 @@ class AppCoordinator: Coordinator {
     func finish() {
         childCoordinators.removeAll()
     }
+    
+    func handleTokenExpired() {
+        finish()
+        showLoginFlow()
+    }
 }
 
 //MARK: 부모배열에서 나를 제거하고 내 자식들도 다 제거한다

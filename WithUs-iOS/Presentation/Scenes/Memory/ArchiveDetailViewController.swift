@@ -57,7 +57,8 @@ class ArchiveDetailViewController: BaseViewController {
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 28
     }
-    
+#warning("https://nomatterjun.github.io/post/Swift%2F2023-05-30-Swift29 -> 참고")
+#warning("https://medium.com/@danielcrompton5/share-content-to-an-instagram-story-from-an-ios-app-d55b1e10e68a -> 참고")
     private let instagramButton = UIButton().then {
         $0.setImage(UIImage(named: "insta_logo"), for: .normal)
         $0.tintColor = .white

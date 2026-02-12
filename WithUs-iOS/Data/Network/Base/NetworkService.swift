@@ -11,6 +11,8 @@ import Alamofire
 public final class NetworkService {
     public static let shared = NetworkService()
     
+    private let session: Session = Session(interceptor: AuthInterceptor())
+    
     private init() {}
     
     public func request<T: Decodable>(
@@ -30,30 +32,27 @@ public final class NetworkService {
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         
         do {
-            // ✅ 1. Raw Data 먼저 받기
-            let rawDataResponse = await AF.request(
+            let rawDataResponse = await session.request(
                 endpoint.url,
                 method: endpoint.method,
                 parameters: endpoint.parameters,
                 encoding: endpoint.encoding,
                 headers: endpoint.headers
             )
+            .validate(statusCode: 200..<300)
             .cURLDescription { description in
                 print("📤 cURL: \(description)")
             }
             .serializingData()
             .response
-#warning("refreshToken으로 accessToken을 갱신해주고 둘다 만료시 logout로직 필요")
-            // ✅ 2. Raw JSON 출력
+            
+            // Raw JSON 출력
             if let data = rawDataResponse.data {
                 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 print("📦 Raw JSON Response:")
-                
                 if let jsonString = String(data: data, encoding: .utf8) {
                     print(jsonString)
                 }
-                
-                // Pretty Print (더 보기 좋게)
                 if let jsonObject = try? JSONSerialization.jsonObject(with: data),
                    let prettyData = try? JSONSerialization.data(withJSONObject: jsonObject, options: .prettyPrinted),
                    let prettyString = String(data: prettyData, encoding: .utf8) {
@@ -64,38 +63,41 @@ public final class NetworkService {
                 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
             }
             
-            // ✅ 3. Status Code 확인
+            // Status Code 확인
             if let statusCode = rawDataResponse.response?.statusCode {
                 print("Status Code: \(statusCode)")
+                
+                if statusCode == 401 {
+                    // retry()가 doNotRetry를 반환한 경우 (RefreshToken도 만료)
+                    // handleLogout()은 AuthInterceptor에서 이미 처리됨
+                    throw NetworkError.unauthorized
+                }
                 
                 if (400...599).contains(statusCode) {
                     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                     print("⚠️ HTTP Error \(statusCode)")
                     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                     
-                    // BaseResponse 디코딩 시도
-                    if let data = rawDataResponse.data {
-                        if let baseResponse = try? JSONDecoder().decode(BaseResponse<T>.self, from: data) {
-                            if !baseResponse.success, let error = baseResponse.error {
-                                print("📝 서버 에러 메시지: \(error.message)")
-                                print("🔢 서버 에러 코드: \(error.code)")
-                                throw NetworkError.serverError(message: error.message, code: error.code)
-                            }
-                        }
+                    if let data = rawDataResponse.data,
+                       let baseResponse = try? JSONDecoder().decode(BaseResponse<T>.self, from: data),
+                       !baseResponse.success,
+                       let error = baseResponse.error {
+                        print("📝 서버 에러 메시지: \(error.message)")
+                        print("🔢 서버 에러 코드: \(error.code)")
+                        throw NetworkError.serverError(message: error.message, code: error.code)
                     }
                     
                     throw NetworkError.httpError(statusCode: statusCode)
                 }
             }
             
-            // ✅ 4. 디코딩
+            // 디코딩
             guard let data = rawDataResponse.data else {
                 throw NetworkError.invalidResponse
             }
             
             do {
                 let response = try JSONDecoder().decode(BaseResponse<T>.self, from: data)
-                
                 print("✅ 응답 성공: \(response.success)")
                 
                 guard response.success else {
@@ -114,7 +116,6 @@ public final class NetworkService {
             } catch let decodingError as DecodingError {
                 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                 print("❌ Decoding Error Details:")
-                
                 switch decodingError {
                 case .typeMismatch(let type, let context):
                     print("Type Mismatch: \(type)")
@@ -132,7 +133,6 @@ public final class NetworkService {
                     print("Unknown decoding error")
                 }
                 print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-                
                 throw NetworkError.decodingError
             }
             
@@ -144,8 +144,7 @@ public final class NetworkService {
         }
     }
     
-    // MARK: - Request without Response Data (success만 확인)
-    
+    // MARK: - Request without Response Data
     public func requestWithoutData(
         endpoint: EndpointProtocol
     ) async throws {
@@ -160,40 +159,41 @@ public final class NetworkService {
         print("Parameters: \(endpoint.parameters ?? [:])")
         print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
         
-        
         do {
-            let dataResponse = await AF.request(
+            let dataResponse = await session.request(
                 endpoint.url,
                 method: endpoint.method,
                 parameters: endpoint.parameters,
                 encoding: endpoint.encoding,
                 headers: endpoint.headers
             )
-                .cURLDescription { description in
-                    print("📤 cURL: \(description)")  // ✅ 실제 요청 확인
-                }
-                .serializingDecodable(BaseResponse<EmptyResponse>.self)
-                .response
+            .validate(statusCode: 200..<300)
+            .cURLDescription { description in
+                print("📤 cURL: \(description)")
+            }
+            .serializingDecodable(BaseResponse<EmptyResponse>.self)
+            .response
             
-            // 상태 코드 확인
             if let statusCode = dataResponse.response?.statusCode {
                 print("Status Code: \(statusCode)")
                 
+                if statusCode == 401 {
+                    throw NetworkError.unauthorized
+                }
+                
                 if (400...599).contains(statusCode) {
-                    
                     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                     print("⚠️ HTTP Error \(statusCode) - 서버 에러 메시지 확인 중...")
                     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
                     
-                    if case .success(let baseResponse) = dataResponse.result {
-                        if !baseResponse.success, let error = baseResponse.error {
-                            
-                            print("📝 서버 에러 메시지: \(error.message)")
-                            print("🔢 서버 에러 코드: \(error.code)")
-                            
-                            throw NetworkError.serverError(message: error.message, code: error.code)
-                        }
+                    if case .success(let baseResponse) = dataResponse.result,
+                       !baseResponse.success,
+                       let error = baseResponse.error {
+                        print("📝 서버 에러 메시지: \(error.message)")
+                        print("🔢 서버 에러 코드: \(error.code)")
+                        throw NetworkError.serverError(message: error.message, code: error.code)
                     }
+                    
                     print("→ 서버 에러 메시지 없음, 기본 HTTP 에러 처리")
                     throw NetworkError.httpError(statusCode: statusCode)
                 }
@@ -238,17 +238,21 @@ public final class NetworkService {
             }
             urlRequest.httpBody = rawBody
             
-            let dataResponse = await AF.request(urlRequest)
+            let dataResponse = await session.request(urlRequest)
+                .validate(statusCode: 200..<300)
                 .serializingDecodable(BaseResponse<T>.self)
                 .response
             
-            // 상태 코드 확인
             if let statusCode = dataResponse.response?.statusCode {
+                if statusCode == 401 {
+                    throw NetworkError.unauthorized
+                }
+                
                 if (400...599).contains(statusCode) {
-                    if case .success(let baseResponse) = dataResponse.result {
-                        if !baseResponse.success, let error = baseResponse.error {
-                            throw NetworkError.serverError(message: error.message, code: error.code)
-                        }
+                    if case .success(let baseResponse) = dataResponse.result,
+                       !baseResponse.success,
+                       let error = baseResponse.error {
+                        throw NetworkError.serverError(message: error.message, code: error.code)
                     }
                     throw NetworkError.httpError(statusCode: statusCode)
                 }
@@ -283,18 +287,16 @@ public final class NetworkService {
     
     public func uploadToS3(url: String, imageData: Data) async throws {
         return try await withCheckedThrowingContinuation { continuation in
-            let headers: HTTPHeaders = [
-                "Content-Type": "image/jpeg"
-            ]
+            let headers: HTTPHeaders = ["Content-Type": "image/jpeg"]
             
+            // S3는 자체 인증 사용 → AF 그대로 유지
             AF.upload(imageData, to: url, method: .put, headers: headers)
-                .validate()
+                .validate(statusCode: 200..<300)
                 .response { response in
                     switch response.result {
                     case .success:
                         print("✅ S3 업로드 성공 (JPG)")
                         continuation.resume()
-                        
                     case .failure(let error):
                         print("❌ S3 업로드 실패: \(error)")
                         continuation.resume(throwing: NetworkError.unknown(error))
@@ -313,28 +315,32 @@ public final class NetworkService {
         }
         
         return try await withCheckedThrowingContinuation { continuation in
-            AF.upload(
+            session.upload(
                 multipartFormData: multipartFormData,
                 to: endpoint.url,
                 method: endpoint.method,
                 headers: endpoint.headers
             )
+            .validate(statusCode: 200..<300)
             .responseDecodable(of: BaseResponse<T>.self) { response in
-                // 상태 코드 확인
-                if let statusCode = response.response?.statusCode, (400...599).contains(statusCode) {
-                    if case .success(let baseResponse) = response.result {
-                        if !baseResponse.success, let error = baseResponse.error {
+                if let statusCode = response.response?.statusCode {
+                    if statusCode == 401 {
+                        continuation.resume(throwing: NetworkError.unauthorized)
+                        return
+                    }
+                    
+                    if (400...599).contains(statusCode) {
+                        if case .success(let baseResponse) = response.result,
+                           !baseResponse.success,
+                           let error = baseResponse.error {
                             continuation.resume(
-                                throwing: NetworkError.serverError(
-                                    message: error.message,
-                                    code: error.code
-                                )
+                                throwing: NetworkError.serverError(message: error.message, code: error.code)
                             )
                             return
                         }
+                        continuation.resume(throwing: NetworkError.httpError(statusCode: statusCode))
+                        return
                     }
-                    continuation.resume(throwing: NetworkError.httpError(statusCode: statusCode))
-                    return
                 }
                 
                 switch response.result {
@@ -343,15 +349,11 @@ public final class NetworkService {
                         continuation.resume(returning: data)
                     } else if let error = baseResponse.error {
                         continuation.resume(
-                            throwing: NetworkError.serverError(
-                                message: error.message,
-                                code: error.code
-                            )
+                            throwing: NetworkError.serverError(message: error.message, code: error.code)
                         )
                     } else {
                         continuation.resume(throwing: NetworkError.invalidResponse)
                     }
-                    
                 case .failure(let error):
                     continuation.resume(throwing: NetworkError.unknown(error))
                 }
@@ -368,28 +370,32 @@ public final class NetworkService {
         }
         
         return try await withCheckedThrowingContinuation { continuation in
-            AF.upload(
+            session.upload(
                 multipartFormData: multipartFormData,
                 to: endpoint.url,
                 method: endpoint.method,
                 headers: endpoint.headers
             )
+            .validate(statusCode: 200..<300)
             .responseDecodable(of: BaseResponse<EmptyResponse>.self) { response in
-                // 상태 코드 확인
-                if let statusCode = response.response?.statusCode, (400...599).contains(statusCode) {
-                    if case .success(let baseResponse) = response.result {
-                        if !baseResponse.success, let error = baseResponse.error {
+                if let statusCode = response.response?.statusCode {
+                    if statusCode == 401 {
+                        continuation.resume(throwing: NetworkError.unauthorized)
+                        return
+                    }
+                    
+                    if (400...599).contains(statusCode) {
+                        if case .success(let baseResponse) = response.result,
+                           !baseResponse.success,
+                           let error = baseResponse.error {
                             continuation.resume(
-                                throwing: NetworkError.serverError(
-                                    message: error.message,
-                                    code: error.code
-                                )
+                                throwing: NetworkError.serverError(message: error.message, code: error.code)
                             )
                             return
                         }
+                        continuation.resume(throwing: NetworkError.httpError(statusCode: statusCode))
+                        return
                     }
-                    continuation.resume(throwing: NetworkError.httpError(statusCode: statusCode))
-                    return
                 }
                 
                 switch response.result {
@@ -398,15 +404,11 @@ public final class NetworkService {
                         continuation.resume()
                     } else if let error = baseResponse.error {
                         continuation.resume(
-                            throwing: NetworkError.serverError(
-                                message: error.message,
-                                code: error.code
-                            )
+                            throwing: NetworkError.serverError(message: error.message, code: error.code)
                         )
                     } else {
                         continuation.resume(throwing: NetworkError.invalidResponse)
                     }
-                    
                 case .failure(let error):
                     continuation.resume(throwing: NetworkError.unknown(error))
                 }

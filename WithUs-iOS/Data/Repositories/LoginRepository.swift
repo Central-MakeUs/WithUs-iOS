@@ -42,7 +42,9 @@ final class LoginRepository: LoginRepositoryProtocol {
         )
        
         print("response.jwt: \(response.jwt)")
+        print("response.refreshToken: \(response.refreshToken)")
         TokenManager.shared.accessToken = response.jwt
+        TokenManager.shared.refreshToken = response.refreshToken
         return response
     }
 }

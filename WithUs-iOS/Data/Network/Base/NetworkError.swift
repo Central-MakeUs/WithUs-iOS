@@ -15,6 +15,7 @@ public enum NetworkError: Error {
     case decodingError
     case httpError(statusCode: Int)
     case unknown(Error)
+    case unauthorized
     
     public var errorDescription: String {
         switch self {
@@ -32,6 +33,8 @@ public enum NetworkError: Error {
             return error.localizedDescription
         case .httpError(let statusCode):
             return statusCode.description
+        case .unauthorized:
+            return "인증이 만료되었습니다. 다시 로그인해주세요."
         }
     }
     
