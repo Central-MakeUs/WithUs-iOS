@@ -161,7 +161,7 @@ final class SignUpSetKeywordViewController: BaseViewController {
                     
                     self.keywords = keywords + [Keyword(
                         id: "add_button",
-                        text: "새 키워드 추가",
+                        text: "직접 추가",
                         isAddButton: true
                     )]
                     self.collectionView.reloadData()

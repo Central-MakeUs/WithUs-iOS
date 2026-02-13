@@ -13,7 +13,7 @@ struct ArchivePhotoCellView: View {
     
     var body: some View {
         ZStack(alignment: .topLeading) {
-            if let imageURL = photo.imageURL {
+            if photo.imageURL != nil {
                 Color.gray.opacity(0.3)
             } else {
                 Color.gray.opacity(0.2)

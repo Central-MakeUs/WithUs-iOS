@@ -214,7 +214,6 @@ final class ProfileReactor: Reactor {
                     observer.onCompleted()
                     return Disposables.create()
                 }
-#warning("유저 가입일 변수 추가 및 ui 수정")
                 Task { @MainActor in
                     do {
                         async let statusTask = self.fetchUserStatusUseCase.execute()

@@ -107,7 +107,7 @@ final class MainCoordinator: Coordinator {
         let fourCutSelectedImage = UIImage(named: "ic_four_cut_on")?.withRenderingMode(.alwaysOriginal)
         
         fourCutNavigationController.tabBarItem = UITabBarItem(
-            title: "활동",
+            title: "추억",
             image: fourCutNormalImage,
             selectedImage: fourCutSelectedImage
         )

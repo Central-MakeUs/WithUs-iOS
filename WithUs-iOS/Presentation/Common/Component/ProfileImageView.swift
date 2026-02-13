@@ -108,7 +108,17 @@ class ProfileImageView: UIView {
             profileImageView.isHidden = true
         }
     }
-
+    
+    func configure(with image: UIImage?) {
+        if let image {
+            emptyProfileImageView.isHidden = true
+            profileImageView.isHidden = false
+            profileImageView.image = image
+        } else {
+            emptyProfileImageView.isHidden = false
+            profileImageView.isHidden = true
+        }
+    }
     
     func hideCameraButton() {
         cameraButton.isHidden = true

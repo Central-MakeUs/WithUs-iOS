@@ -36,7 +36,7 @@ final class SignupBirthDayViewController: BaseViewController, View {
         $0.font = UIFont.pretendard16Regular
         $0.textAlignment = .center
         $0.textColor = UIColor.gray500
-        $0.text = "연령대에 맞는 콘텐츠를 제공해드릴게요"
+        $0.text = "서로의 생일에 특별한 사진을 주고 받아요"
     }
     
     private let warningLabel = UILabel().then {

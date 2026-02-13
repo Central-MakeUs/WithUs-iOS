@@ -228,7 +228,7 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         switch (myAnswered, partnerAnswered) {
         case (false, false):
             waitingBothView.isHidden = false
-            waitingBothView.configure(question: data.question, number: nil)
+            waitingBothView.configure(question: data.question, number: nil, isTodayQuestion: false)
             
         case (false, true):
             keywordPartnerOnlyView.isHidden = false
