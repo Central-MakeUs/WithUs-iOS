@@ -74,6 +74,7 @@ final class AuthInterceptor: RequestInterceptor {
         .response
         
         if response.response?.statusCode == 401 {
+            print("Error = 401")
             throw NetworkError.unauthorized
         }
         

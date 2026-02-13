@@ -12,7 +12,7 @@ enum UserOnboardingStatusEndpoint {
 }
 
 extension UserOnboardingStatusEndpoint: EndpointProtocol {
-    var method: HTTPMethod { .post }
+    var method: HTTPMethod { .get }
 
     var path: String {
         return "/api/me/status"

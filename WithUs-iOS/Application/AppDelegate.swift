@@ -65,15 +65,43 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 }
 
-extension AppDelegate: UNUserNotificationCenterDelegate {
-    // foregound 모드에서도 Push를 받을 수 있게
-    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.badge, .sound, .banner])
-    }
-}
-
 extension AppDelegate: MessagingDelegate {
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
         FCMTokenManager.shared.fcmToken = fcmToken
+    }
+}
+
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    // 기존 코드 유지
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                 willPresent notification: UNNotification,
+                                 withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.badge, .sound, .banner])
+    }
+    
+    // 알림 클릭 시 추가
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                 didReceive response: UNNotificationResponse,
+                                 withCompletionHandler completionHandler: @escaping () -> Void) {
+        
+        let userInfo = response.notification.request.content.userInfo
+        
+        // 서버에서 보내는 payload 예시
+        // { "deeplink": "/today_question" }
+        // { "deeplink": "/today_keyword/123" }
+        if let deepLinkPath = userInfo["deeplink"] as? String,
+           let url = URL(string: "https://withus.p-e.kr\(deepLinkPath)"),
+           let deepLink = DeepLink.from(url: url) {
+            
+            DeepLinkHandler.shared.handle(deepLink: deepLink)
+            
+            // SceneDelegate의 AppCoordinator에 전달
+            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let sceneDelegate = scene.delegate as? SceneDelegate {
+                sceneDelegate.appCoordinator?.handlePendingDeepLinkIfNeeded()
+            }
+        }
+        
+        completionHandler()
     }
 }

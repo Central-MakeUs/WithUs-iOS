@@ -39,6 +39,43 @@ final class MainCoordinator: Coordinator {
         showMainTabBar()
     }
     
+    func handlePendingDeepLinkIfNeeded() {
+        guard let deepLink = DeepLinkHandler.shared.popPendingDeepLink() else { return }
+        
+        switch deepLink {
+        case .invite:
+            // invite는 HomePagerVC에서 처리하므로 다시 저장
+            DeepLinkHandler.shared.handle(deepLink: deepLink)
+            
+        case .todayQuestion:
+            // 홈 탭으로 이동
+            navigateToTodayQuestion()
+            
+        case .todayKeyword(let id):
+            // 키워드 화면으로 이동
+            navigateToTodayKeyword(id: id)
+        }
+    }
+    
+    private func navigateToTodayQuestion() {
+        guard let tabBarController = navigationController.viewControllers.first as? UITabBarController
+        else { return }
+        
+        // 홈 탭으로 이동
+        tabBarController.selectedIndex = 0
+        homeCoordinator?.navigateToTodayQuestion()
+    }
+
+    private func navigateToTodayKeyword(id: String) {
+        guard let tabBarController = navigationController.viewControllers.first as? UITabBarController
+        else { return }
+        
+        // 홈 탭으로 이동
+        tabBarController.selectedIndex = 0
+        homeCoordinator?.navigateToTodayKeyword(id: id)
+    }
+    
+    
     func handleNeedUserSetup() {
         delegate?.mainCoordinatorDidFinish(self)
     }
@@ -138,7 +175,7 @@ final class MainCoordinator: Coordinator {
         navigationController.setViewControllers([tabBarController], animated: false)
         navigationController.setNavigationBarHidden(true, animated: false)
     }
-
+    
     func finish() {
         childCoordinators.removeAll()
         homeCoordinator = nil

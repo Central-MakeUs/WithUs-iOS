@@ -20,6 +20,7 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
     private var keywords: [Keyword] = []
     private var selectedKeywordIndex: Int = 0
     private weak var currentPhotoPreview: PhotoPreviewViewController?
+    private var pendingKeywordId: String?
     
     private lazy var keywordCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -115,9 +116,16 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
         reactor.state.map { $0.keywords }
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] keywords in
-                self?.keywords = keywords
-                self?.keywordCollectionView.reloadData()
-                self?.updateViewVisibility(hasKeywords: !keywords.isEmpty)
+                guard let self else { return }
+                self.keywords = keywords
+                self.keywordCollectionView.reloadData()
+                self.updateViewVisibility(hasKeywords: !keywords.isEmpty)
+                
+                // 딥링크로 들어온 pending 키워드 처리
+                if let pendingId = self.pendingKeywordId {
+                    self.pendingKeywordId = nil
+                    self.selectKeyword(id: pendingId)
+                }
             })
             .disposed(by: disposeBag)
         
@@ -180,6 +188,29 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
                 self?.showPokeAlert()
             })
             .disposed(by: disposeBag)
+    }
+    
+    func scrollToKeyword(id: String) {
+        // keywords가 아직 로드 안됐을 수 있으니 대기
+        guard !keywords.isEmpty else {
+            // keywords 로드 후 처리하도록 pendingKeywordId 저장
+            pendingKeywordId = id
+            return
+        }
+        selectKeyword(id: id)
+    }
+    
+    private func selectKeyword(id: String) {
+        guard let index = keywords.firstIndex(where: { $0.id == id }),
+              let coupleKeywordId = Int(id)
+        else { return }
+        
+        // 기존 선택 로직 그대로 재사용
+        reactor?.action.onNext(.selectKeyword(coupleKeywordId: coupleKeywordId, index: index))
+        
+        // 컬렉션뷰도 해당 셀로 스크롤
+        let indexPath = IndexPath(item: index, section: 0)
+        keywordCollectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
     }
     
     // MARK: - View Visibility
