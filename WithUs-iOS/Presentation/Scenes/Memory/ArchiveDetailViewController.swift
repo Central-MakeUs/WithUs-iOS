@@ -388,8 +388,12 @@ class ArchiveDetailViewController: BaseViewController {
     // MARK: - Actions
     
     @objc private func shareButtonTapped() {
-        print("공유하기")
-        // TODO: 공유 기능 구현
+        guard let image = currentPageImage() else {
+            ToastView.show(message: "공유 실패")
+            return
+        }
+        let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        present(activityVC, animated: true)
     }
     
     @objc private func instagramButtonTapped() {
@@ -398,52 +402,29 @@ class ArchiveDetailViewController: BaseViewController {
     }
     
     @objc private func downloadButtonTapped() {
-        let currentPage = pageControl.currentPage
-        
-        guard currentPage >= 0 && currentPage < items.count else {
+        guard let image = currentPageImage() else {
             ToastView.show(message: "저장 실패")
             return
-        } 
+        }
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+    }
+    
+    private func currentPageImage() -> UIImage? {
+        let currentPage = pageControl.currentPage
+        guard currentPage >= 0 && currentPage < items.count else { return nil }
         
         let currentItem = items[currentPage]
         let indexPath = IndexPath(item: currentPage, section: 0)
-        guard let cell = collectionView.cellForItem(at: indexPath) else {
-            ToastView.show(message: "저장 실패")
-            return
-        }
-        
-        let imageToSave: UIImage?
+        guard let cell = collectionView.cellForItem(at: indexPath) else { return nil }
         
         switch currentItem.kind {
         case .single:
-            if let blurredCell = cell as? BlurredDetailCell {
-                imageToSave = blurredCell.getMainImage()
-            } else {
-                imageToSave = nil
-            }
-            
+            return (cell as? BlurredDetailCell)?.getMainImage()
         case .combined:
-            if let combinedCell = cell as? CombinedImageCell {
-                imageToSave = combinedCell.getCombinedImage()
-            } else {
-                imageToSave = nil
-            }
-            
+            return (cell as? CombinedImageCell)?.getCombinedImage()
         case .empty:
-            imageToSave = nil
+            return nil
         }
-        
-        guard let finalImage = imageToSave else {
-            ToastView.show(message: "저장 실패")
-            return
-        }
-        
-        UIImageWriteToSavedPhotosAlbum(
-            finalImage,
-            self,
-            #selector(image(_:didFinishSavingWithError:contextInfo:)),
-            nil
-        )
     }
 
     @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {

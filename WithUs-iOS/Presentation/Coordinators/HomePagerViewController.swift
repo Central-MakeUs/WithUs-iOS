@@ -13,7 +13,7 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     
     private var fetchUserStatusUseCase: FetchUserStatusUseCaseProtocol?
     private var fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol?
-    
+    private var currentStatus: OnboardingStatus?
     var coordinator: HomeCoordinator?
     
     private lazy var pageViewController = UIPageViewController(
@@ -173,14 +173,25 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     }
     
     private func handleOnboardingStatus(_ status: OnboardingStatus) {
+        currentStatus = status
+        
         switch status {
         case .needUserSetup:
             coordinator?.handleNeedUserSetup()
             
         case .needCoupleConnect:
             showInviteCodeView()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                self?.coordinator?.showInviteModal()
+            
+            let pendingCode = DeepLinkHandler.shared.popPendingInviteCode()
+            
+            if let code = pendingCode {
+                // 딥링크 코드 있으면 모달 없이 바로 코드 입력 화면으로
+                coordinator?.startInviteFlow(.input)
+            } else {
+                // 기존 로직 유지
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.coordinator?.showInviteModal()
+                }
             }
             
         case .completed:
@@ -189,6 +200,30 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     }
     
     // MARK: - View State 전환
+    func scrollToTodayQuestion() {
+        guard case .completed = currentStatus else { return }
+        pageViewController.setViewControllers(
+            [pages[0]],
+            direction: .reverse,
+            animated: true
+        )
+        updateSegmentUI(index: 0)
+    }
+
+    // 오늘의 키워드 탭으로 이동 + ID 전달
+    func scrollToTodayKeyword(id: String) {
+        guard case .completed = currentStatus else { return }
+        pageViewController.setViewControllers(
+            [pages[1]],
+            direction: .forward,
+            animated: true
+        )
+        updateSegmentUI(index: 1)
+        
+        // TodayDailyVC에 키워드 ID 전달
+        todayDailyVC.scrollToKeyword(id: id)
+    }
+    
     private func hideAllViews() {
         settingInviteCodeView.isHidden = true
         segmentStackView.isHidden = true

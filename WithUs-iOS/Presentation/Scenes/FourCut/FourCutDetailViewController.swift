@@ -118,6 +118,7 @@ final class FourCutDetailViewController: BaseViewController {
     override func setupActions() {
         closeButton.addTarget(self, action: #selector(didTapCloseButton), for: .touchUpInside)
         downloadButton.addTarget(self, action: #selector(didTapDownloadButton), for: .touchUpInside)
+        shareButton.addTarget(self, action: #selector(didTapShareButton), for: .touchUpInside)
     }
     
     @objc private func didTapDownloadButton() {
@@ -145,6 +146,15 @@ final class FourCutDetailViewController: BaseViewController {
     @objc private func didTapCloseButton() {
         self.dismiss(animated: true) {
         }
+    }
+    
+    @objc private func didTapShareButton() {
+        guard let image = mainImageView.image else {
+            ToastView.show(message: "공유 실패")
+            return
+        }
+        let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        present(activityVC, animated: true)
     }
     
     func configure(_ imageUrl: String) {

@@ -12,6 +12,7 @@ struct TodayQuestionResponse: Decodable {
     let question: String
     let myInfo: UserAnswerInfo?
     let partnerInfo: UserAnswerInfo?
+    let questionNumber: Int?
 }
 
 struct UserAnswerInfo: Decodable {

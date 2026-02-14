@@ -90,6 +90,16 @@ class InviteInputCodeViewController: BaseViewController, View {
         setupTapGesture()
         setupKeyboardObservers()
         setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        if let code = DeepLinkHandler.shared.popPendingInviteCode() {
+            autoFillAndVerify(code: code)
+        }
+    }
+    
+    private func autoFillAndVerify(code: String) {
+        pinCode = code
+        hiddenTextField.text = code
+        hiddenTextField.resignFirstResponder()
+        reactor?.action.onNext(.verifyCode(code))
     }
     
     override func viewDidAppear(_ animated: Bool) {

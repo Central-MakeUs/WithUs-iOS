@@ -127,10 +127,11 @@ final class WaitingBothView: UIView {
         onSendPhotoTapped?()
     }
     
-    func configure(question: String, number: Int?) {
+    func configure(question: String, number: Int?, isTodayQuestion: Bool = true) {
         questionLabel.text = question
         if let number {
             questionNumberLabel.text = "#\(number)"
         }
+        subTitleLabel.text = isTodayQuestion ? "먼저 오늘의 질문에 답해보세요." : "먼저 오늘의 일상 사진을 보내보세요."
     }
 }

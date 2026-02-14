@@ -163,6 +163,25 @@ class HomeCoordinator: Coordinator {
         navigationController.pushViewController(vc, animated: true)
     }
      
+    func navigateToTodayQuestion() {
+        guard let homePagerVC = navigationController.viewControllers
+            .first(where: { $0 is HomePagerViewController }) as? HomePagerViewController
+        else { return }
+        
+        // 혹시 다른 VC가 push 되어있으면 홈으로 pop
+        navigationController.popToViewController(homePagerVC, animated: false)
+        homePagerVC.scrollToTodayQuestion()
+    }
+
+    func navigateToTodayKeyword(id: String) {
+        guard let homePagerVC = navigationController.viewControllers
+            .first(where: { $0 is HomePagerViewController }) as? HomePagerViewController
+        else { return }
+        
+        navigationController.popToViewController(homePagerVC, animated: false)
+        homePagerVC.scrollToTodayKeyword(id: id)
+    }
+    
     func finish() {
         childCoordinators.removeAll()
         inviteCoordinator = nil

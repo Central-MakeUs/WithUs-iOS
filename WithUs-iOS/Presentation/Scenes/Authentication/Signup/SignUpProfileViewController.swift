@@ -272,7 +272,7 @@ extension SignUpProfileViewController: UIImagePickerControllerDelegate, UINaviga
         }
         
         reactor?.action.onNext(.selectImage(imageData))
-        profileView.profileImageView.image = image
+        profileView.configure(with: image)
     }
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {

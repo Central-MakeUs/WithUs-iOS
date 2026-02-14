@@ -24,6 +24,13 @@ class AppCoordinator: Coordinator {
         checkAutoLogin()
     }
     
+    func handlePendingDeepLinkIfNeeded() {
+        guard let mainCoordinator = childCoordinators.first(where: { $0 is MainCoordinator }) as? MainCoordinator
+        else { return }
+        
+        mainCoordinator.handlePendingDeepLinkIfNeeded()
+    }
+    
     private func checkAutoLogin() {
         if let token = TokenManager.shared.accessToken, !token.isEmpty {
             print("✅ 자동 로그인: 토큰 있음")

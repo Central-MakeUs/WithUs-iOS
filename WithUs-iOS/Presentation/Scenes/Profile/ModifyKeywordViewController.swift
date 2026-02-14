@@ -152,7 +152,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
         
         collectionView.snp.makeConstraints {
             $0.top.equalTo(topLabelStackView.snp.bottom).offset(70)
-            $0.horizontalEdges.equalToSuperview().inset(24.5)
+            $0.horizontalEdges.equalToSuperview().inset(33)
             $0.bottom.equalTo(setupButton.snp.top).offset(-12)
         }
     }
@@ -168,6 +168,10 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
             .observe(on: MainScheduler.instance)
             .bind(with: self, onNext: { strongSelf, _ in
                 ToastView.show(message: "키워드 설정이 저장되었습니다.")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    guard let self else { return }
+                    self.navigationController?.popViewController(animated: true)
+                }
             })
             .disposed(by: disposeBag)
         
@@ -190,10 +194,9 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     }
     
     private func createLayout() -> UICollectionViewLayout {
-        let layout = LeftAlignedCollectionViewFlowLayout()
-        layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
-        layout.minimumInteritemSpacing = 8
-        layout.minimumLineSpacing = 12
+        let layout = CenterAlignedCollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 12
+        layout.minimumLineSpacing = 18
         layout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         return layout
     }
@@ -211,7 +214,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
                         
                         self.keywords = keywords + [Keyword(
                             id: "add_button",
-                            text: "새 키워드 추가",
+                            text: "직접 추가",
                             isAddButton: true
                         )]
                         self.selectedKeywords = []
@@ -236,7 +239,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
                         
                         self.keywords = keywords + [Keyword(
                             id: "add_button",
-                            text: "새 키워드 추가",
+                            text: "직접 추가",
                             isAddButton: true
                         )]
                         
@@ -271,7 +274,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
         
         bottomSheet.onAddKeyword = { [weak self] newKeyword in
             guard let self = self else { return }
-            
+            print("현재 keywords: \(self.keywords.map { $0.id })")
             let addButtonIndex = self.keywords.firstIndex(where: { $0.isAddButton }) ?? self.keywords.count
             let newKeywordItem = Keyword(
                 id: "custom_\(UUID().uuidString)",
@@ -334,5 +337,27 @@ extension ModifyKeywordViewController: UICollectionViewDelegate {
         
         collectionView.reloadItems(at: [indexPath])
         updateSaveButtonState()
+    }
+}
+
+extension ModifyKeywordViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAt indexPath: IndexPath
+    ) -> CGSize {
+        let keyword = keywords[indexPath.item]
+        let text = keyword.text
+        
+        let label = UILabel()
+        label.font = UIFont.pretendard14SemiBold
+        label.text = text
+        label.sizeToFit()
+        var width = ceil(label.frame.width) + 45
+        if keyword.isAddButton {
+            width += 14 + 4
+        }
+        let height: CGFloat = 41
+        return CGSize(width: width, height: height)
     }
 }
