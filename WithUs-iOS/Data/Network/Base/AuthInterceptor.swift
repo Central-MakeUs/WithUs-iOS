@@ -6,88 +6,82 @@
 import Alamofire
 import Foundation
 
-final class AuthInterceptor: RequestInterceptor {
+extension Notification.Name {
+    static let didTokenExpired = Notification.Name("didTokenExpired")
+}
+
+struct TokenCredential: AuthenticationCredential {
+    var accessToken: String { TokenManager.shared.accessToken ?? "" }
+    var refreshToken: String { TokenManager.shared.refreshToken ?? "" }
+    var requiresRefresh: Bool = false
+}
+
+final class TokenAuthenticator: Authenticator {
     
-    private var isRefreshing = false
-    private var pendingCompletions: [(RetryResult) -> Void] = []
-    
-    func adapt(
-        _ urlRequest: URLRequest,
-        for session: Session,
-        completion: @escaping (Result<URLRequest, Error>) -> Void
-    ) {
-        var request = urlRequest
-        if let accessToken = TokenManager.shared.accessToken {
-            request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
-        }
-        completion(.success(request))
+    func apply(_ credential: TokenCredential, to urlRequest: inout URLRequest) {
+        urlRequest.setValue("Bearer \(credential.accessToken)", forHTTPHeaderField: "Authorization")
     }
     
-    func retry(
-        _ request: Request,
+    func refresh(
+        _ credential: TokenCredential,
         for session: Session,
-        dueTo error: Error,
-        completion: @escaping (RetryResult) -> Void
+        completion: @escaping (Result<TokenCredential, Error>) -> Void
     ) {
-        guard let response = request.task?.response as? HTTPURLResponse,
-              response.statusCode == 401 else {
-            completion(.doNotRetry)
-            return
-        }
+        print("🔄 [리프레시 요청] POST /api/auth/refresh")
         
-        if request.request?.url?.absoluteString.contains("/api/auth/refresh") == true {
-            handleLogout()
-            completion(.doNotRetry)
-            return
-        }
-        
-        pendingCompletions.append(completion)
-        
-        guard !isRefreshing else { return }
-        isRefreshing = true
-        
-        Task {
-            do {
-                try await refreshToken()
-                pendingCompletions.forEach { $0(.retry) }
-            } catch {
-                pendingCompletions.forEach { $0(.doNotRetry) }
-                handleLogout()
-            }
-            pendingCompletions.removeAll()
-            isRefreshing = false
-        }
-    }
-    
-    private func refreshToken() async throws {
-        guard let refreshToken = TokenManager.shared.refreshToken else {
-            throw NetworkError.unauthorized
-        }
-        
-        let response = await AF.request(
+        AF.request(
             "https://withus.p-e.kr/api/auth/refresh",
             method: .post,
-            parameters: ["refreshToken": refreshToken],
+            parameters: ["refreshToken": credential.refreshToken],
             encoding: JSONEncoding.default
         )
-        .serializingData()
-        .response
-        
-        if response.response?.statusCode == 401 {
-            print("Error = 401")
-            throw NetworkError.unauthorized
+        .responseData { response in
+            let statusCode = response.response?.statusCode ?? -1
+            print("🔄 [리프레시 응답] statusCode: \(statusCode)")
+            
+            guard TokenManager.shared.refreshToken != nil else {
+                print("❌ [리프레시] 이미 로그아웃됨 - 토큰 없음")
+                completion(.failure(NetworkError.unauthorized))
+                return
+            }
+            
+            if statusCode == 401 {
+                print("❌ [리프레시 응답] 401 → 서버에서 리프레시 토큰 거부")
+                self.handleLogout()
+                completion(.failure(NetworkError.unauthorized))
+                return
+            }
+            
+            guard let data = response.data,
+                  let baseResponse = try? JSONDecoder().decode(BaseResponse<TokenResponse>.self, from: data),
+                  baseResponse.success,
+                  let tokens = baseResponse.data else {
+                print("❌ [리프레시 응답] 파싱 실패")
+                completion(.failure(NetworkError.invalidResponse))
+                return
+            }
+            
+            print("✅ 토큰 갱신 성공")
+            TokenManager.shared.accessToken = tokens.accessToken
+            TokenManager.shared.refreshToken = tokens.refreshToken
+            let newCredential = TokenCredential()
+            completion(.success(newCredential))
         }
-        
-        guard let data = response.data,
-              let baseResponse = try? JSONDecoder().decode(BaseResponse<TokenResponse>.self, from: data),
-              baseResponse.success,
-              let tokens = baseResponse.data else {
-            throw NetworkError.invalidResponse
-        }
-        
-        TokenManager.shared.accessToken = tokens.accessToken
-        TokenManager.shared.refreshToken = tokens.refreshToken
-        print("✅ 토큰 갱신 성공")
+    }
+    
+    // 401이 왔을 때 refresh를 시도할지 여부
+    func didRequest(
+        _ urlRequest: URLRequest,
+        with response: HTTPURLResponse,
+        failDueToAuthenticationError error: Error
+    ) -> Bool {
+        return response.statusCode == 401
+    }
+    
+    // credential이 요청과 맞는지 확인
+    func isRequest(_ urlRequest: URLRequest, authenticatedWith credential: TokenCredential) -> Bool {
+        let bearerToken = "Bearer \(credential.accessToken)"
+        return urlRequest.value(forHTTPHeaderField: "Authorization") == bearerToken
     }
     
     private func handleLogout() {
@@ -98,8 +92,4 @@ final class AuthInterceptor: RequestInterceptor {
         }
         print("🔐 토큰 만료 → 로그아웃 처리")
     }
-}
-
-extension Notification.Name {
-    static let didTokenExpired = Notification.Name("didTokenExpired")
 }

@@ -11,9 +11,17 @@ import Alamofire
 public final class NetworkService {
     public static let shared = NetworkService()
     
-    private let session: Session = Session(interceptor: AuthInterceptor())
+    private let session: Session
     
-    private init() {}
+    private init() {
+        let credential = TokenCredential()
+        let authenticator = TokenAuthenticator()
+        let interceptor = AuthenticationInterceptor(
+            authenticator: authenticator,
+            credential: credential
+        )
+        session = Session(interceptor: interceptor)
+    }
     
     public func request<T: Decodable>(
         endpoint: EndpointProtocol,
