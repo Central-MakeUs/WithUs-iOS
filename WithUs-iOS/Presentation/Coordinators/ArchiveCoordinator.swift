@@ -11,6 +11,7 @@ class ArchiveCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
     private let fetchRecentArchiveUseCase: FetchArchiveListUseCase
+    private let deleteArchiveUseCase: ArchiveDeleteUseCaseProtocol
     
     init(navigationController: UINavigationController) {
         self.navigationController = navigationController
@@ -18,13 +19,18 @@ class ArchiveCoordinator: Coordinator {
         let networkService = NetworkService.shared
         // Repositories
         let fetchRecentArchiveList = FetchArchiveListRepository(networkService: networkService)
+        let deleteRepository = ArchiveDeleteRepository(networkService: networkService)
         
         // UseCase
         self.fetchRecentArchiveUseCase = FetchArchiveListUseCase(archiveService: fetchRecentArchiveList)
+        self.deleteArchiveUseCase = ArchiveDeleteUseCase(repository: deleteRepository)
     }
     
     func start() {
-        let reactor = ArchiveReactor(fetchArchiveListUseCase: self.fetchRecentArchiveUseCase)
+        let reactor = ArchiveReactor(
+            fetchArchiveListUseCase: self.fetchRecentArchiveUseCase,
+            deleteArchiveUseCase: deleteArchiveUseCase
+        )
         let archiveViewController = ArchiveViewController()
         archiveViewController.reactor = reactor
         archiveViewController.coordinator = self

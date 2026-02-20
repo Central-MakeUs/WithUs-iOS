@@ -290,6 +290,19 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
                 isLoading ? owner.showLoading() : owner.hideLoading()
             }
             .disposed(by: disposeBag)
+        
+        reactor.state.map { actions in
+                actions.loadingActions.contains(where: { action in
+                    if case .deletePhotos = action { return true }
+                    return false
+                })
+            }
+            .distinctUntilChanged()
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { owner, isLoading in
+                isLoading ? owner.showLoading() : owner.hideLoading()
+            }
+            .disposed(by: disposeBag)
     }
     
     private func showEmptyState() {
@@ -388,16 +401,18 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         
         alert.addAction(UIAlertAction(title: "취소", style: .cancel))
         alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
-            // TODO: Reactor에 삭제 액션 전달
-            print("삭제된 사진 개수: \(selectedPhotos.count)")
-            
-            self?.cancelSelectionMode()
+            guard let self else { return }
+            let deleteItems = selectedPhotos.map { $0.toDeleteItem() }
+            self.reactor?.action.onNext(.deletePhotos(deleteItems))
+            self.cancelSelectionMode()
         })
         
         present(alert, animated: true)
     }
     
     private func showDeleteAllConfirmation() {
+        let allItems = reactor?.currentState.recentPhotos.map { $0.toDeleteItem() } ?? []
+
         let alert = UIAlertController(
             title: "전체 삭제",
             message: "모든 사진을 삭제하시겠습니까?",
@@ -406,8 +421,8 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
         
         alert.addAction(UIAlertAction(title: "취소", style: .cancel))
         alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
-            // TODO: Reactor에 전체 삭제 액션 전달
-            print("전체 삭제 실행")
+            guard let self else { return }
+            self.reactor?.action.onNext(.deletePhotos(allItems))
         })
         
         present(alert, animated: true)
@@ -449,3 +464,4 @@ extension ArchiveViewController: ArchiveRecentViewDelegate {
         updateDeleteButton(selectedCount: count)
     }
 }
+

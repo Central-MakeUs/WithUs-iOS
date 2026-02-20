@@ -18,6 +18,7 @@ final class ArchiveReactor: Reactor {
         case loadMoreQuestions
         case fetchQuestionDetail(coupleQuestionId: Int)
         case fetchPhotoDetail(date: String, targetId: Int?, targetType: String?)
+        case deletePhotos([ArchiveDeleteItem])
     }
     
     enum Mutation {
@@ -36,6 +37,7 @@ final class ArchiveReactor: Reactor {
         case setQuestionDetail(ArchiveQuestionDetailResponse?)
         case setPhotoDetail(ArchivePhotoDetailResponse?)
         case setLoading(Action, Bool)
+        case removePhotos([Int])
     }
     
     struct State {
@@ -64,9 +66,11 @@ final class ArchiveReactor: Reactor {
     
     let initialState = State()
     private let fetchArchiveListUseCase: FetchArchiveListUseCaseProtocol
+    private let deleteArchiveUseCase: ArchiveDeleteUseCaseProtocol
     
-    init(fetchArchiveListUseCase: FetchArchiveListUseCaseProtocol) {
+    init(fetchArchiveListUseCase: FetchArchiveListUseCaseProtocol, deleteArchiveUseCase: ArchiveDeleteUseCaseProtocol) {
         self.fetchArchiveListUseCase = fetchArchiveListUseCase
+        self.deleteArchiveUseCase = deleteArchiveUseCase
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
@@ -94,6 +98,8 @@ final class ArchiveReactor: Reactor {
             
         case .fetchPhotoDetail(let date, let targetId, let targetType):
             return fetchPhotoDetail(date: date, targetId: targetId, targetType: targetType)
+        case .deletePhotos(let items):
+            return deletePhotos(items: items)
         }
     }
     
@@ -137,8 +143,10 @@ final class ArchiveReactor: Reactor {
             newState.questionDetail = response
         case .setPhotoDetail(let response):
             newState.photoDetail = response
+        case .removePhotos(let ids):
+            let idSet = Set(ids)
+            newState.recentPhotos = newState.recentPhotos.filter { !idSet.contains($0.id) }
         }
-        
         return newState
     }
     
@@ -356,5 +364,32 @@ final class ArchiveReactor: Reactor {
             }
             return Disposables.create()
         }
+    }
+    
+    private func deletePhotos(items: [ArchiveDeleteItem]) -> Observable<Mutation> {
+        return .concat(
+            .just(.setLoading(.deletePhotos(items), true)),
+            Observable.create { [weak self] observer in
+                guard let self else { observer.onCompleted(); return Disposables.create() }
+                Task {
+                    do {
+                        try await self.deleteArchiveUseCase.execute(items: items)
+                        let deletedIds = items.map { $0.id }
+                        await MainActor.run {
+                            observer.onNext(.removePhotos(deletedIds))
+                            observer.onNext(.setLoading(.deletePhotos(items), false))
+                            observer.onCompleted()
+                        }
+                    } catch {
+                        await MainActor.run {
+                            observer.onNext(.setError(self.errorMessage(from: error)))
+                            observer.onNext(.setLoading(.deletePhotos(items), false))
+                            observer.onCompleted()
+                        }
+                    }
+                }
+                return Disposables.create()
+            }
+        )
     }
 }

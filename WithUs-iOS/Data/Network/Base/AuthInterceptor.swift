@@ -38,7 +38,7 @@ final class TokenAuthenticator: Authenticator {
         .responseData { response in
             let statusCode = response.response?.statusCode ?? -1
             print("🔄 [리프레시 응답] statusCode: \(statusCode)")
-            
+            print("🔄 refreshToken: \(TokenManager.shared.refreshToken)")
             guard TokenManager.shared.refreshToken != nil else {
                 print("❌ [리프레시] 이미 로그아웃됨 - 토큰 없음")
                 completion(.failure(NetworkError.unauthorized))

@@ -56,3 +56,9 @@ struct ArchivePhotoViewModel {
         }
     }
 }
+
+extension ArchivePhotoViewModel {
+    func toDeleteItem() -> ArchiveDeleteItem {
+        return ArchiveDeleteItem(archiveType: archiveType, id: id, date: date)
+    }
+}
