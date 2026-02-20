@@ -208,13 +208,10 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
             .disposed(by: disposeBag)
         
         reactor.state
-            .map { $0.calendarDataList }
-            .distinctUntilChanged { $0.count == $1.count }
+            .compactMap { $0.lastUpdatedCalendarMonth }
             .observe(on: MainScheduler.instance)
-            .subscribe(onNext: { [weak self] dataList in
-                if let lastData = dataList.last {
-                    self?.calendarView.applyCalendarResponse(lastData)
-                }
+            .subscribe(onNext: { [weak self] data in
+                self?.calendarView.applyCalendarResponse(data)
             })
             .disposed(by: disposeBag)
         
@@ -365,7 +362,6 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
             break
         }
         
-        // 탭 변경 시 네비게이션 바 업데이트
         updateNavigationBar(for: index)
     }
     

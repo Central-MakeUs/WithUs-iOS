@@ -6,6 +6,7 @@
 import UIKit
 import Then
 import SnapKit
+import ReactorKit
 
 // MARK: - Detail Type
 
@@ -14,7 +15,8 @@ enum ArchiveDetailType {
     case photo(ArchivePhotoDetailResponse)
 }
 
-class ArchiveDetailViewController: BaseViewController {
+class ArchiveDetailViewController: BaseViewController, View {
+    var disposeBag: DisposeBag = DisposeBag()
     weak var coordinator: ArchiveCoordinator?
     
     private let detailType: ArchiveDetailType
@@ -101,6 +103,9 @@ class ArchiveDetailViewController: BaseViewController {
         self.tabBarController?.tabBar.isHidden = false
     }
     
+    func bind(reactor: ArchiveReactor) {
+        
+    }
     // MARK: - Setup
     
     override func setNavigation() {
@@ -113,6 +118,8 @@ class ArchiveDetailViewController: BaseViewController {
             
         case .photo(let response):
             titleText = formatDateForNavigation(response.date)
+            
+            setRightBarButton(image: UIImage(named: "ic_delete"), action: #selector(deleteButtonTapped))
         }
         
         navigationItem.titleView = UILabel().then {
@@ -120,8 +127,6 @@ class ArchiveDetailViewController: BaseViewController {
             $0.font = UIFont.pretendard14SemiBold
             $0.textColor = UIColor.gray900
         }
-        
-        setRightBarButton(image: UIImage(named: "ic_delete"))
     }
     
     override func setupUI() {
@@ -386,6 +391,47 @@ class ArchiveDetailViewController: BaseViewController {
     }
     
     // MARK: - Actions
+    @objc private func deleteButtonTapped() {
+        CustomAlertViewController
+            .showWithCancel(
+                on: self,
+                title: "주고 받은 사진을 삭제할까요?",
+                message: "상대방에게도 동일하게 삭제되고,\n사진은 영구적으로 삭제됩니다.",
+                confirmTitle: "삭제하기",
+                cancelTitle: "취소",
+                confirmAction: { [weak self] in
+                    guard let self else { return }
+                    switch self.detailType {
+                    case .photo(let response):
+                        let date = response.date
+                        let parts = date.split(separator: "-")
+                        guard parts.count >= 2,
+                              let year = Int(parts[0]),
+                              let month = Int(parts[1]) else { return }
+                        
+                        let currentPage = self.pageControl.currentPage
+                        let currentArchive = response.archiveInfoList[currentPage]
+                        let deleteItem = ArchiveDeleteItem(
+                            archiveType: currentArchive.archiveType,
+                            id: currentArchive.id,
+                            date: date
+                        )
+                        
+                        self.reactor?.action.onNext(.deletePhotoAndRefresh(
+                            item: deleteItem,
+                            year: year,
+                            month: month
+                        ))
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            self.navigationController?.popViewController(animated: true)
+                        }
+                    case .question:
+                        break
+                    }
+                }
+            )
+    }
     
     @objc private func shareButtonTapped() {
         guard let image = currentPageImage() else {
