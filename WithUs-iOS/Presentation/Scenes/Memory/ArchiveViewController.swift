@@ -300,6 +300,13 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
                 isLoading ? owner.showLoading() : owner.hideLoading()
             }
             .disposed(by: disposeBag)
+        
+        reactor.state.filter { $0.deletePhotosSuccess }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, _ in
+                strongSelf.showSuccessToast()
+            }
+            .disposed(by: disposeBag)
     }
     
     private func showEmptyState() {
@@ -381,47 +388,41 @@ class ArchiveViewController: BaseViewController, ReactorKit.View {
     
     private func deleteSelectedPhotos() {
         let selectedPhotos = recentView.getSelectedPhotos()
-        
-        if selectedPhotos.isEmpty {
-            let alert = UIAlertController(title: "알림", message: "삭제할 사진을 선택해주세요", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "확인", style: .default))
-            present(alert, animated: true)
-            return
-        }
-        
-        let alert = UIAlertController(
-            title: "사진 삭제",
-            message: "\(selectedPhotos.count)장의 사진을 삭제하시겠습니까?",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
-            guard let self else { return }
-            let deleteItems = selectedPhotos.map { $0.toDeleteItem() }
-            self.reactor?.action.onNext(.deletePhotos(deleteItems))
-            self.cancelSelectionMode()
-        })
-        
-        present(alert, animated: true)
+        CustomAlertViewController
+            .showWithCancel(
+                on: self,
+                title: "\(selectedPhotos.count)장의 사진을 삭제하시겠습니까?",
+                message: "상대방에게도 동일하게 삭제되고,\n사진은 영구적으로 삭제됩니다.",
+                confirmTitle: "\(selectedPhotos.count)장의 사진 삭제",
+                cancelTitle: "취소",
+                confirmAction: { [weak self] in
+                    guard let self else { return }
+                    let deleteItems = selectedPhotos.map { $0.toDeleteItem() }
+                    self.reactor?.action.onNext(.deletePhotos(deleteItems))
+                    self.cancelSelectionMode()
+                }
+            )
     }
     
     private func showDeleteAllConfirmation() {
         let allItems = reactor?.currentState.recentPhotos.map { $0.toDeleteItem() } ?? []
-
-        let alert = UIAlertController(
-            title: "전체 삭제",
-            message: "모든 사진을 삭제하시겠습니까?",
-            preferredStyle: .alert
-        )
         
-        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
-        alert.addAction(UIAlertAction(title: "삭제", style: .destructive) { [weak self] _ in
-            guard let self else { return }
-            self.reactor?.action.onNext(.deletePhotos(allItems))
-        })
-        
-        present(alert, animated: true)
+        CustomAlertViewController
+            .showWithCancel(
+                on: self,
+                title: "사진을 전체 삭제하시겠어요?",
+                message: "상대방에게도 동일하게 삭제되고,\n사진은 영구적으로 삭제됩니다.",
+                confirmTitle: "전체 삭제",
+                cancelTitle: "취소",
+                confirmAction: { [weak self] in
+                    guard let self else { return }
+                    self.reactor?.action.onNext(.deletePhotos(allItems))
+                }
+            )
+    }
+    
+    private func showSuccessToast() {
+        ToastView.show(message: "사진이 삭제되었어요.")
     }
 }
 

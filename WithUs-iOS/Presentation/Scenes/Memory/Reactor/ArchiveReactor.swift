@@ -39,6 +39,7 @@ final class ArchiveReactor: Reactor {
         case setPhotoDetail(ArchivePhotoDetailResponse?)
         case setLoading(Action, Bool)
         case removePhotos([ArchiveDeleteItem])
+        case setDeletePhotosSuccess(Bool)
     }
     
     struct State {
@@ -55,6 +56,7 @@ final class ArchiveReactor: Reactor {
         var photoDetail: ArchivePhotoDetailResponse?
         var loadingActions: Set<Action> = []
         var lastUpdatedCalendarMonth: ArchiveCalendarResponse?
+        var deletePhotosSuccess: Bool = false
         var isInitialLoading: Bool {
             loadingActions.contains(.viewDidLoad)
         }
@@ -167,6 +169,9 @@ final class ArchiveReactor: Reactor {
             newState.recentPhotos = newState.recentPhotos.filter { photo in
                 !deleteSet.contains(ArchiveDeleteItem(archiveType: photo.archiveType, id: photo.id, date: photo.date))
             }
+            
+        case .setDeletePhotosSuccess(let success):
+            newState.deletePhotosSuccess = success
         }
         return newState
     }
@@ -178,6 +183,8 @@ final class ArchiveReactor: Reactor {
                 return .concat(.just(mutation), .just(.setQuestionDetail(nil)))
             case .setPhotoDetail(let detail) where detail != nil:
                 return .concat(.just(mutation), .just(.setPhotoDetail(nil)))
+            case .setDeletePhotosSuccess(let success) where success == true:
+                return .concat(.just(mutation), .just(.setDeletePhotosSuccess(false)))
             default:
                 return .just(mutation)
             }
@@ -405,6 +412,7 @@ final class ArchiveReactor: Reactor {
                         try await self.deleteArchiveUseCase.execute(items: items)
                         await MainActor.run {
                             observer.onNext(.removePhotos(items))
+                            observer.onNext(.setDeletePhotosSuccess(true))
                             observer.onNext(.setLoading(.deletePhotos(items), false))
                             observer.onCompleted()
                         }
