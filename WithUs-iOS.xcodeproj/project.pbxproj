@@ -373,6 +373,7 @@
 				INFOPLIST_FILE = "WithUs-iOS/Resources/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "위더스";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSCameraUsageDescription = "사진 촬영 후 콘텐츠 업로드를 위해 사용됩니다.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "기기에 저장된 사진을 업로드하기 위해 사용됩니다.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "기기에 저장된 사진을 업로드하기 위해 사용됩니다.";
@@ -410,6 +411,7 @@
 				INFOPLIST_FILE = "WithUs-iOS/Resources/Info.plist";
 				INFOPLIST_KEY_CFBundleDisplayName = "위더스";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
 				INFOPLIST_KEY_NSCameraUsageDescription = "사진 촬영 후 콘텐츠 업로드를 위해 사용됩니다.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "기기에 저장된 사진을 업로드하기 위해 사용됩니다.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "기기에 저장된 사진을 업로드하기 위해 사용됩니다.";
