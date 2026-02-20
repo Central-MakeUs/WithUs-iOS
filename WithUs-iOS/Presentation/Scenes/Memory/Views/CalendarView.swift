@@ -17,13 +17,10 @@ protocol CalendarViewDelegate: AnyObject {
 class CalendarView: UIView {
     weak var delegate: CalendarViewDelegate?
     
-    // 데이터 요청 콜백 - Reactor와 연결
     var onMonthVisible: ((Int, Int) -> Void)?
     
-    // 로딩된 월 추적
     private var loadedMonths: Set<String> = []
     
-    // 월별 데이터
     private var monthsData: [ArchiveCalendarResponse] = []
     
     private let dateFormatter = DateFormatter().then {
@@ -146,18 +143,14 @@ class CalendarView: UIView {
             uniqueKeysWithValues: response.days.map { ($0.date, $0) }
         )
         let updatedDays = monthsData[index].days.map { day -> ArchiveDay in
-            guard !day.date.isEmpty else {
-                return day
-            }
+            guard !day.date.isEmpty else { return day }
             
             if let serverDay = dayMap[day.date] {
                 return serverDay
             } else {
-                return day
+                return ArchiveDay(date: day.date, meImageThumbnailUrl: nil, partnerImageThumbnailUrl: nil)
             }
         }
-        
-        let photoDaysCount = updatedDays.filter { $0.hasPhoto }.count
         
         monthsData[index] = ArchiveCalendarResponse(
             year: response.year,

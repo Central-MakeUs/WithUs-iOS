@@ -18,6 +18,8 @@ final class ArchiveReactor: Reactor {
         case loadMoreQuestions
         case fetchQuestionDetail(coupleQuestionId: Int)
         case fetchPhotoDetail(date: String, targetId: Int?, targetType: String?)
+        case deletePhotos([ArchiveDeleteItem])
+        case deletePhotoAndRefresh(item: ArchiveDeleteItem, year: Int, month: Int)
     }
     
     enum Mutation {
@@ -36,6 +38,8 @@ final class ArchiveReactor: Reactor {
         case setQuestionDetail(ArchiveQuestionDetailResponse?)
         case setPhotoDetail(ArchivePhotoDetailResponse?)
         case setLoading(Action, Bool)
+        case removePhotos([ArchiveDeleteItem])
+        case setDeletePhotosSuccess(Bool)
     }
     
     struct State {
@@ -44,7 +48,6 @@ final class ArchiveReactor: Reactor {
         var nextCursor: String?
         var hasNext: Bool = false
         var errorMessage: String?
-        var calendarDataList: [ArchiveCalendarResponse] = []
         var joinDate: Date?
         var questions: [ArchiveQuestionItem] = []
         var questionNextCursor: String?
@@ -52,7 +55,8 @@ final class ArchiveReactor: Reactor {
         var questionDetail: ArchiveQuestionDetailResponse?
         var photoDetail: ArchivePhotoDetailResponse?
         var loadingActions: Set<Action> = []
-        
+        var lastUpdatedCalendarMonth: ArchiveCalendarResponse?
+        var deletePhotosSuccess: Bool = false
         var isInitialLoading: Bool {
             loadingActions.contains(.viewDidLoad)
         }
@@ -64,9 +68,11 @@ final class ArchiveReactor: Reactor {
     
     let initialState = State()
     private let fetchArchiveListUseCase: FetchArchiveListUseCaseProtocol
+    private let deleteArchiveUseCase: ArchiveDeleteUseCaseProtocol
     
-    init(fetchArchiveListUseCase: FetchArchiveListUseCaseProtocol) {
+    init(fetchArchiveListUseCase: FetchArchiveListUseCaseProtocol, deleteArchiveUseCase: ArchiveDeleteUseCaseProtocol) {
         self.fetchArchiveListUseCase = fetchArchiveListUseCase
+        self.deleteArchiveUseCase = deleteArchiveUseCase
     }
     
     func mutate(action: Action) -> Observable<Mutation> {
@@ -94,6 +100,29 @@ final class ArchiveReactor: Reactor {
             
         case .fetchPhotoDetail(let date, let targetId, let targetType):
             return fetchPhotoDetail(date: date, targetId: targetId, targetType: targetType)
+        case .deletePhotos(let items):
+            return deletePhotos(items: items)
+        case .deletePhotoAndRefresh(let item, let year, let month):
+            return Observable.create { [weak self] observer in
+                guard let self else { observer.onCompleted(); return Disposables.create() }
+                Task {
+                    do {
+                        try await self.deleteArchiveUseCase
+                            .execute(archiveType: item.archiveType, id: item.id, date: item.date)
+                        await MainActor.run {
+                            observer.onNext(.removePhotos([item]))
+                            observer.onCompleted()
+                        }
+                    } catch {
+                        await MainActor.run {
+                            observer.onNext(.setError(self.errorMessage(from: error)))
+                            observer.onCompleted()
+                        }
+                    }
+                }
+                return Disposables.create()
+            }
+            .concat(loadCalendarData(year: year, month: month))
         }
     }
     
@@ -120,9 +149,7 @@ final class ArchiveReactor: Reactor {
         case .setError(let message):
             newState.errorMessage = message
         case .appendCalendarData(let data):
-            if !newState.calendarDataList.contains(where: { $0.year == data.year && $0.month == data.month }) {
-                newState.calendarDataList.append(data)
-            }
+            newState.lastUpdatedCalendarMonth = data
         case .setJoinDate(let date):
             newState.joinDate = date
         case .setQuestions(let questions):
@@ -137,8 +164,15 @@ final class ArchiveReactor: Reactor {
             newState.questionDetail = response
         case .setPhotoDetail(let response):
             newState.photoDetail = response
+        case .removePhotos(let items):
+            let deleteSet = Set(items)
+            newState.recentPhotos = newState.recentPhotos.filter { photo in
+                !deleteSet.contains(ArchiveDeleteItem(archiveType: photo.archiveType, id: photo.id, date: photo.date))
+            }
+            
+        case .setDeletePhotosSuccess(let success):
+            newState.deletePhotosSuccess = success
         }
-        
         return newState
     }
     
@@ -149,6 +183,8 @@ final class ArchiveReactor: Reactor {
                 return .concat(.just(mutation), .just(.setQuestionDetail(nil)))
             case .setPhotoDetail(let detail) where detail != nil:
                 return .concat(.just(mutation), .just(.setPhotoDetail(nil)))
+            case .setDeletePhotosSuccess(let success) where success == true:
+                return .concat(.just(mutation), .just(.setDeletePhotosSuccess(false)))
             default:
                 return .just(mutation)
             }
@@ -356,5 +392,44 @@ final class ArchiveReactor: Reactor {
             }
             return Disposables.create()
         }
+    }
+    
+    private func deletePhotos(items: [ArchiveDeleteItem]) -> Observable<Mutation> {
+        let monthsToRefresh = Set(items.compactMap { item -> YearMonth? in
+            let parts = item.date.split(separator: "-")
+            guard parts.count >= 2,
+                  let year = Int(parts[0]),
+                  let month = Int(parts[1]) else { return nil }
+            return YearMonth(year: year, month: month)
+        })
+        
+        return .concat(
+            .just(.setLoading(.deletePhotos(items), true)),
+            Observable.create { [weak self] observer in
+                guard let self else { observer.onCompleted(); return Disposables.create() }
+                Task {
+                    do {
+                        try await self.deleteArchiveUseCase.execute(items: items)
+                        await MainActor.run {
+                            observer.onNext(.removePhotos(items))
+                            observer.onNext(.setDeletePhotosSuccess(true))
+                            observer.onNext(.setLoading(.deletePhotos(items), false))
+                            observer.onCompleted()
+                        }
+                    } catch {
+                        await MainActor.run {
+                            observer.onNext(.setError(self.errorMessage(from: error)))
+                            observer.onNext(.setLoading(.deletePhotos(items), false))
+                            observer.onCompleted()
+                        }
+                    }
+                }
+                return Disposables.create()
+            },
+            Observable.deferred { [weak self] in
+                guard let self else { return .empty() }
+                return Observable.merge(monthsToRefresh.map { self.loadCalendarData(year: $0.year, month: $0.month) })
+            }
+        )
     }
 }

@@ -7,14 +7,13 @@
 
 import Foundation
 
-struct ArchiveCalendarResponse: Codable {
+struct ArchiveCalendarResponse: Codable, Equatable {
     let year: Int
     let month: Int
     let days: [ArchiveDay]
 }
 
-// 3. 날짜별 정보 객체
-struct ArchiveDay: Codable {
+struct ArchiveDay: Codable, Equatable {
     let date: String
     let meImageThumbnailUrl: String?
     let partnerImageThumbnailUrl: String?
