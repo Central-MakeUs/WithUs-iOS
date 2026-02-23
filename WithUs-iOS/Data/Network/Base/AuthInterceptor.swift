@@ -11,7 +11,8 @@ extension Notification.Name {
 }
 
 struct TokenCredential: AuthenticationCredential {
-    var accessToken: String { TokenManager.shared.accessToken ?? "" }
+//    var accessToken: String { TokenManager.shared.accessToken ?? "" }
+    var accessToken: String { "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwibmlja25hbWUiOiJ0ZW1wVXNlcjEiLCJpYXQiOjE3Njg4MjM1NzMsImV4cCI6NDkyMjQyMzU3M30.nM9TzG6eZBemZlKSsy7ma5od8F7NCzAgXetpxeZe_O0" }
     var refreshToken: String { TokenManager.shared.refreshToken ?? "" }
     var requiresRefresh: Bool = false
 }
@@ -47,7 +48,7 @@ final class TokenAuthenticator: Authenticator {
             
             if statusCode == 401 {
                 print("❌ [리프레시 응답] 401 → 서버에서 리프레시 토큰 거부")
-                self.handleLogout()
+//                self.handleLogout()
                 completion(.failure(NetworkError.unauthorized))
                 return
             }

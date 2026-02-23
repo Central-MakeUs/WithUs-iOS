@@ -11,6 +11,7 @@ struct ArchiveQuestionDetailResponse: Decodable {
     let coupleQuestionId: Int
     let questionNumber: Int
     let questionContent: String
+    let date: String
     let myInfo: UserArchiveInfo
     let partnerInfo: UserArchiveInfo
 }

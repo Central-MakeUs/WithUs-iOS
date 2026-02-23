@@ -10,17 +10,29 @@ import Then
 final class EmptyDetailCell: UICollectionViewCell {
     static let reuseId = "EmptyDetailCell"
     
-    private let emptyImageView = UIImageView().then {
-        $0.image = UIImage(named: "ic_empty_archive")
-        $0.contentMode = .scaleAspectFit
-        $0.tintColor = .black
+    private let emptyMainLabel = UILabel().then {
+        $0.text = "저장된 사진이 없어요"
+        $0.textColor = UIColor.gray900
+        $0.font = UIFont.pretendard24Bold
     }
     
-    private let emptyLabel = UILabel().then {
-        $0.text = "삭제되었습니다."
+    private let emptyImageView = UIImageView().then {
+        $0.image = UIImage(named: "empty_archive")
+        $0.contentMode = .scaleAspectFit
+    }
+    
+    private let emptySubLabel = UILabel().then {
+        $0.text = "주고 받은 사진이 삭제되어서\n확인이 불가능해요."
         $0.font = UIFont.pretendard16Regular
-        $0.textColor = UIColor.gray500
+        $0.textColor = UIColor.gray700
         $0.textAlignment = .center
+        $0.numberOfLines = 2
+    }
+    
+    private let emptyStackView = UIStackView().then {
+        $0.axis = .vertical
+        $0.spacing = 0
+        $0.alignment = .center
     }
     
     override init(frame: CGRect) {
@@ -34,21 +46,20 @@ final class EmptyDetailCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        contentView.backgroundColor = UIColor.gray50
-        contentView.addSubview(emptyImageView)
-        contentView.addSubview(emptyLabel)
+        contentView.addSubview(emptyStackView)
+        
+        emptyStackView.addArrangedSubview(emptyMainLabel)
+        emptyStackView.addArrangedSubview(emptyImageView)
+        emptyStackView.addArrangedSubview(emptySubLabel)
     }
     
     private func setupConstraints() {
         emptyImageView.snp.makeConstraints {
-            $0.centerX.equalToSuperview()
-            $0.centerY.equalToSuperview().offset(-30)
-            $0.size.equalTo(80)
+            $0.size.equalTo(160)
         }
         
-        emptyLabel.snp.makeConstraints {
-            $0.top.equalTo(emptyImageView.snp.bottom).offset(16)
-            $0.centerX.equalToSuperview()
+        emptyStackView.snp.makeConstraints {
+            $0.center.equalToSuperview()
         }
     }
 }

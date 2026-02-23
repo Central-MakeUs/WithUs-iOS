@@ -118,8 +118,6 @@ class ArchiveDetailViewController: BaseViewController, View {
             
         case .photo(let response):
             titleText = formatDateForNavigation(response.date)
-            
-            setRightBarButton(image: UIImage(named: "ic_delete"), action: #selector(deleteButtonTapped))
         }
         
         navigationItem.titleView = UILabel().then {
@@ -127,6 +125,8 @@ class ArchiveDetailViewController: BaseViewController, View {
             $0.font = UIFont.pretendard14SemiBold
             $0.textColor = UIColor.gray900
         }
+        
+        setRightBarButton(image: UIImage(named: "ic_delete"), action: #selector(deleteButtonTapped))
     }
     
     override func setupUI() {
@@ -349,8 +349,7 @@ class ArchiveDetailViewController: BaseViewController, View {
             
             let isEmptyPage = items[initialIndex].kind == .empty
             [shareButton, instagramButton, downloadButton].forEach {
-                $0.isEnabled = !isEmptyPage
-                $0.alpha = isEmptyPage ? 0.5 : 1.0
+                $0.isHidden = isEmptyPage ? true : false
             }
         }
     }
@@ -426,8 +425,25 @@ class ArchiveDetailViewController: BaseViewController, View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             self.navigationController?.popViewController(animated: true)
                         }
-                    case .question:
-                        break
+                    case .question(let response):
+                        let id = response.coupleQuestionId
+                        let date = response.date
+                        let parts = date.split(separator: "-")
+                        guard parts.count >= 2,
+                              let year = Int(parts[0]),
+                              let month = Int(parts[1]) else { return }
+                        
+                        let deleteItem = ArchiveDeleteItem(
+                            archiveType: "QUESTION",
+                            id: id,
+                            date: date
+                        )
+                        
+                        self.reactor?.action.onNext(.deletePhotoAndRefresh(item: deleteItem, year: year, month: month))
+                        
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            self.navigationController?.popViewController(animated: true)
+                        }
                     }
                 }
             )
