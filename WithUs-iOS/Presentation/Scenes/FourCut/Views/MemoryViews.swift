@@ -83,7 +83,7 @@ struct MemoryFullCellView: View {
                                 .clipped()
                             
                             VStack(spacing: 8) {
-                                Text("두 명 모두 6장 이상\n사진을 올려서\n추억이 자동 생성돼요.")
+                                Text("두명 모두 6장 이상\n사진을 보내면\n추억이 자동 생성돼요.")
                                     .font(Font(UIFont.pretendard14Regular))
                                     .foregroundColor(.white.opacity(0.9))
                                     .multilineTextAlignment(.center)
