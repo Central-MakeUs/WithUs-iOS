@@ -30,8 +30,6 @@ class EditBottomSheetViewController: UIViewController {
     
     private let items: [OptionItem] = [
         OptionItem(icon: "text",      title: "텍스트"),
-        OptionItem(icon: "location",  title: "위치"),
-        OptionItem(icon: "music",     title: "음악"),
         OptionItem(icon: "delicious", title: "존맛탱"),
         OptionItem(icon: "boom_up",   title: "붐업"),
         OptionItem(icon: "boom_down", title: "붐따"),
