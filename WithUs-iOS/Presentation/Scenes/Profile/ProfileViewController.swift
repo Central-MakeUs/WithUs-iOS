@@ -347,8 +347,15 @@ extension ProfileViewController: UICollectionViewDelegate {
                 if UIApplication.shared.canOpenURL(settingsUrl) {
                     UIApplication.shared.open(settingsUrl, options: [:], completionHandler: nil)
                 }
-        default:
-            break
+        case .review:
+            let appId = "6758986808"
+                let urlString = "itms-apps://itunes.apple.com/app/id\(appId)?action=write-review"
+                
+                guard let url = URL(string: urlString) else { return }
+                
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url, options: [:], completionHandler: nil)
+                }
         }
     }
 }
