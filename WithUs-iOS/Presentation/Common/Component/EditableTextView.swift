@@ -14,8 +14,8 @@ class EditableTextView: UIView {
     private let textView: UITextView = {
         let textView = UITextView()
         textView.backgroundColor = .clear
-        textView.textColor = .white
-        textView.font = .systemFont(ofSize: 32, weight: .bold)
+        textView.textColor = UIColor.gray50
+        textView.font = UIFont.pretendard12Regular
         textView.textAlignment = .center
         textView.isScrollEnabled = false
         textView.translatesAutoresizingMaskIntoConstraints = false
@@ -27,7 +27,11 @@ class EditableTextView: UIView {
     private var currentScale: CGFloat = 1.0
 
     init(text: String) {
-        super.init(frame: CGRect(x: 0, y: 0, width: 200, height: 80))
+        let font = UIFont.pretendard12Regular
+        let textSize = (text as NSString).size(withAttributes: [.font: font])
+        let initialWidth = ceil(textSize.width) + 10 + 16
+        let initialHeight = ceil(textSize.height) + 16 + 16
+        super.init(frame: CGRect(x: 0, y: 0, width: initialWidth, height: initialHeight))
         textView.text = text
         setupUI()
         setupGestures()
@@ -38,17 +42,17 @@ class EditableTextView: UIView {
     }
 
     private func setupUI() {
-        backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        layer.cornerRadius = 8
+        backgroundColor = UIColor.black.withAlphaComponent(0.68)
+        layer.cornerRadius = 12
         clipsToBounds = false
 
         addSubview(textView)
 
         NSLayoutConstraint.activate([
-            textView.topAnchor.constraint(equalTo: topAnchor, constant: 12),
-            textView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            textView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
-            textView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12)
+            textView.topAnchor.constraint(equalTo: topAnchor, constant: 8),
+            textView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
+            textView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
+            textView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
         ])
 
         textView.delegate = self
@@ -123,10 +127,12 @@ class EditableTextView: UIView {
         case .changed:
             var newCenter = CGPoint(x: initialCenter.x + translation.x, y: initialCenter.y + translation.y)
             if let superview = superview {
-                let halfWidth = bounds.width / 2
-                let halfHeight = bounds.height / 2
-                newCenter.x = max(halfWidth, min(newCenter.x, superview.bounds.width - halfWidth))
-                newCenter.y = max(halfHeight, min(newCenter.y, superview.bounds.height - halfHeight))
+                let inset: CGFloat = 30
+                let verticalInset: CGFloat = 40
+                let halfWidth = frame.width / 2
+                let halfHeight = frame.height / 2
+                newCenter.x = max(halfWidth + inset, min(newCenter.x, superview.bounds.width - halfWidth - inset))
+                newCenter.y = max(halfHeight + verticalInset, min(newCenter.y, superview.bounds.height - halfHeight - verticalInset))
             }
             center = newCenter
         default:
@@ -175,12 +181,12 @@ class EditableTextView: UIView {
 extension EditableTextView: UITextViewDelegate {
     func textViewDidChange(_ textView: UITextView) {
         let maxWidth: CGFloat = 300
-        let minWidth: CGFloat = 100
+        let padding: CGFloat = 26
 
         let textSize = textView.sizeThatFits(CGSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude))
-        let requiredWidth = min(max(textSize.width + 32, minWidth), maxWidth)
-        let constrainedSize = textView.sizeThatFits(CGSize(width: requiredWidth - 32, height: .greatestFiniteMagnitude))
-        let requiredHeight = constrainedSize.height + 24
+        let requiredWidth = min(textSize.width + padding, maxWidth)
+        let constrainedSize = textView.sizeThatFits(CGSize(width: requiredWidth - 16, height: .greatestFiniteMagnitude))
+        let requiredHeight = constrainedSize.height + 16
 
         UIView.animate(withDuration: 0.1) {
             self.frame.size = CGSize(width: requiredWidth, height: requiredHeight)

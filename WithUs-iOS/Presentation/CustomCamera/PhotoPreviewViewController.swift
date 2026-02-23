@@ -54,7 +54,7 @@ class PhotoPreviewViewController: BaseViewController {
         $0.color = .white
         $0.hidesWhenStopped = true
     }
-
+    
     private let loadingDimView = UIView().then {
         $0.backgroundColor = UIColor.black.withAlphaComponent(0.3)
         $0.isHidden = true
@@ -125,7 +125,7 @@ class PhotoPreviewViewController: BaseViewController {
         loadingDimView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
-
+        
         loadingIndicator.snp.makeConstraints {
             $0.center.equalToSuperview()
         }
@@ -332,7 +332,7 @@ extension PhotoPreviewViewController: DraggableViewDelegate {
         alert.addAction(UIAlertAction(title: "취소", style: .cancel))
         present(alert, animated: true)
     }
-
+    
     func draggableViewDidRequestDelete(_ view: UIView) {
         UIView.animate(withDuration: 0.2, animations: {
             view.alpha = 0
