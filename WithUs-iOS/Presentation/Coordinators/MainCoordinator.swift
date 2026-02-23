@@ -46,6 +46,7 @@ final class MainCoordinator: Coordinator {
         case .invite:
             // invite는 HomePagerVC에서 처리하므로 다시 저장
             DeepLinkHandler.shared.handle(deepLink: deepLink)
+            navigateToHomePager()
             
         case .todayQuestion:
             // 홈 탭으로 이동
@@ -54,7 +55,17 @@ final class MainCoordinator: Coordinator {
         case .todayKeyword(let id):
             // 키워드 화면으로 이동
             navigateToTodayKeyword(id: id)
+            
+        case .poke:
+            navigateToTodayQuestion()
         }
+    }
+    
+    private func navigateToHomePager() {
+        guard let tabBarController = navigationController.viewControllers.first as? UITabBarController
+        else { return }
+        
+        tabBarController.selectedIndex = 0
     }
     
     private func navigateToTodayQuestion() {

@@ -11,6 +11,7 @@ enum DeepLink {
     case invite(code: String?)
     case todayQuestion
     case todayKeyword(coupleKeywordId: String)
+    case poke
     
     static func from(url: URL) -> DeepLink? {
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: true)
@@ -25,6 +26,9 @@ enum DeepLink {
             
         case "/today_question":
             return .todayQuestion
+            
+        case "/poke":
+            return .poke
             
         default:
             if path.hasPrefix("/today_keyword/") {

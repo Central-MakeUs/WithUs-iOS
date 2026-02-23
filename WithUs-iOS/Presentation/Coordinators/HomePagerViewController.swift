@@ -181,14 +181,9 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
             
         case .needCoupleConnect:
             showInviteCodeView()
-            
-            let pendingCode = DeepLinkHandler.shared.popPendingInviteCode()
-            
-            if let code = pendingCode {
-                // 딥링크 코드 있으면 모달 없이 바로 코드 입력 화면으로
+            if DeepLinkHandler.shared.hasPendingInviteCode {
                 coordinator?.startInviteFlow(.input)
             } else {
-                // 기존 로직 유지
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
                     self?.coordinator?.showInviteModal()
                 }

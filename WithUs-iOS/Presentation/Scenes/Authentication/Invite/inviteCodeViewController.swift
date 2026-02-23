@@ -182,12 +182,18 @@ class InviteCodeViewController: BaseViewController, View {
     }
     
     @objc private func linkBtnTapped() {
-//        let imageToShare: UIImage = UIImage(named: "ic_duplicate")!
-//        let urlToShare: String = "https://velog.io/@go90js"
-//        let textToShare: String = "고라니"
-//        
-//        let activityViewController = UIActivityViewController(activityItems: [imageToShare, urlToShare, textToShare], applicationActivities: nil)
-//        present(activityViewController, animated: true)
+        guard let reactor, let inviteCode = reactor.currentState.invitationCode else { return }
+        
+        let urlToShare = "https://withus.p-e.kr/invite?code=\(inviteCode)"
+        
+        let itemSource = InviteActivityItemSource(inviteURL: urlToShare)
+        
+        let activityViewController = UIActivityViewController(
+            activityItems: [itemSource],
+            applicationActivities: nil
+        )
+        
+        present(activityViewController, animated: true)
     }
     
     private func updatePinDisplay() {
