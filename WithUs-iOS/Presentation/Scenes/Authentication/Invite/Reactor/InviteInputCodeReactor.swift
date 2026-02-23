@@ -83,8 +83,8 @@ final class InviteInputCodeReactor: Reactor {
                     do {
                         let result = try await self.usecase.executeAccept(inviteCode: code)
                         print("✅ couple id 받아오기 완료")
-                        observer.onNext(.setSuccess)
                         observer.onNext(.acceptedInvite(result.coupleId))
+                        observer.onNext(.setSuccess)
                         observer.onCompleted()
                     } catch let error as NetworkError {
                         observer.onNext(.setError(error.errorDescription))
@@ -103,6 +103,7 @@ final class InviteInputCodeReactor: Reactor {
     }
     
     private func verifyCode(_ code: String) -> Observable<Mutation> {
+        print("sssssssss verifyCode 들어옴")
         return Observable.concat(
             .just(.setLoading(true)),
             Observable.create { [weak self] observer in
@@ -122,8 +123,8 @@ final class InviteInputCodeReactor: Reactor {
                         print("   invitationCode: \(result.inviteCode)")
                         
                         if code == result.inviteCode {
-                            observer.onNext(.setSuccess)
                             observer.onNext(.verifiedCode(result))
+                            observer.onNext(.setSuccess)
                         } else {
                             observer.onNext(.setError("초대코드를 다시 확인해주세요."))
                             observer.onNext(.setError(nil))

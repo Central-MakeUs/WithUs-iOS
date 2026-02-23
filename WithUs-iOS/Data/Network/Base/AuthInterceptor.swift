@@ -48,7 +48,7 @@ final class TokenAuthenticator: Authenticator {
             
             if statusCode == 401 {
                 print("❌ [리프레시 응답] 401 → 서버에서 리프레시 토큰 거부")
-                self.handleLogout()
+//                self.handleLogout()
                 completion(.failure(NetworkError.unauthorized))
                 return
             }

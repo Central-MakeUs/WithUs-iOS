@@ -158,6 +158,7 @@ class InviteInputCodeViewController: BaseViewController, View {
     func bind(reactor: InviteInputCodeReactor) {
         reactor.state.map { $0.previewData }
             .compactMap { $0 }
+            .take(1)
             .observe(on: MainScheduler.instance)
             .bind(with: self) { owner, data in
                 owner.warningStackView.isHidden = true

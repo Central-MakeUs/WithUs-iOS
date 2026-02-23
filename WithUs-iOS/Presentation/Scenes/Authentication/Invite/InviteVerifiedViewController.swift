@@ -78,6 +78,7 @@ final class InviteVerifiedViewController: BaseViewController, View {
     }
     
     override func setupUI() {
+        super.setupUI()
         view.addSubview(titleStackView)
         view.addSubview(imageView)
         view.addSubview(buttonStackView)
@@ -129,6 +130,7 @@ final class InviteVerifiedViewController: BaseViewController, View {
     func bind(reactor: InviteInputCodeReactor) {
         reactor.state.map { $0.coupleId }
             .compactMap { $0 }
+            .take(1)
             .observe(on: MainScheduler.instance)
             .bind(with: self) { owner, id in
                 if !id.isEmpty {
@@ -139,6 +141,7 @@ final class InviteVerifiedViewController: BaseViewController, View {
         
         reactor.state.map { $0.previewData }
             .compactMap { $0 }
+            .take(1)
             .observe(on: MainScheduler.instance)
             .bind(with: self) { owner, data in
                 let myName = data.myName
