@@ -68,11 +68,6 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
     }
     
     func bind(reactor: TodayQuestionReactor) {
-        rx.viewWillAppear
-            .map { _ in Reactor.Action.viewWillAppear }
-            .bind(to: reactor.action)
-            .disposed(by: disposeBag)
-        
         reactor.state.map { $0.currentQuestionData }
             .compactMap { $0 }
             .observe(on: MainScheduler.instance)

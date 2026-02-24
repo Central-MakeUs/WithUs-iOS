@@ -108,11 +108,6 @@ final class TodayDailyViewController: BaseViewController, ReactorKit.View {
     
     // MARK: - Reactor Binding
     func bind(reactor: TodayDailyReactor) {
-        rx.viewWillAppear
-            .map { _ in Reactor.Action.viewWillAppear }
-            .bind(to: reactor.action)
-            .disposed(by: disposeBag)
-        
         reactor.state.map { $0.keywords }
             .observe(on: MainScheduler.instance)
             .subscribe(onNext: { [weak self] keywords in

@@ -191,6 +191,17 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
             
         case .completed:
             showPagerView()
+            loadCurrentPage()
+        }
+    }
+    
+    private func loadCurrentPage() {
+        guard let currentVC = pageViewController.viewControllers?.first else { return }
+        
+        if currentVC === todayQuestionVC {
+            todayQuestionVC.reactor?.action.onNext(.viewWillAppear)
+        } else if currentVC === todayDailyVC {
+            todayDailyVC.reactor?.action.onNext(.viewWillAppear)
         }
     }
     
@@ -247,6 +258,7 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
         
         let direction: UIPageViewController.NavigationDirection = index == 0 ? .reverse : .forward
         pageViewController.setViewControllers([pages[index]], direction: direction, animated: true)
+        loadCurrentPage()
     }
     
     @objc private func buttonTapped() {

@@ -162,7 +162,6 @@ final class UserDefaultsManager {
         }
     }
     
-    
     func clearTokens() {
         accessToken = nil
         refreshToken = nil
