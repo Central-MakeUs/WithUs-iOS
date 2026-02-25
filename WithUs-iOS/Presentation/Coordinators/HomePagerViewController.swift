@@ -150,24 +150,35 @@ final class HomePagerViewController: BaseViewController, UIPageViewControllerDel
     
     private func fetchUserStatus() {
         Task { [weak self] in
-            guard let self, let useCase = self.fetchUserStatusUseCase, let infoUseCase = self.fetchUserInfoUseCase else {
-                return
-            }
-            
+            guard let self,
+                  let statusUseCase = self.fetchUserStatusUseCase,
+                  let infoUseCase = self.fetchUserInfoUseCase else { return }
+
             do {
-                let status = try await useCase.execute()
-                let user = try await infoUseCase.execute()
-                UserManager.shared.userId = user.userId
-                UserManager.shared.nickName = user.nickname
-                UserManager.shared.profileImageUrl = user.profileImageUrl
-                if let joinDate = user.joinDate {
-                    UserManager.shared.joinDate = joinDate.toDate()
+                let status = try await statusUseCase.execute()
+                await MainActor.run {
+                    self.handleOnboardingStatus(status)
                 }
-                await MainActor.run { self.handleOnboardingStatus(status) }
+                
+                do {
+                    let user = try await infoUseCase.execute()
+
+                    UserManager.shared.userId = user.userId
+                    UserManager.shared.nickName = user.nickname
+                    UserManager.shared.profileImageUrl = user.profileImageUrl
+
+                    if let joinDate = user.joinDate {
+                        UserManager.shared.joinDate = joinDate.toDate()
+                    }
+
+                } catch {
+                    print("⚠️ user info 실패: \(error)")
+                }
+
             } catch let error as NetworkError {
-                print("❌ fetchUserStatus 에러: \(error.errorDescription)")
+                print("❌ status 실패: \(error.errorDescription)")
             } catch {
-                print("❌ fetchUserStatus 에러: 다시 접속해주세요.")
+                print("❌ status 실패")
             }
         }
     }

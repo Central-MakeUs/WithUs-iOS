@@ -86,12 +86,12 @@ final class SignUpNickNameViewController: BaseViewController, View {
         setupKeyboardObservers()
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        self.navigationController?.setNavigationBarHidden(false, animated: false)
-        navigationItem.hidesBackButton = true
-    }
-    
+//    override func viewWillAppear(_ animated: Bool) {
+//        super.viewWillAppear(animated)
+//        self.navigationController?.setNavigationBarHidden(false, animated: false)
+//
+//    }
+//    
     override func setupUI() {
         super.setupUI()
         view.addSubview(titleStackView)
@@ -132,6 +132,8 @@ final class SignUpNickNameViewController: BaseViewController, View {
     }
     
     override func setNavigation() {
+        self.navigationController?.setNavigationBarHidden(false, animated: false)
+        navigationItem.hidesBackButton = true
         let attributed = createHighlightedAttributedString(
             fullText: "1 / 3",
             highlightText: "1",
