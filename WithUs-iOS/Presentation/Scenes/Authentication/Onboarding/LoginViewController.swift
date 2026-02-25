@@ -150,6 +150,10 @@ final class LoginViewController: BaseViewController, View {
     }
     
     func bind(reactor: LoginReactor) {
+        print("response.jwt: \(TokenManager.shared.accessToken)")
+        print("response.refreshToken: \(TokenManager.shared.refreshToken)")
+        print("response.fcmToken: \(FCMTokenManager.shared.fcmToken)")
+        
         reactor.state.compactMap { $0.loginResult }
             .distinctUntilChanged()
             .observe(on: MainScheduler.instance)

@@ -47,7 +47,7 @@ enum MemoryContentEndpoint: EndpointProtocol {
         case .makeMemory(weekEndDate: _, imageKey: let imageKey):
             return ["imageKey": imageKey]
         case .fetchDetailImage(memoryType: let memoryType, weekEndDate: let weekEndDate, targetId: let targetId):
-            var params: [String: Any] = [
+            var params: Parameters = [
                 "memoryType": memoryType.rawValue
             ]
             

@@ -31,7 +31,7 @@ extension LoginEndpoint: EndpointProtocol {
     var parameters: Parameters? {
         switch self {
         case .socialLogin(_, let oauthToken, let fcmToken, let authorizationCode):
-            var params: [String: Any] = [
+            var params: Parameters = [
                 "oauthToken": oauthToken
             ]
             

@@ -38,7 +38,7 @@ extension PutUserEndpoint: EndpointProtocol {
     var parameters: Parameters? {
         switch self {
         case .updateProfile(let nickname, let birthday, let imageKey, let isImageUpdated):
-            var params: [String: Any] = [
+            var params: Parameters = [
                 "nickname": nickname,
                 "birthday": birthday,
                 "isImageUpdated": isImageUpdated

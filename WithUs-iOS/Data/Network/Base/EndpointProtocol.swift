@@ -23,10 +23,9 @@ extension EndpointProtocol {
     }
     
     public var headers: HTTPHeaders {
-        let headers: HTTPHeaders = [
+        return [
             "Content-Type": "application/json"
         ]
-        return headers
     }
     
     public var parameters: Parameters? {
