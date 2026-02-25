@@ -71,7 +71,7 @@ final class NotiCenterViewController: BaseViewController {
         titleLabel.sizeToFit()
         navigationItem.titleView = titleLabel
          
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
     }
     
     private func checkNotificationPermissionAndUpdateUI() {

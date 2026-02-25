@@ -68,7 +68,6 @@ final class FourCutDetailViewController: BaseViewController {
         view.addSubview(backgroundImageView)
         view.addSubview(blurEffectView)
         view.addSubview(mainImageView)
-        view.addSubview(pageControl)
         view.addSubview(buttonStackView)
         view.addSubview(closeButton)
         
@@ -102,16 +101,11 @@ final class FourCutDetailViewController: BaseViewController {
             $0.size.equalTo(30)
             $0.top.right.equalTo(view.safeAreaLayoutGuide).inset(12)
         }
-        
-        pageControl.snp.makeConstraints {
-            $0.bottom.equalTo(buttonStackView.snp.top).offset(-15)
-            $0.centerX.equalToSuperview()
-        }
-        
+
         mainImageView.snp.makeConstraints {
             $0.top.equalTo(view.safeAreaLayoutGuide)
             $0.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
-            $0.bottom.equalTo(pageControl.snp.top).offset(-34)
+            $0.bottom.equalTo(buttonStackView.snp.top)
         }
     }
     

@@ -60,7 +60,7 @@ final class SignUpProfileViewController: BaseViewController, View {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         let attributed = createHighlightedAttributedString(
             fullText: "3 / 3",
             highlightRange: NSRange(location: 0, length: 1),

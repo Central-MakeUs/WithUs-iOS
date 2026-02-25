@@ -181,7 +181,7 @@ final class WithdrawalViewController: BaseViewController, View {
     }
     
     override func setNavigation() {
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         
         let attributed = NSAttributedString(
             string: "회원 탈퇴",

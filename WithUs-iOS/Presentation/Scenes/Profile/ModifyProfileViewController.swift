@@ -133,7 +133,7 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
     }
     
     override func setNavigation() {
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         let attributed = NSAttributedString(
             string: "프로필 편집",
             attributes: [

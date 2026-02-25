@@ -147,7 +147,7 @@ final class CancleNotificationViewController: BaseViewController, ReactorKit.Vie
     }
     
     override func setNavigation() {
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         
         let attributed = NSAttributedString(
             string: "연결 해제",

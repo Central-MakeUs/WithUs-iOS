@@ -89,7 +89,7 @@ class InviteInputCodeViewController: BaseViewController, View {
         setupTextField()
         setupTapGesture()
         setupKeyboardObservers()
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         if let code = DeepLinkHandler.shared.popPendingInviteCode() {
             autoFillAndVerify(code: code)
         }

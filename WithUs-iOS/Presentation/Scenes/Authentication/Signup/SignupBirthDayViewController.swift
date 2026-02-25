@@ -130,7 +130,7 @@ final class SignupBirthDayViewController: BaseViewController, View {
     }
     
     override func setNavigation() {
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         let attributed = createHighlightedAttributedString(
             fullText: "2 / 3",
             highlightText: "2",

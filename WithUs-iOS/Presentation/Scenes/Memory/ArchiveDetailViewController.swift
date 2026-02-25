@@ -109,7 +109,7 @@ class ArchiveDetailViewController: BaseViewController, View {
     // MARK: - Setup
     
     override func setNavigation() {
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         
         let titleText: String
         switch detailType {

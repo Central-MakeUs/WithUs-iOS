@@ -64,7 +64,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     }()
     
     private let setupButton = UIButton().then {
-        $0.setTitle("저장", for: .normal)
+        $0.setTitle("완료", for: .normal)
         $0.titleLabel?.font = UIFont.pretendard16SemiBold
         $0.layer.cornerRadius = 8
         $0.isEnabled = false
@@ -114,7 +114,7 @@ final class ModifyKeywordViewController: BaseViewController, ReactorKit.View {
     }
     
     override func setNavigation() {
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         
         let attributed = NSAttributedString(
             string: "키워드 수정",

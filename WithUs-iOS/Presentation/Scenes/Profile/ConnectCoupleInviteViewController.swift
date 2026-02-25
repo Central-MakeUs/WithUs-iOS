@@ -74,7 +74,7 @@ final class ConnectCoupleInviteViewController: BaseViewController {
     }
     
     override func setNavigation() {
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         let attributed = NSAttributedString(
             string: "커플 연결 정보",
             attributes: [

@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "bx_trash.png",
+      "filename" : "icon_ARROW.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "bx_trash@2x.png",
+      "filename" : "icon_ARROW@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "bx_trash@3x.png",
+      "filename" : "icon_ARROW@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

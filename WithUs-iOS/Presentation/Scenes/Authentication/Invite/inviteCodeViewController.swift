@@ -77,7 +77,7 @@ class InviteCodeViewController: BaseViewController, View {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         reactor?.action.onNext(.getInvitationCode)
     }
     

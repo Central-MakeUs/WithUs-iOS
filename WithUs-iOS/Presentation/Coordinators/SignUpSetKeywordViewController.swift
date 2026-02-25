@@ -85,7 +85,7 @@ final class SignUpSetKeywordViewController: BaseViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         let attributed = createHighlightedAttributedString(
             fullText: "3/4",
             highlightText: "3",

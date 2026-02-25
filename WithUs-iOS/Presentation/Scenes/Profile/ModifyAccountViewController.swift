@@ -101,7 +101,7 @@ final class ModifyAccountViewController: BaseViewController, ReactorKit.View {
     }
     
     override func setNavigation() {
-        setLeftBarButton(image: UIImage(systemName: "chevron.left"))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
         self.navigationItem.title = "계정 관리"
     }
     

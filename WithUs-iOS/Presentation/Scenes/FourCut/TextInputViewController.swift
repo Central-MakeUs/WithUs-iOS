@@ -131,7 +131,7 @@ class TextInputViewController: BaseViewController, View {
         titleLabel.attributedText = NSAttributedString(string: "문구 작성", attributes: attributes)
         titleLabel.sizeToFit()
         navigationItem.titleView = titleLabel
-        setLeftBarButton(image: UIImage(systemName: "chevron.left", withConfiguration: config))
+        setLeftBarButton(image: UIImage(named: "ic_back"))
     }
     
     override func setupUI() {
