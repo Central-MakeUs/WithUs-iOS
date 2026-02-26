@@ -12,15 +12,12 @@ extension Notification.Name {
 
 struct TokenCredential: AuthenticationCredential {
     var accessToken: String { TokenManager.shared.accessToken ?? "" }
-//    var accessToken: String {"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwibmlja25hbWUiOiJ0ZW1wVXNlcjEiLCJpYXQiOjE3Njg4MjM1NzMsImV4cCI6NDkyMjQyMzU3M30.nM9TzG6eZBemZlKSsy7ma5od8F7NCzAgXetpxeZe_O0" }
     var refreshToken: String { TokenManager.shared.refreshToken ?? "" }
-//    var refreshToken: String { "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwiaWF0IjoxNzcxODk0MjQ1LCJleHAiOjE3NzQzMTM0NDV9.nbMfGnWUXYktBn0JvK_I0BCubV6KgodK0Xp0RWOGAjI" }
     var requiresRefresh: Bool = false
 }
 
 final class TokenAuthenticator: Authenticator {
-    private var isRefreshing = false
-    private let lock = NSLock()
+    private var isRefreshFailed = false
     
     func apply(_ credential: TokenCredential, to urlRequest: inout URLRequest) {
         urlRequest.setValue("Bearer \(credential.accessToken)", forHTTPHeaderField: "Authorization")
@@ -31,15 +28,6 @@ final class TokenAuthenticator: Authenticator {
         for session: Session,
         completion: @escaping (Result<TokenCredential, Error>) -> Void
     ) {
-        lock.lock()
-        guard !isRefreshing else {
-            lock.unlock()
-            completion(.failure(NetworkError.unauthorized))
-            return
-        }
-        isRefreshing = true
-        lock.unlock()
-        
         print("🔄 [리프레시 요청] POST /api/auth/refresh")
         
         AF.request(
@@ -49,18 +37,13 @@ final class TokenAuthenticator: Authenticator {
             encoding: JSONEncoding.default,
             headers: ["Authorization": "Bearer \(credential.accessToken)"]
         )
-        .responseData { response in
+        .responseData { [weak self] response in
             let statusCode = response.response?.statusCode ?? -1
             print("🔄 [리프레시 응답] statusCode: \(statusCode)")
-            guard TokenManager.shared.refreshToken != nil else {
-                print("❌ [리프레시] 이미 로그아웃됨 - 토큰 없음")
-                completion(.failure(NetworkError.unauthorized))
-                return
-            }
-            
             if statusCode == 401 {
-                print("❌ [리프레시 응답] 401 → 서버에서 리프레시 토큰 거부")
-//                self.handleLogout()
+                print("❌ [리프레시 응답] 401 → 리프레시 토큰 만료 → 로그아웃")
+                self?.isRefreshFailed = true
+                self?.handleLogout()
                 completion(.failure(NetworkError.unauthorized))
                 return
             }
@@ -75,24 +58,27 @@ final class TokenAuthenticator: Authenticator {
             }
             
             print("✅ 토큰 갱신 성공")
+            self?.isRefreshFailed = false
             TokenManager.shared.accessToken = tokens.accessToken
             TokenManager.shared.refreshToken = tokens.refreshToken
-            let newCredential = TokenCredential()
-            completion(.success(newCredential))
+            completion(.success(TokenCredential()))
         }
     }
     
-    // 401이 왔을 때 refresh를 시도할지 여부
     func didRequest(
         _ urlRequest: URLRequest,
         with response: HTTPURLResponse,
         failDueToAuthenticationError error: Error
     ) -> Bool {
+        if isRefreshFailed { return false }
         return response.statusCode == 401
     }
-    
-    // credential이 요청과 맞는지 확인
-    func isRequest(_ urlRequest: URLRequest, authenticatedWith credential: TokenCredential) -> Bool {
+
+    func isRequest(
+        _ urlRequest: URLRequest,
+        authenticatedWith credential: TokenCredential
+    ) -> Bool {
+        if isRefreshFailed { return false }
         let bearerToken = "Bearer \(credential.accessToken)"
         return urlRequest.value(forHTTPHeaderField: "Authorization") == bearerToken
     }
