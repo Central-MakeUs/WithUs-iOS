@@ -11,8 +11,8 @@ extension Notification.Name {
 }
 
 struct TokenCredential: AuthenticationCredential {
-    var accessToken: String { TokenManager.shared.accessToken ?? "" }
-//    var accessToken: String {"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwibmlja25hbWUiOiLjhY7jhY7jhY7jhY7jhY7jhY7jhY4iLCJpYXQiOjE3NzE4OTQyNDUsImV4cCI6MTc3MTkzNzQ0NX0.ng32SowDqcaO636MmEB_p5Vilj57bDfG-x682hM6WKQ" }
+//    var accessToken: String { TokenManager.shared.accessToken ?? "" }
+    var accessToken: String {"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxIiwibmlja25hbWUiOiJ0ZW1wVXNlcjEiLCJpYXQiOjE3Njg4MjM1NzMsImV4cCI6NDkyMjQyMzU3M30.nM9TzG6eZBemZlKSsy7ma5od8F7NCzAgXetpxeZe_O0" }
     var refreshToken: String { TokenManager.shared.refreshToken ?? "" }
 //    var refreshToken: String { "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIzIiwiaWF0IjoxNzcxODk0MjQ1LCJleHAiOjE3NzQzMTM0NDV9.nbMfGnWUXYktBn0JvK_I0BCubV6KgodK0Xp0RWOGAjI" }
     var requiresRefresh: Bool = false
@@ -75,8 +75,8 @@ final class TokenAuthenticator: Authenticator {
             }
             
             print("✅ 토큰 갱신 성공")
-//            TokenManager.shared.accessToken = tokens.accessToken
-//            TokenManager.shared.refreshToken = tokens.refreshToken
+            TokenManager.shared.accessToken = tokens.accessToken
+            TokenManager.shared.refreshToken = tokens.refreshToken
             let newCredential = TokenCredential()
             completion(.success(newCredential))
         }

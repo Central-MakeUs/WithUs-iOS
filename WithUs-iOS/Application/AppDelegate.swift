@@ -84,6 +84,8 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                                  withCompletionHandler completionHandler: @escaping () -> Void) {
         
         let userInfo = response.notification.request.content.userInfo
+        print("userInfo: \(userInfo)")
+        print("content: \(response.notification.request.content)")
         if let pushUrlPath = userInfo["push"] as? String,
            let url = URL(string: "https://withus.p-e.kr\(pushUrlPath)"),
            let deepLink = DeepLink.from(url: url) {

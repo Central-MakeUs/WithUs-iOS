@@ -9,23 +9,21 @@ import Foundation
 import UIKit
 import SnapKit
 import Then
+import ReactorKit
 
-final class NotiCenterViewController: BaseViewController {
+final class NotiCenterViewController: BaseViewController, View{
+    var disposeBag: DisposeBag = DisposeBag()
     private let noRequestView = NoRequestNotiView()
     private let emptyView = EmptyNotiView()
     private let tableView = NotiTableView()
     
-    private var notiItems: [NotiItem] = []
-//    private var notiItems: [NotiItem] = [
-//        NotiItem(image: UIImage(named: "ic_camera"), title: "상대방이 사진을 기다리고 있어요!", body: "지금 바로 사진을 보내볼까요?", time: "30초 전", isRead: false),
-//        NotiItem(image: UIImage(named: "ic_heart"), title: "오늘의 랜덤 질문이 도착했어요!", body: "오늘의 질문에 답해볼까요?", time: "5분 전", isRead: true),
-//        NotiItem(image: UIImage(named: "ic_camera"), title: "상대방이 사진을 기다리고 있어요!", body: "지금 바로 사진을 보내볼까요?", time: "12분 전", isRead: false),
-//        NotiItem(image: UIImage(named: "ic_bell"), title: "새로운 메시지가 도착했어요!", body: "확인하러 가볼까요?", time: "1시간 전", isRead: true),
-//        NotiItem(image: UIImage(named: "ic_camera"), title: "상대방이 사진을 기다리고 있어요!", body: "지금 바로 사진을 보내볼까요?", time: "2시간 전", isRead: true),
-//        NotiItem(image: UIImage(named: "ic_heart"), title: "오늘의 랜덤 질문이 도착했어요!", body: "오늘의 질문에 답해볼까요?", time: "3시간 전", isRead: false),
-//        NotiItem(image: UIImage(named: "ic_camera"), title: "상대방이 사진을 기다리고 있어요!", body: "지금 바로 사진을 보내볼까요?", time: "어제", isRead: true),
-//        NotiItem(image: UIImage(named: "ic_heart"), title: "오늘의 랜덤 질문이 도착했어요!", body: "오늘의 질문에 답해볼까요?", time: "어제", isRead: true)
-//    ]
+    private var noti: [NotiCenterItem] = []
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.tableView.delegate = self
+        reactor?.action.onNext(.loadInitialData)
+    }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -74,12 +72,45 @@ final class NotiCenterViewController: BaseViewController {
         setLeftBarButton(image: UIImage(named: "ic_back"))
     }
     
+    func bind(reactor: NotiCenterReactor) {
+        reactor.state.map { $0.noti }
+            .distinctUntilChanged { $0.count == $1.count }
+            .observe(on: MainScheduler.instance)
+            .subscribe(onNext: { [weak self] notiItems in
+                guard let self else { return }
+                self.updateList(notiItems)
+            })
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .map { $0.isLoading }
+            .observe(on: MainScheduler.instance)
+            .distinctUntilChanged()
+            .bind(with: self) { strongSelf, isLoading in
+                isLoading ? strongSelf.showLoading() : strongSelf.hideLoading()
+            }
+            .disposed(by: disposeBag)
+        
+        reactor.state
+            .compactMap { $0.errorMessage }
+            .observe(on: MainScheduler.instance)
+            .bind(with: self) { strongSelf, message in
+                ToastView.show(message: message)
+            }
+            .disposed(by: disposeBag)
+    }
+    
+    private func updateList(_ noti: [NotiCenterItem]) {
+        self.noti = noti
+        self.updateViewState(hasItems: !noti.isEmpty)
+    }
+    
     private func checkNotificationPermissionAndUpdateUI() {
         UNUserNotificationCenter.current().getNotificationSettings { [weak self] settings in
             DispatchQueue.main.async {
                 guard let self else { return }
                 if settings.authorizationStatus == .authorized {
-                    self.updateViewState(hasItems: !self.notiItems.isEmpty)
+                    self.updateViewState(hasItems: !self.noti.isEmpty)
                 } else {
                     self.showNoRequestView()
                 }
@@ -93,7 +124,7 @@ final class NotiCenterViewController: BaseViewController {
         tableView.isHidden = !hasItems
         
         if hasItems {
-            tableView.configure(with: notiItems)
+            tableView.configure(with: noti)
         }
     }
     
@@ -103,4 +134,22 @@ final class NotiCenterViewController: BaseViewController {
         tableView.isHidden = true
     }
 
+}
+
+extension NotiCenterViewController: NotiTableViewCellDelegate {
+    func didSelect(_ item: NotiCenterItem) {
+        guard let deepLink = item.deepLink else {
+            return
+        }
+        DeepLinkHandler.shared.handle(deepLink: deepLink)
+        
+        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let sceneDelegate = scene.delegate as? SceneDelegate {
+            sceneDelegate.appCoordinator?.handlePendingDeepLinkIfNeeded()
+        }
+    }
+
+    func didScrollToBottom() {
+        reactor?.action.onNext(.loadMoreData)
+    }
 }

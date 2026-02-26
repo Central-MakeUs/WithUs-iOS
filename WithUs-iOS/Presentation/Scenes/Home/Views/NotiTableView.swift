@@ -9,16 +9,11 @@ import UIKit
 import SnapKit
 import Then
 
-// MARK: - Model
-struct NotiItem {
-    let image: UIImage?
-    let title: String
-    let body: String
-    let time: String
-    let isRead: Bool
+protocol NotiTableViewCellDelegate: AnyObject {
+    func didSelect(_ item: NotiCenterItem)
+    func didScrollToBottom()
 }
 
-// MARK: - Cell
 final class NotiTableViewCell: UITableViewCell {
 
     static let identifier = "NotiTableViewCell"
@@ -26,7 +21,6 @@ final class NotiTableViewCell: UITableViewCell {
     private let notiImageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.clipsToBounds = true
-        $0.backgroundColor = .gray200
     }
 
     private let titleLabel = UILabel().then {
@@ -78,7 +72,7 @@ final class NotiTableViewCell: UITableViewCell {
         notiImageView.snp.makeConstraints {
             $0.leading.equalToSuperview().inset(16)
             $0.centerY.equalToSuperview()
-            $0.width.height.equalTo(44)
+            $0.width.height.equalTo(34)
         }
 
         infoStackView.snp.makeConstraints {
@@ -103,6 +97,8 @@ final class NotiTableViewCell: UITableViewCell {
 }
 
 final class NotiTableView: UIView {
+    
+    weak var delegate: NotiTableViewCellDelegate?
 
     private let tableView = UITableView().then {
         $0.backgroundColor = .white
@@ -111,7 +107,7 @@ final class NotiTableView: UIView {
         $0.register(NotiTableViewCell.self, forCellReuseIdentifier: NotiTableViewCell.identifier)
     }
 
-    private var items: [NotiItem] = []
+    private var items: [NotiCenterItem] = []
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -126,13 +122,13 @@ final class NotiTableView: UIView {
     private func setupUI() {
         addSubview(tableView)
         tableView.dataSource = self
-
+        tableView.delegate = self
         tableView.snp.makeConstraints {
             $0.edges.equalToSuperview()
         }
     }
 
-    func configure(with items: [NotiItem]) {
+    func configure(with items: [NotiCenterItem]) {
         self.items = items
         tableView.reloadData()
     }
@@ -150,7 +146,25 @@ extension NotiTableView: UITableViewDataSource {
         ) as? NotiTableViewCell else {
             return UITableViewCell()
         }
-        cell.configure(with: items[indexPath.row])
+        cell.configure(with: items[indexPath.row].toNotiItem())
         return cell
+    }
+}
+
+extension NotiTableView: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+//        tableView.deselectRow(at: indexPath, animated: false)
+        let item = items[indexPath.row]
+        delegate?.didSelect(item)
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let height = scrollView.frame.height
+        
+        if offsetY > contentHeight - height - 100 {
+            delegate?.didScrollToBottom()
+        }
     }
 }

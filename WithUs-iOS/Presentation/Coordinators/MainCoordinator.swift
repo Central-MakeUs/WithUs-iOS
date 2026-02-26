@@ -44,7 +44,6 @@ final class MainCoordinator: Coordinator {
         
         switch deepLink {
         case .invite:
-            // invite는 HomePagerVC에서 처리하므로 다시 저장
             DeepLinkHandler.shared.handle(deepLink: deepLink)
             navigateToHomePager()
             

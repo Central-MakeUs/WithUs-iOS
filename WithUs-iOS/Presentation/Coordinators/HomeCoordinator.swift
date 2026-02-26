@@ -35,6 +35,7 @@ class HomeCoordinator: Coordinator {
     private let fetchKeywordUseCase: FetchKeywordUseCaseProtocol
     private let selectedKeywordUseCase: FetchSelectedKeywordUseCaseProtocol
     private var fetchUserInfoUseCase: FetchUserInfoUseCaseProtocol
+    private var notiUseCase: NotiCenterUsecaseProtocol
     
     init(
         navigationController: UINavigationController,
@@ -52,6 +53,7 @@ class HomeCoordinator: Coordinator {
         self.keywordRepository = KeywordRepository(networkService: networkService)
         self.pokeRepository = PokePartnerRepository(networkService: networkService)
         let userRepository = UpdateUserRepository(networdService: networkService)
+        let notiRepository = NotiCenterRepository(networkService: networkService)
         
         // Use Cases 초기화
         self.fetchUserStatusUseCase = FetchUserStatusUseCase(repository: homeRepository)
@@ -72,6 +74,7 @@ class HomeCoordinator: Coordinator {
         self.fetchKeywordUseCase = FetchKeywordUseCase(keywordRepository: keywordRepository)
         self.selectedKeywordUseCase = FetchSelectedKeywordUseCase(keywordRepository: keywordRepository)
         self.fetchUserInfoUseCase = FetchUserInfoUseCase(userRepository: userRepository)
+        self.notiUseCase = NotiCenterUsecase(repository: notiRepository)
     }
     
     func start() {
@@ -160,6 +163,8 @@ class HomeCoordinator: Coordinator {
     
     func showNotiCenter() {
         let vc = NotiCenterViewController()
+        let reactor = NotiCenterReactor(usecase: notiUseCase)
+        vc.reactor = reactor
         navigationController.pushViewController(vc, animated: true)
     }
      
