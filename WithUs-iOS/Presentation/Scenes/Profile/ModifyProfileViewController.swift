@@ -254,7 +254,11 @@ final class ModifyProfileViewController: BaseViewController, ReactorKit.View {
                 strongSelf.nicknameTextField.text = user.nickname
                 strongSelf.profileView.setProfileImage(user.profileImageUrl)
                 if let birthDate = user.birthDate {
-                    strongSelf.birthDayTextField.text = birthDate
+                    if birthDate == "1900-01-01" {
+                        strongSelf.birthDayTextField.text = "-"
+                    } else {
+                        strongSelf.birthDayTextField.text = birthDate
+                    }
                 }
                 
                 strongSelf.isNicknameValid = true

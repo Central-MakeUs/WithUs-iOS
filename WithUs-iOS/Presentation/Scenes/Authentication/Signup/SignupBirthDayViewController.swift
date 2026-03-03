@@ -65,9 +65,9 @@ final class SignupBirthDayViewController: BaseViewController, View {
     
     private let nextButton = UIButton().then {
         $0.setTitle("다음", for: .normal)
-        $0.backgroundColor = UIColor.disabled
+        $0.backgroundColor = UIColor.abled
         $0.layer.cornerRadius = 8
-        $0.isEnabled = false
+        $0.isEnabled = true
     }
     
     init(reactor: SignUpReactor) {
@@ -219,9 +219,16 @@ final class SignupBirthDayViewController: BaseViewController, View {
     
     @objc private func textFieldDidChange() {
         guard let text = birthDayTextField.text else { return }
-        let isValid = validateBirthDate(text)
+        
+        if text.isEmpty {
+            nextButton.isEnabled = true
+            nextButton.backgroundColor = UIColor.abled
+            warningLabel.isHidden = true
+            return
+        }
         
         if text.count == 10 {
+            let isValid = validateBirthDate(text)
             nextButton.isEnabled = isValid
             nextButton.backgroundColor = isValid ? UIColor.abled : UIColor.disabled
             warningLabel.isHidden = isValid
@@ -233,8 +240,8 @@ final class SignupBirthDayViewController: BaseViewController, View {
     }
     
     @objc private func nextButtonTapped() {
-        guard let birthDate = birthDayTextField.text, !birthDate.isEmpty else { return }
-        reactor?.action.onNext(.updateBirthDate(birthDate))
+        let birthDate = birthDayTextField.text ?? "1900-01-01"
+        reactor?.action.onNext(.updateBirthDate(birthDate.isEmpty ? "1900-01-01" : birthDate ))
         coordinator?.showSignUpProfile()
     }
     

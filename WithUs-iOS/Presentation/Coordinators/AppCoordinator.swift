@@ -32,19 +32,17 @@ class AppCoordinator: Coordinator {
     }
     
     private func checkAutoLogin() {
-//        if let token = TokenManager.shared.accessToken, !token.isEmpty {
-//            print("✅ 자동 로그인: 토큰 있음")
-//            showMainFlow()
-//        } else {
-//            print("❌ 자동 로그인: 토큰 없음")
-//            if UserDefaultsManager.shared.shouldShowLogin {
-//                showLoginFlow()
-//            } else {
-//                showAuthFlow()
-//            }
-//        }
-        
-        showSignUpFlowOnly()
+        if let token = TokenManager.shared.accessToken, !token.isEmpty {
+            print("✅ 자동 로그인: 토큰 있음")
+            showMainFlow()
+        } else {
+            print("❌ 자동 로그인: 토큰 없음")
+            if UserDefaultsManager.shared.shouldShowLogin {
+                showLoginFlow()
+            } else {
+                showAuthFlow()
+            }
+        }
     }
     
     private func showAuthFlow() {
