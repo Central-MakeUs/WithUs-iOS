@@ -12,6 +12,9 @@ import SnapKit
 import Photos
 
 class PhotoCell: UICollectionViewCell {
+    private var requestID: PHImageRequestID?
+    private var currentAsset: PHAsset?  // ✅ 현재 asset 추적
+    
     private let imageView = UIImageView().then {
         $0.contentMode = .scaleAspectFill
         $0.clipsToBounds = true
@@ -38,6 +41,19 @@ class PhotoCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        imageView.image = nil
+        checkmarkView.isHidden = true
+        checkmarkLabel.text = nil
+        currentAsset = nil  // ✅ asset 초기화
+        
+        if let id = requestID {
+            PHImageManager.default().cancelImageRequest(id)
+            requestID = nil
+        }
+    }
+    
     private func setupUI() {
         contentView.addSubview(imageView)
         contentView.addSubview(checkmarkView)
@@ -59,15 +75,32 @@ class PhotoCell: UICollectionViewCell {
     }
     
     func configure(with asset: PHAsset, isSelected: Bool, imageManager: PHCachingImageManager) {
+        imageView.image = nil
+        currentAsset = asset  // ✅ 현재 asset 저장
+        
         let scale = UIScreen.main.scale
-        let targetSize = CGSize(width: bounds.width * scale, height: bounds.height * scale)
-
-        imageManager.requestImage(for: asset,
-                                  targetSize: targetSize,
-                                  contentMode: .aspectFill,
-                                  options: nil) { [weak self] image, _ in
-            self?.imageView.image = image
+        let itemWidth = (UIScreen.main.bounds.width - 4) / 3
+        let targetSize = CGSize(width: itemWidth * scale, height: itemWidth * scale)
+        
+        let options = PHImageRequestOptions()
+        options.deliveryMode = .opportunistic  // 저화질 먼저, 고화질 나중
+        options.resizeMode = .exact            // ✅ fast → exact로 화질 개선
+        options.isNetworkAccessAllowed = true
+        
+        requestID = imageManager.requestImage(
+            for: asset,
+            targetSize: targetSize,
+            contentMode: .aspectFill,
+            options: options
+        ) { [weak self] image, _ in
+            guard let self = self else { return }
+            // ✅ 현재 셀의 asset과 같을 때만 이미지 세팅 (잔상 방지 핵심!)
+            guard self.currentAsset == asset else { return }
+            DispatchQueue.main.async {
+                self.imageView.image = image
+            }
         }
+        
         checkmarkView.isHidden = !isSelected
     }
     

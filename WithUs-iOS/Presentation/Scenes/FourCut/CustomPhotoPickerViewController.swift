@@ -18,7 +18,8 @@ class CustomPhotoPickerViewController: BaseViewController {
     private var selectedAssets: [PHAsset] = []
     private let imageManager = PHCachingImageManager()
     private var selectedPhotosCollectionViewHeightConstraint: Constraint?
-    
+    private var previousCachedAssets: [PHAsset] = []
+
     private lazy var photoCollectionView = UICollectionView(frame: .zero, collectionViewLayout: photoCollectionViewFlowLayout).then {
         $0.backgroundColor = .white
         $0.register(PhotoCell.self, forCellWithReuseIdentifier: "PhotoCell")
@@ -202,6 +203,7 @@ class CustomPhotoPickerViewController: BaseViewController {
         coordinator?.pop()
     }
     
+    // MARK: - Actions
     @objc private func doneButtonTapped() {
         guard selectedAssets.count == 12 else {
             let alert = UIAlertController(
@@ -220,6 +222,7 @@ class CustomPhotoPickerViewController: BaseViewController {
             let options = PHImageRequestOptions()
             options.isSynchronous = false
             options.deliveryMode = .highQualityFormat
+            options.isNetworkAccessAllowed = true  // ✅ 추가
 
             var images: [UIImage] = []
             images.reserveCapacity(12)
@@ -227,7 +230,7 @@ class CustomPhotoPickerViewController: BaseViewController {
             for asset in self.selectedAssets {
                 if let image = await self.requestImage(
                     for: asset,
-                    targetSize: PHImageManagerMaximumSize,
+                    targetSize: CGSize(width: 1080, height: 1080),  // ✅ MaximumSize 제거
                     contentMode: .aspectFill,
                     options: options
                 ) {
@@ -241,7 +244,7 @@ class CustomPhotoPickerViewController: BaseViewController {
             }
         }
     }
-    
+
     private func requestImage(
         for asset: PHAsset,
         targetSize: CGSize,
@@ -249,16 +252,43 @@ class CustomPhotoPickerViewController: BaseViewController {
         options: PHImageRequestOptions
     ) async -> UIImage? {
         await withCheckedContinuation { continuation in
+            var resumed = false  // ✅ 중복 resume 방지
             imageManager.requestImage(
                 for: asset,
                 targetSize: targetSize,
                 contentMode: contentMode,
                 options: options
-            ) { image, _ in
-                continuation.resume(returning: image)
+            ) { image, info in
+                guard !resumed else { return }
+                let isDegraded = (info?[PHImageResultIsDegradedKey] as? Bool) ?? false
+                let isError = info?[PHImageErrorKey] != nil
+                let isCancelled = (info?[PHImageCancelledKey] as? Bool) ?? false
+
+                if isError || isCancelled || !isDegraded {
+                    resumed = true
+                    continuation.resume(returning: image)
+                }
             }
         }
     }
+    
+//    private func requestImage(
+//        for asset: PHAsset,
+//        targetSize: CGSize,
+//        contentMode: PHImageContentMode,
+//        options: PHImageRequestOptions
+//    ) async -> UIImage? {
+//        await withCheckedContinuation { continuation in
+//            imageManager.requestImage(
+//                for: asset,
+//                targetSize: targetSize,
+//                contentMode: contentMode,
+//                options: options
+//            ) { image, _ in
+//                continuation.resume(returning: image)
+//            }
+//        }
+//    }
     
     private func updateSelectedContainerVisibility() {
         let newHeight: CGFloat = selectedAssets.isEmpty ? 0 : 60
@@ -383,3 +413,40 @@ extension CustomPhotoPickerViewController: UICollectionViewDelegate {
     }
 }
 
+extension CustomPhotoPickerViewController {
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard scrollView == photoCollectionView else { return }
+        updateCachedAssets()
+    }
+    
+    private func updateCachedAssets() {
+        guard let allPhotos = allPhotos else { return }
+
+        let visibleIndexPaths = photoCollectionView.indexPathsForVisibleItems
+        guard !visibleIndexPaths.isEmpty else { return }
+
+        let scale = UIScreen.main.scale
+        let itemWidth = (view.bounds.width - 4) / 3
+        let targetSize = CGSize(width: itemWidth * scale, height: itemWidth * scale)
+
+        let cacheOptions = PHImageRequestOptions()
+        cacheOptions.deliveryMode = .opportunistic
+        cacheOptions.resizeMode = .exact
+        cacheOptions.isNetworkAccessAllowed = true
+
+        let newAssets = visibleIndexPaths.compactMap { allPhotos.object(at: $0.item) }
+
+        // ✅ 이전 캐시 해제
+        imageManager.stopCachingImages(for: previousCachedAssets,
+                                       targetSize: targetSize,
+                                       contentMode: .aspectFill,
+                                       options: cacheOptions)
+
+        imageManager.startCachingImages(for: newAssets,
+                                        targetSize: targetSize,
+                                        contentMode: .aspectFill,
+                                        options: cacheOptions)
+
+        previousCachedAssets = newAssets
+    }
+}

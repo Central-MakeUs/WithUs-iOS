@@ -278,27 +278,24 @@ class PhotoPreviewViewController: BaseViewController {
     
     private func captureEditedImage() {
         let imageSize = originalImage.size
-        let scale = imageSize.width / imageView.bounds.width
+        let maxDimension: CGFloat = 1920
+        let scaleFactor = min(maxDimension / imageSize.width, maxDimension / imageSize.height, 1.0)
+        let targetSize = CGSize(width: imageSize.width * scaleFactor, height: imageSize.height * scaleFactor)
         
-        let renderer = UIGraphicsImageRenderer(size: imageSize)
+        let viewScale = targetSize.width / imageView.bounds.width  // ← 여기만 바뀜
+        
+        let renderer = UIGraphicsImageRenderer(size: targetSize)  // ← 여기만 바뀜
         editedImage = renderer.image { context in
-            originalImage.draw(at: .zero)
+            originalImage.draw(in: CGRect(origin: .zero, size: targetSize))  // ← draw(at:) → draw(in:)
             
             for subview in imageView.subviews {
                 context.cgContext.saveGState()
-                
-                let subviewCenter = subview.center
-                let scaledCenter = CGPoint(x: subviewCenter.x * scale, y: subviewCenter.y * scale)
-                
+                let scaledCenter = CGPoint(x: subview.center.x * viewScale, y: subview.center.y * viewScale)
                 context.cgContext.translateBy(x: scaledCenter.x, y: scaledCenter.y)
-                
                 context.cgContext.concatenate(subview.transform)
-                context.cgContext.scaleBy(x: scale, y: scale)
-                
+                context.cgContext.scaleBy(x: viewScale, y: viewScale)
                 context.cgContext.translateBy(x: -subview.bounds.width / 2, y: -subview.bounds.height / 2)
-                
                 subview.layer.render(in: context.cgContext)
-                
                 context.cgContext.restoreGState()
             }
         }
