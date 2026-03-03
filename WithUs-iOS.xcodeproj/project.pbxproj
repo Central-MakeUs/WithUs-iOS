@@ -374,9 +374,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "위더스";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
-				INFOPLIST_KEY_NSCameraUsageDescription = "사진 촬영 후 콘텐츠 업로드를 위해 사용됩니다.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "기기에 저장된 사진을 업로드하기 위해 사용됩니다.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "기기에 저장된 사진을 업로드하기 위해 사용됩니다.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "프로필 사진 또는 추억 기록 콘텐츠를 직접 촬영하여 업로드하기 위해 카메라 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.";
+				INFOPLIST_KEY_NSFileProviderDomainUsageDescription = "";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "기기에 저장된 사진을 프로필 이미지 또는 추억 기록 콘텐츠로 업로드하기 위해 앨범 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "기기에 저장된 사진을 프로필 이미지 또는 추억 기록 콘텐츠로 업로드하기 위해 앨범 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -412,9 +413,10 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "위더스";
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.entertainment";
-				INFOPLIST_KEY_NSCameraUsageDescription = "사진 촬영 후 콘텐츠 업로드를 위해 사용됩니다.";
-				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "기기에 저장된 사진을 업로드하기 위해 사용됩니다.";
-				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "기기에 저장된 사진을 업로드하기 위해 사용됩니다.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "프로필 사진 또는 추억 기록 콘텐츠를 직접 촬영하여 업로드하기 위해 카메라 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.";
+				INFOPLIST_KEY_NSFileProviderDomainUsageDescription = "";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "기기에 저장된 사진을 프로필 이미지 또는 추억 기록 콘텐츠로 업로드하기 위해 앨범 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "기기에 저장된 사진을 프로필 이미지 또는 추억 기록 콘텐츠로 업로드하기 위해 앨범 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
