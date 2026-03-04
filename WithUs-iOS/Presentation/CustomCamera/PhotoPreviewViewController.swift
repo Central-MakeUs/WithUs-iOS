@@ -154,7 +154,7 @@ class PhotoPreviewViewController: BaseViewController {
                 return
             }
             
-            if status == .authorized {
+            if status == .authorized || status == .limited {
                 UIImageWriteToSavedPhotosAlbum(self.editedImage, self, #selector(self.image(_:didFinishSavingWithError:contextInfo:)), nil)
             } else {
                 DispatchQueue.main.async {
@@ -223,8 +223,8 @@ class PhotoPreviewViewController: BaseViewController {
     
     private func showPermissionAlert() {
         let alert = UIAlertController(
-            title: "사진 접근 권한 필요",
-            message: "사진을 저장하려면 권한이 필요합니다.",
+            title: "앨범 접근 권한 필요",
+            message: "사진을 기기 앨범에 저장하기 위해 접근 권한이 필요합니다. 설정에서 이를 변경할 수 있습니다.",
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in

@@ -185,8 +185,8 @@ class CustomPhotoPickerViewController: BaseViewController {
     
     private func showPermissionAlert() {
         let alert = UIAlertController(
-            title: "사진 접근 권한 필요",
-            message: "사진을 선택하려면 사진 라이브러리 접근 권한이 필요합니다.",
+            title: "앨범 권한 필요",
+            message: "기기에 저장된 사진을 추억 기록 콘텐츠로 업로드하기 위해 앨범 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.",
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in

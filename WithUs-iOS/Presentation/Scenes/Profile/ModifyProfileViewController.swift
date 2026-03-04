@@ -572,7 +572,7 @@ extension ModifyProfileViewController {
             }
             
         default:
-            showPermissionAlert("사진")
+            showPermissionAlert("앨범")
         }
     }
     
@@ -589,7 +589,7 @@ extension ModifyProfileViewController {
     private func showPermissionAlert(_ type: String) {
         let alert = UIAlertController(
             title: "\(type) 접근 권한 필요",
-            message: "설정에서 권한을 허용해주세요.",
+            message: "프로필 사진 등록을 위해 \(type) 접근이 필요합니다. 설정에서 권한을 허용해주세요.",
             preferredStyle: .alert
         )
         

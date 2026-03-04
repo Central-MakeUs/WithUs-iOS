@@ -7,6 +7,7 @@ import UIKit
 import Then
 import SnapKit
 import ReactorKit
+import Photos
 
 // MARK: - Detail Type
 
@@ -468,7 +469,38 @@ class ArchiveDetailViewController: BaseViewController, View {
             ToastView.show(message: "저장 실패")
             return
         }
-        UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+        
+        PHPhotoLibrary.requestAuthorization { [weak self] status in
+            guard let self else { return }
+            
+            if status == .authorized || status == .limited {
+                UIImageWriteToSavedPhotosAlbum(
+                    image,
+                    self,
+                    #selector(image(_:didFinishSavingWithError:contextInfo:)),
+                    nil
+                )
+            } else {
+                DispatchQueue.main.async {
+                    self.showPermissionAlert()
+                }
+            }
+        }
+    }
+    
+    private func showPermissionAlert() {
+        let alert = UIAlertController(
+            title: "앨범 접근 권한 필요",
+            message: "사진을 기기 앨범에 저장하기 위해 접근 권한이 필요합니다. 설정에서 이를 변경할 수 있습니다.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        present(alert, animated: true)
     }
     
     private func currentPageImage() -> UIImage? {

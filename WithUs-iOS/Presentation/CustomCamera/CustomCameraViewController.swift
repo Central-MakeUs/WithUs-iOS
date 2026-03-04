@@ -57,12 +57,11 @@ class CustomCameraViewController: BaseViewController {
     }
     
     private var flashMode: AVCaptureDevice.FlashMode = .off
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         checkPermissions()
     }
-    
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         if captureSession?.isRunning == false {
@@ -137,7 +136,7 @@ class CustomCameraViewController: BaseViewController {
         captureButton.addTarget(self, action: #selector(capturePhoto), for: .touchUpInside)
         flipCameraButton.addTarget(self, action: #selector(flipCamera), for: .touchUpInside)
         flashButton.addTarget(self, action: #selector(toggleFlash), for: .touchUpInside)
-        galleryButton.addTarget(self, action: #selector(openGallery), for: .touchUpInside)
+        galleryButton.addTarget(self, action: #selector(openPhotoLibrary), for: .touchUpInside)
         closeButton.addTarget(self, action: #selector(closeCamera), for: .touchUpInside)
     }
     
@@ -161,7 +160,22 @@ class CustomCameraViewController: BaseViewController {
     private func showPermissionAlert() {
         let alert = UIAlertController(
             title: "카메라 권한 필요",
-            message: "카메라를 사용하려면 권한이 필요합니다.",
+            message: "추억 기록 콘텐츠를 직접 촬영하여 업로드하기 위해 카메라 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
+            if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                UIApplication.shared.open(settingsURL)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "취소", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func showAlbumPermissionAlert() {
+        let alert = UIAlertController(
+            title: "앨범 권한 필요",
+            message: "기기에 저장된 사진을 추억 기록 콘텐츠로 업로드하기 위해 앨범 접근이 필요합니다. 설정에서 이를 변경할 수 있습니다.",
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "설정으로 이동", style: .default) { _ in
@@ -296,7 +310,28 @@ class CustomCameraViewController: BaseViewController {
         }
     }
     
-    @objc private func openGallery() {
+    @objc private func openPhotoLibrary() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        
+        switch status {
+        case .authorized, .limited:
+            openGallery()
+            
+        case .notDetermined:
+            PHPhotoLibrary.requestAuthorization(for: .readWrite) { newStatus in
+                DispatchQueue.main.async {
+                    if newStatus == .authorized || newStatus == .limited {
+                        self.openGallery()
+                    }
+                }
+            }
+            
+        default:
+            showAlbumPermissionAlert()
+        }
+    }
+    
+    private func openGallery() {
         let imagePickerController = UIImagePickerController()
         imagePickerController.sourceType = .photoLibrary
         imagePickerController.delegate = self
