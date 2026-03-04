@@ -282,11 +282,11 @@ class PhotoPreviewViewController: BaseViewController {
         let scaleFactor = min(maxDimension / imageSize.width, maxDimension / imageSize.height, 1.0)
         let targetSize = CGSize(width: imageSize.width * scaleFactor, height: imageSize.height * scaleFactor)
         
-        let viewScale = targetSize.width / imageView.bounds.width  // ← 여기만 바뀜
+        let viewScale = targetSize.width / imageView.bounds.width
         
-        let renderer = UIGraphicsImageRenderer(size: targetSize)  // ← 여기만 바뀜
+        let renderer = UIGraphicsImageRenderer(size: targetSize)
         editedImage = renderer.image { context in
-            originalImage.draw(in: CGRect(origin: .zero, size: targetSize))  // ← draw(at:) → draw(in:)
+            originalImage.draw(in: CGRect(origin: .zero, size: targetSize))
             
             for subview in imageView.subviews {
                 context.cgContext.saveGState()

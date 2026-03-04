@@ -198,12 +198,10 @@ class CustomPhotoPickerViewController: BaseViewController {
         present(alert, animated: true)
     }
     
-    // MARK: - Actions
     @objc private func cancelButtonTapped() {
         coordinator?.pop()
     }
     
-    // MARK: - Actions
     @objc private func doneButtonTapped() {
         guard selectedAssets.count == 12 else {
             let alert = UIAlertController(
@@ -222,7 +220,7 @@ class CustomPhotoPickerViewController: BaseViewController {
             let options = PHImageRequestOptions()
             options.isSynchronous = false
             options.deliveryMode = .highQualityFormat
-            options.isNetworkAccessAllowed = true  // ✅ 추가
+            options.isNetworkAccessAllowed = true
 
             var images: [UIImage] = []
             images.reserveCapacity(12)
@@ -230,7 +228,7 @@ class CustomPhotoPickerViewController: BaseViewController {
             for asset in self.selectedAssets {
                 if let image = await self.requestImage(
                     for: asset,
-                    targetSize: CGSize(width: 1080, height: 1080),  // ✅ MaximumSize 제거
+                    targetSize: CGSize(width: 1080, height: 1080),
                     contentMode: .aspectFill,
                     options: options
                 ) {
@@ -252,7 +250,7 @@ class CustomPhotoPickerViewController: BaseViewController {
         options: PHImageRequestOptions
     ) async -> UIImage? {
         await withCheckedContinuation { continuation in
-            var resumed = false  // ✅ 중복 resume 방지
+            var resumed = false
             imageManager.requestImage(
                 for: asset,
                 targetSize: targetSize,
@@ -271,25 +269,7 @@ class CustomPhotoPickerViewController: BaseViewController {
             }
         }
     }
-    
-//    private func requestImage(
-//        for asset: PHAsset,
-//        targetSize: CGSize,
-//        contentMode: PHImageContentMode,
-//        options: PHImageRequestOptions
-//    ) async -> UIImage? {
-//        await withCheckedContinuation { continuation in
-//            imageManager.requestImage(
-//                for: asset,
-//                targetSize: targetSize,
-//                contentMode: contentMode,
-//                options: options
-//            ) { image, _ in
-//                continuation.resume(returning: image)
-//            }
-//        }
-//    }
-    
+
     private func updateSelectedContainerVisibility() {
         let newHeight: CGFloat = selectedAssets.isEmpty ? 0 : 60
         
@@ -380,7 +360,6 @@ extension CustomPhotoPickerViewController: UICollectionViewDelegate {
                 selectedPhotosCollectionView.performBatchUpdates({
                     selectedPhotosCollectionView.deleteItems(at: [IndexPath(item: index, section: 0)])
                 }, completion: { _ in
-                    // 삭제 후 모든 셀 reload (번호 업데이트)
                     self.selectedPhotosCollectionView.reloadData()
                     self.updateSelectedContainerVisibility()
                 })
@@ -436,7 +415,6 @@ extension CustomPhotoPickerViewController {
 
         let newAssets = visibleIndexPaths.compactMap { allPhotos.object(at: $0.item) }
 
-        // ✅ 이전 캐시 해제
         imageManager.stopCachingImages(for: previousCachedAssets,
                                        targetSize: targetSize,
                                        contentMode: .aspectFill,
