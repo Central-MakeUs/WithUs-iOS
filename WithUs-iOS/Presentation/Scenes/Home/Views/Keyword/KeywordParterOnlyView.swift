@@ -25,7 +25,7 @@ final class KeywordPartnerOnlyView: UIView {
         $0.textColor = UIColor.gray300
         $0.textAlignment = .center
         $0.numberOfLines = 1
-        $0.text = "#3."
+        $0.text = "오늘의 일상"
     }
     
     private let questionLabel = UILabel().then {

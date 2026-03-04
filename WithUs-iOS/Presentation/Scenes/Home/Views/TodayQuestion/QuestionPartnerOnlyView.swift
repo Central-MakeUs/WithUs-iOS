@@ -127,8 +127,12 @@ final class QuestionPartnerOnlyView: UIView {
         name: String,
         profile: String,
         image: String,
-        time: String
+        time: String,
+        questionNumber: Int?
     ) {
+        if let questionNumber {
+            questionNumberLabel.text = "#\(questionNumber)."
+        }
         questionLabel.text = question
         partnerImageView
             .configure(

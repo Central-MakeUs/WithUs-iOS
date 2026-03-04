@@ -146,13 +146,15 @@ final class TodayQuestionViewController: BaseViewController, ReactorKit.View {
             let profile = data.partnerInfo?.profileThumbnailImageUrl ?? ""
             let image = data.partnerInfo?.questionImageUrl ?? ""
             let time = data.partnerInfo?.answeredAt ?? ""
+            let questionNumber = data.questionNumber
             
             questionPartnerOnlyView.configure(
                 question: question,
                 name: name,
                 profile: profile,
                 image: image,
-                time: time
+                time: time,
+                questionNumber: questionNumber
             )
             
         case (true, false):
