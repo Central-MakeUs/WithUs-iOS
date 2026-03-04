@@ -145,7 +145,7 @@ class ArchiveDetailViewController: BaseViewController, View {
         collectionView.delegate = self
         
         buttonStackView.addArrangedSubview(shareButton)
-        buttonStackView.addArrangedSubview(instagramButton)
+//        buttonStackView.addArrangedSubview(instagramButton)
         buttonStackView.addArrangedSubview(downloadButton)
     }
     

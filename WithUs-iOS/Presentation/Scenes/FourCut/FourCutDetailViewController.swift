@@ -72,7 +72,7 @@ final class FourCutDetailViewController: BaseViewController {
         view.addSubview(closeButton)
         
         buttonStackView.addArrangedSubview(shareButton)
-        buttonStackView.addArrangedSubview(instagramButton)
+//        buttonStackView.addArrangedSubview(instagramButton)
         buttonStackView.addArrangedSubview(downloadButton)
     }
     
