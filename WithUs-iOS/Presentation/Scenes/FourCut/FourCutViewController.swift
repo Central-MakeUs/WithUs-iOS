@@ -13,6 +13,8 @@ import RxCocoa
 
 class FourCutViewController: BaseViewController, View {
     
+    var settingView = MemorySettingInviteCodeView()
+    
     var disposeBag: DisposeBag = DisposeBag()
     
     weak var coordinator: FourCutCoordinator?
@@ -62,6 +64,7 @@ class FourCutViewController: BaseViewController, View {
         view.addSubview(makeControl)
         view.addSubview(dateStackView)
         view.addSubview(memoryCollectionView)
+        view.addSubview(settingView)
         
         dateStackView.addArrangedSubview(dateLabel)
         dateStackView.addArrangedSubview(toggleButton)
@@ -87,11 +90,19 @@ class FourCutViewController: BaseViewController, View {
             $0.horizontalEdges.equalTo(view.safeAreaLayoutGuide)
             $0.bottom.equalTo(view.safeAreaLayoutGuide).offset(-10)
         }
+        
+        settingView.snp.makeConstraints {
+            $0.edges.equalTo(view.safeAreaLayoutGuide)
+        }
     }
     
     override func setupActions() {
         toggleButton.addTarget(self, action: #selector(toggleTapped), for: .touchUpInside)
         makeControl.addTarget(self, action: #selector(didAddButtonTapped), for: .touchUpInside)
+        
+        settingView.onTap = { [weak self] in
+            self?.coordinator?.showInviteModal()
+        }
     }
     
     override func setNavigation() {
@@ -145,15 +156,26 @@ class FourCutViewController: BaseViewController, View {
             })
             .disposed(by: disposeBag)
         
-        reactor.state.compactMap { $0.coupleInfo }
+        reactor.state.map { $0.coupleInfo }
             .observe(on: MainScheduler.instance)
-            .bind(with: self) { strongSelf, data in
-                let myName = data.meProfile.nickname
-                let partnerName = data.partnerProfile.nickname
-                
-                strongSelf.makeControl.configure(myName: myName, partnerName: partnerName)
+            .bind(with: self) { strongSelf, coupleInfo in
+                let isConnected = coupleInfo != nil
+                if let coupleInfo {
+                    let myName = coupleInfo.meProfile.nickname
+                    let partnerName = coupleInfo.partnerProfile.nickname
+                    
+                    strongSelf.makeControl.configure(myName: myName, partnerName: partnerName)
+                }
+                strongSelf.setMainUI(hidden: !isConnected)
+                strongSelf.settingView.isHidden = isConnected
             }
             .disposed(by: disposeBag)
+    }
+    
+    private func setMainUI(hidden: Bool) {
+        makeControl.isHidden = hidden
+        dateStackView.isHidden = hidden
+        memoryCollectionView.isHidden = hidden
     }
     
     private func updateDateLabel() {

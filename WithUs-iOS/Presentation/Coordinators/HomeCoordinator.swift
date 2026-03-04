@@ -206,3 +206,5 @@ extension HomeCoordinator: InviteCoordinatorDelegate {
         coordinator.finish()
     }
 }
+
+extension HomeCoordinator: InviteCoordinatable {}

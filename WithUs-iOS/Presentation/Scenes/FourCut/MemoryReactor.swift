@@ -28,7 +28,7 @@ final class MemoryReactor: Reactor {
         case setSelectedDate(year: Int, month: Int)
         case setDetailMemory(String)
         case clearDetailMemory
-        case setCoupleInfo(ProfileData)
+        case setCoupleInfo(ProfileData?)
     }
 
     struct State {
@@ -264,6 +264,7 @@ final class MemoryReactor: Reactor {
                     }
                 } catch {
                     await MainActor.run {
+                        observer.onNext(.setCoupleInfo(nil))
                         observer.onNext(.setError(self.errorMessage(from: error)))
                         observer.onCompleted()
                     }

@@ -11,7 +11,7 @@ import Then
 
 final class InviteViewController: BaseViewController {
     
-    weak var coordinator: HomeCoordinator?
+    weak var coordinator: InviteCoordinatable?
     
     private let titleStackView = UIStackView().then {
         $0.axis = .vertical

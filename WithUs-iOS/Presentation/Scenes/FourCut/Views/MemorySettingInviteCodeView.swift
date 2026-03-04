@@ -1,24 +1,25 @@
 //
-//  SettingInviteCodeView.swift
+//  MemorySettingInviteCodeView.swift
 //  WithUs-iOS
 //
-//  Created by Hubriz iOS on 1/20/26.
+//  Created by Hubriz iOS on 3/4/26.
 //
 
-import SnapKit
+import Foundation
 import UIKit
 import Then
+import SnapKit
 
-final class SettingInviteCodeView: UIView {
+final class MemorySettingInviteCodeView: UIView {
     
     var onTap: (() -> Void)?
-    
+   
     private let titleLabel = UILabel().then {
         $0.font = UIFont.pretendard24Bold
         $0.textColor = UIColor.gray900
         $0.textAlignment = .center
         $0.numberOfLines = 2
-        $0.text = "앗!\n아직 커플 연결이 되지 않았어요"
+        $0.text = "커플 연결이 되지 않았어요"
     }
 
     private let subTitleLabel = UILabel().then {
@@ -26,32 +27,28 @@ final class SettingInviteCodeView: UIView {
         $0.textColor = UIColor.gray500
         $0.textAlignment = .center
         $0.numberOfLines = 2
-        $0.text = "연결을 완료하고\n사진으로 일상을 공유해보세요!"
+        $0.text = "연결을 완료하고\n연인과의 추억을 만들어 보세요!"
     }
 
     private let imageView = UIImageView().then {
-        $0.image = UIImage(named: "inviteCodeSetting")
+        $0.image = UIImage(named: "empty_archive")
         $0.contentMode = .scaleAspectFit
     }
-
+    
     private let setupButton = UIButton().then {
         $0.setTitle("연결하러 가기 →", for: .normal)
         $0.setTitleColor(.white, for: .normal)
         $0.backgroundColor = UIColor.gray900
         $0.layer.cornerRadius = 8
     }
-
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
         setupConstraints()
         setupActions()
     }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
+    
     private func setupUI() {
         addSubview(titleLabel)
         addSubview(subTitleLabel)
@@ -92,5 +89,8 @@ final class SettingInviteCodeView: UIView {
     @objc private func setupButtonTapped() {
         onTap?()
     }
-}
 
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

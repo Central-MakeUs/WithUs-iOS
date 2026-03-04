@@ -7,6 +7,10 @@
 
 import UIKit
 
+protocol InviteCoordinatable: AnyObject {
+    func startInviteFlow(_ type: CodeType)
+}
+
 class FourCutCoordinator: Coordinator {
     var childCoordinators: [Coordinator] = []
     var navigationController: UINavigationController
@@ -112,7 +116,32 @@ class FourCutCoordinator: Coordinator {
         navigationController.popToRootViewController(animated: true)
     }
     
+    func showInviteModal() {
+        let inviteModalVC = InviteViewController()
+        inviteModalVC.coordinator = self
+        inviteModalVC.view.backgroundColor = .white
+        inviteModalVC.modalPresentationStyle = .overFullScreen
+        navigationController.present(inviteModalVC, animated: true)
+    }
+    
     func finish() {
         
+    }
+}
+
+extension FourCutCoordinator: InviteCoordinatable {
+    func startInviteFlow(_ type: CodeType) {
+        let inviteCoord = InviteCoordinator(navigationController: navigationController, type: type)
+        inviteCoord.delegate = self
+        childCoordinators.append(inviteCoord)
+        inviteCoord.start()
+    }
+}
+
+extension FourCutCoordinator: InviteCoordinatorDelegate {
+    func inviteCoordinatorDidFinish(_ coordinator: InviteCoordinator) {
+        childCoordinators.removeAll(where: { $0 is InviteCoordinator })
+        showUploadSuccessAndPopToRoot()
+        coordinator.finish()
     }
 }
