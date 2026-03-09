@@ -14,7 +14,14 @@
 				<string>kakao6b31fa2ec8c3f03f01844c279953f769</string>
 			</array>
 		</dict>
-		<dict/>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>withus</string>
+			</array>
+		</dict>
 	</array>
 	<key>KAKAO_NATIVE_APP_KEY</key>
 	<string>6b31fa2ec8c3f03f01844c279953f769</string>

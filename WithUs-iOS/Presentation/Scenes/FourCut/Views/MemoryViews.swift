@@ -96,7 +96,6 @@ struct MemoryFullCellView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .cornerRadius(5)
             .shadow(
                 color: .black.opacity(0.12),
                 radius: 6,
