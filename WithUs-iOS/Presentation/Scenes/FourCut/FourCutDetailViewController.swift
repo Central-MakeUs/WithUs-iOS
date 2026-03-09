@@ -73,7 +73,7 @@ final class FourCutDetailViewController: BaseViewController {
         view.addSubview(closeButton)
         
         buttonStackView.addArrangedSubview(shareButton)
-//        buttonStackView.addArrangedSubview(instagramButton)
+        buttonStackView.addArrangedSubview(instagramButton)
         buttonStackView.addArrangedSubview(downloadButton)
     }
     
@@ -114,6 +114,7 @@ final class FourCutDetailViewController: BaseViewController {
         closeButton.addTarget(self, action: #selector(didTapCloseButton), for: .touchUpInside)
         downloadButton.addTarget(self, action: #selector(didTapDownloadButton), for: .touchUpInside)
         shareButton.addTarget(self, action: #selector(didTapShareButton), for: .touchUpInside)
+        instagramButton.addTarget(self, action: #selector(instagramButtonTapped), for: .touchUpInside)
     }
     
     @objc private func didTapDownloadButton() {
@@ -160,6 +161,28 @@ final class FourCutDetailViewController: BaseViewController {
         }
         let activityVC = UIActivityViewController(activityItems: [image], applicationActivities: nil)
         present(activityVC, animated: true)
+    }
+    
+    @objc private func instagramButtonTapped() {
+        guard let image = mainImageView.image,
+              let imageData = image.pngData() else {
+            ToastView.show(message: "공유 실패")
+            return
+        }
+        
+        let appId = "25751910594504201"
+        guard let url = URL(string: "instagram-stories://share?source_application=\(appId)"),
+              UIApplication.shared.canOpenURL(url) else {
+            ToastView.show(message: "인스타그램 앱이 없습니다.")
+            return
+        }
+        
+        let pasteboardItems = [["com.instagram.sharedSticker.backgroundImage": imageData]]
+        let pasteboardOptions: [UIPasteboard.OptionsKey: Any] = [
+            .expirationDate: Date(timeIntervalSinceNow: 60 * 5)
+        ]
+        UIPasteboard.general.setItems(pasteboardItems, options: pasteboardOptions)
+        UIApplication.shared.open(url)
     }
     
     private func showPermissionAlert() {

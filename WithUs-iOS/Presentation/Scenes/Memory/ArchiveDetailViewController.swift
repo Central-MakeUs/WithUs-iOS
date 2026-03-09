@@ -146,7 +146,7 @@ class ArchiveDetailViewController: BaseViewController, View {
         collectionView.delegate = self
         
         buttonStackView.addArrangedSubview(shareButton)
-//        buttonStackView.addArrangedSubview(instagramButton)
+        buttonStackView.addArrangedSubview(instagramButton)
         buttonStackView.addArrangedSubview(downloadButton)
     }
     
@@ -460,8 +460,25 @@ class ArchiveDetailViewController: BaseViewController, View {
     }
     
     @objc private func instagramButtonTapped() {
-        print("인스타그램 공유")
-        // TODO: 인스타그램 공유 구현
+        guard let image = currentPageImage(),
+              let imageData = image.pngData() else {
+            ToastView.show(message: "공유 실패")
+            return
+        }
+        
+        let appId = "25751910594504201"
+        guard let url = URL(string: "instagram-stories://share?source_application=\(appId)"),
+              UIApplication.shared.canOpenURL(url) else {
+            ToastView.show(message: "인스타그램 앱이 없습니다.")
+            return
+        }
+        
+        let pasteboardItems = [["com.instagram.sharedSticker.backgroundImage": imageData]]
+        let pasteboardOptions: [UIPasteboard.OptionsKey: Any] = [
+            .expirationDate: Date(timeIntervalSinceNow: 60 * 5)
+        ]
+        UIPasteboard.general.setItems(pasteboardItems, options: pasteboardOptions)
+        UIApplication.shared.open(url)
     }
     
     @objc private func downloadButtonTapped() {
