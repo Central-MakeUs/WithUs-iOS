@@ -284,34 +284,30 @@ class CustomPhotoPickerViewController: BaseViewController {
         let index = sender.tag
         guard index < selectedAssets.count else { return }
         
-        let asset = selectedAssets[index]
+        let deletedAsset = selectedAssets[index]
+        selectedAssets.remove(at: index)
         
-        var photoIndexPath: IndexPath?
+        var indexPathsToReload: [IndexPath] = []
         if let allPhotos = allPhotos {
             for i in 0..<allPhotos.count {
-                if allPhotos.object(at: i) == asset {
-                    photoIndexPath = IndexPath(item: i, section: 0)
-                    break
+                let asset = allPhotos.object(at: i)
+                if selectedAssets.contains(asset) || asset == deletedAsset {
+                    indexPathsToReload.append(IndexPath(item: i, section: 0))
                 }
             }
         }
         
-        selectedAssets.remove(at: index)
         selectedPhotosCollectionView.performBatchUpdates({
             selectedPhotosCollectionView.deleteItems(at: [IndexPath(item: index, section: 0)])
         }, completion: { _ in
             self.selectedPhotosCollectionView.reloadData()
         })
         
-        if let photoIndexPath = photoIndexPath {
-            photoCollectionView.reloadItems(at: [photoIndexPath])
-        }
-        
+        photoCollectionView.reloadItems(at: indexPathsToReload)
         updateSelectedContainerVisibility()
     }
 }
 
-// MARK: - UICollectionViewDataSource
 extension CustomPhotoPickerViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if collectionView == photoCollectionView {
@@ -348,7 +344,6 @@ extension CustomPhotoPickerViewController: UICollectionViewDataSource {
     }
 }
 
-// MARK: - UICollectionViewDelegate
 extension CustomPhotoPickerViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == photoCollectionView {
@@ -356,20 +351,32 @@ extension CustomPhotoPickerViewController: UICollectionViewDelegate {
             
             if let index = selectedAssets.firstIndex(of: asset) {
                 selectedAssets.remove(at: index)
+                var indexPathsToReload: [IndexPath] = [indexPath]
+                if let allPhotos = allPhotos {
+                    for i in 0..<allPhotos.count {
+                        if selectedAssets.contains(allPhotos.object(at: i)) {
+                            indexPathsToReload.append(IndexPath(item: i, section: 0))
+                        }
+                    }
+                }
                 
                 selectedPhotosCollectionView.performBatchUpdates({
                     selectedPhotosCollectionView.deleteItems(at: [IndexPath(item: index, section: 0)])
                 }, completion: { _ in
                     self.selectedPhotosCollectionView.reloadData()
-                    self.updateSelectedContainerVisibility()
                 })
+                
+                photoCollectionView.reloadItems(at: indexPathsToReload)
+                self.updateSelectedContainerVisibility()
+                
             } else {
+                guard selectedAssets.count < 12 else { return }
+                
                 let isFirstItem = selectedAssets.isEmpty
                 selectedAssets.append(asset)
                 
                 if isFirstItem {
                     updateSelectedContainerVisibility()
-                    
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         self.selectedPhotosCollectionView.reloadData()
                         let lastIndexPath = IndexPath(item: self.selectedAssets.count - 1, section: 0)
@@ -384,9 +391,9 @@ extension CustomPhotoPickerViewController: UICollectionViewDelegate {
                         self.selectedPhotosCollectionView.scrollToItem(at: lastIndexPath, at: .right, animated: true)
                     })
                 }
+                photoCollectionView.reloadItems(at: [indexPath])
             }
             
-            photoCollectionView.reloadItems(at: [indexPath])
             doneButton.backgroundColor = selectedAssets.count == 12 ? UIColor.redWarning : UIColor.gray300
         }
     }

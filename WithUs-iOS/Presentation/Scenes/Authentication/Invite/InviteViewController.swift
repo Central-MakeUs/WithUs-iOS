@@ -69,6 +69,7 @@ final class InviteViewController: BaseViewController {
     }
     
     override func setupUI() {
+        super.setupUI()
         view.addSubview(closeBtn)
         view.addSubview(titleStackView)
         view.addSubview(imageView)
