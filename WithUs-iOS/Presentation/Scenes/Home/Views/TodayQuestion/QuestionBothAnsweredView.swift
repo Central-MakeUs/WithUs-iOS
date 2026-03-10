@@ -31,7 +31,7 @@ final class QuestionBothAnsweredView: UIView {
     }
     
     private func setupUI() {
-        backgroundColor = .white
+        backgroundColor = .clear
         layer.cornerRadius = 20
         addShadow(
             color: .black,

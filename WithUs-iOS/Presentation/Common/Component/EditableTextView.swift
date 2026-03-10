@@ -188,8 +188,14 @@ extension EditableTextView: UITextViewDelegate {
         let constrainedSize = textView.sizeThatFits(CGSize(width: requiredWidth - 16, height: .greatestFiniteMagnitude))
         let requiredHeight = constrainedSize.height + 16
 
-        UIView.animate(withDuration: 0.1) {
-            self.frame.size = CGSize(width: requiredWidth, height: requiredHeight)
+        let savedCenter = center
+        let savedTransform = transform
+
+        UIView.performWithoutAnimation {
+            transform = .identity
+            bounds.size = CGSize(width: requiredWidth, height: requiredHeight)
+            center = savedCenter
+            transform = savedTransform
         }
     }
 
